@@ -53,9 +53,11 @@
                     </li>
                     {% endfor %}
                     <!-- User Auth -->
+                    {% if not user.is_authenticated %}
                     <li>
                         <a href="/login"><strong>Login</strong></a>
                     </li>
+                    {% endif %}
                     <li>
                         <a href="/register"><strong>Register</strong></a>
                     </li>
