@@ -3,6 +3,7 @@
 {% load settings_tags %}
 {% get_settings %}
 <!DOCTYPE html>
+{% spaceless %}
 <html lang="en">
     <head>
     <meta charset="utf-8" />
@@ -93,7 +94,11 @@
     </script>
     <script>
     $(document).ready(function(){
-      $('.bxslider').bxSlider();
+      $('.bxslider').bxSlider({
+          auto: true,
+        //   autoControls: true,
+          mode: 'vertical'
+        });
     });
     </script>
     <script>
@@ -119,3 +124,4 @@
     {% endblock extra_js %}
     </body>
 </html>
+{% endspaceless %}

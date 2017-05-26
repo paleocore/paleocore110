@@ -268,7 +268,7 @@ button:hover {
 
   .off-canvas.position-left,
   .off-canvas.position-right {
-    background: $primary;
+    background: $dark-metal; //$primary;
     height: 100%;
 
     .menu {
@@ -294,7 +294,7 @@ button:hover {
   }
 
   .is-drilldown-submenu {
-    background: $primary;
+    background: $dark-metal; //$primary;
     height: 100%;
   }
 
@@ -436,6 +436,10 @@ ul.share-buttons .fa {
     padding: 1rem 0 0;
     background: $white;
     border-bottom: 1px solid $paleocore-grey;
+
+    h3 {
+        color: $black;
+    }
 }
 
 #media,
@@ -491,7 +495,7 @@ ul.share-buttons .fa {
 
 #side_menu {
   h6.title {
-    background: $primary;
+    background: $dark-metal; //$primary;
     padding: 6px;
     color: $white;
   }
@@ -517,11 +521,11 @@ ul.share-buttons .fa {
 
 #news_feed {
   h6 {
-    color: $primary;
+    color: $dark-metal; //$primary;
   }
 
   h6.title {
-    background: $primary;
+    background: $dark-metal; //$primary;
     padding: 6px;
     color: $white;
   }
@@ -560,13 +564,13 @@ ul.share-buttons .fa {
 
 #more_news {
   h6.title {
-    background: $primary;
+    background: $dark-metal; //$primary;
     padding: 6px;
     color: $white;
   }
 
   h5 {
-    color: $primary;
+    color: $dark-metal; //$primary;
     margin-bottom: 2px;
   }
 
@@ -590,7 +594,7 @@ ul.share-buttons .fa {
   }
 
   h6.title {
-    background: $primary;
+    background: $dark-metal; //$primary;
     padding: 6px;
     color: $white;
   }
@@ -699,7 +703,7 @@ ul.share-buttons .fa {
   h6,
   li,
   p {
-    color: $primary;
+    color: $black; //$primary;
   }
 
   p {
@@ -721,9 +725,9 @@ ul.share-buttons .fa {
 
 .tag-names li {
   background: transparent;
-  border: 1px $primary solid;
+  border: 1px $dark-metal solid;
   border-radius: 2px;
-  color: $primary;
+  color: $black;
   padding: 4px 8px;
   font-size: 12px;
   display: inline;
@@ -742,7 +746,7 @@ ul.share-buttons .fa {
   .block-faq_question {
     background: url('/#{$static}/img/faq/open.png') right no-repeat;
     font-size: 15px;
-    color: $primary;
+    color: $black; //$primary;
     padding: 12px 25px 12px 0;
     cursor: pointer;
     margin: 0;
@@ -750,7 +754,7 @@ ul.share-buttons .fa {
   }
 
   .block-faq_question:hover {
-    color: $primary;
+    color: $black; //$primary;
   }
 
   .block-faq_question.close {

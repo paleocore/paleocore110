@@ -9,7 +9,7 @@
     <div class="row text-center">
         <!-- <div class="medium-10 medium-centered columns"> -->
         <div class="small-12 small-centered columns">
-            <!-- <h3>{{ self.title_text|richtext }}</h3> -->
+            <h3>{{ self.title_text|richtext }}</h3>
             <!-- {{ self.body|richtext }} -->
             <div id="carousel">
                 {% include "pages/includes/bx_carousel.html" with carousel_items=self.carousel_items.all only  %}
