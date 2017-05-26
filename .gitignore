@@ -17,3 +17,4 @@ env.example
 env.production
 pages/static/libs
 .python-version
+.idea/*
