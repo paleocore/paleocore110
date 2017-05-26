@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
 
     'compressor',
     'taggit',
@@ -69,8 +70,8 @@ INSTALLED_APPS = (
     'wagtail.wagtailadmin',
     'wagtail.wagtailcore',
     'wagtailfontawesome',
-     'wagalytics', 
-     'cachalot', 
+     'wagalytics',
+     'cachalot',
     'utils',
     'pages',
     'blog',
@@ -83,6 +84,8 @@ INSTALLED_APPS = (
 
     'foundation_formtags',
     'wagtail_feeds',
+
+    'lgrp'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -132,8 +135,16 @@ WSGI_APPLICATION = 'paleocore110.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
+# DATABASES = {
+#     'default': env.db('DATABASE_URL', default='postgres:///paleocore110'),
+# }
+
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres:///paleocore110'),
+    'default': {
+         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+         'NAME': 'paleocore110',
+         'USER': '',
+    },
 }
 
 DATABASES['default']['ATOMIC_REQUESTS'] = True
