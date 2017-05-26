@@ -38,7 +38,9 @@
 @include foundation-tooltip;
 @include foundation-top-bar;
 @include foundation-visibility-classes;
-@include foundation-float-classes; // @include foundation-flex-classes;
+@include foundation-float-classes;
+// @include foundation-flex-classes;
+
 // Colors
 $primary: map-get($foundation-palette, primary);
 $secondary: map-get($foundation-palette, secondary);
@@ -46,12 +48,16 @@ $primary-dark: #303F9F;
 $off-white: #F8F8FA;
 $dove-gray: #666666;
 $dark-metal: #222222;
-$static: static; // Paleocore Colors
+$static: static;
+
+// Paleocore Colors
 $paleocore-white: #ffffff;
 $paleocore-offwhite: #f0f0f0;
 $paleocore-grey: #666666;
 $paleocore-grey-dark: #222222;
-$paleocore-orange: #f65d20; // Fonts
+$paleocore-orange: #f65d20;
+
+// Fonts
 $header-font-family: 'Lato', Helvetica, sans;
 $body-font-family: 'Lato', Helvetica, sans;
 $paragraph-font-family: 'Lato', Helvetica, sans;
@@ -99,7 +105,7 @@ a {
 }
 
 a:hover {
-  color: $secondary;
+  color: $paleocore-grey; //$secondary;
 }
 
 .button,
@@ -151,7 +157,7 @@ button:hover {
   }
 
   li a:hover {
-    background-color: $secondary;
+    background-color: $paleocore-grey; //$secondary;
   }
 
   li.menu-text {
@@ -168,17 +174,17 @@ button:hover {
   }
 
   .menu .active a {
-    background: $secondary;
+    background: $paleocore-grey; //$secondary;
   }
 
   .dropdown.menu .submenu,
   ul {
-    background: $primary;
+    background: $paleocore-grey-dark; //$primary;
     border: 0;
   }
 
   .dropdown.menu .submenu {
-    border-top: 3px solid $secondary;
+    border-top: 3px solid $paleocore-grey; //$secondary;
   }
 
   .top-bar-right {
@@ -240,7 +246,7 @@ button:hover {
   }
 
   a:hover {
-    color: $secondary;
+    color: $paleocore-orange; //$secondary;
   }
 
   .is-accordion-submenu-parent a::after {
@@ -389,7 +395,7 @@ ul.share-buttons .fa {
 }
 
 #carousel {
-  margin-top: 30px;
+  // margin-top: 30px;
 }
 
 #carousel_business {
@@ -401,7 +407,7 @@ ul.share-buttons .fa {
 #intro,
 #testimonials {
   padding: 50px 0 30px;
-  background: #5E9CD1;
+  background: $white; //#5E9CD1;
 
   h3,
   p {
@@ -427,19 +433,19 @@ ul.share-buttons .fa {
   padding: 20px 10px;
 
   h4 {
-    color: $primary;
+    color: $black; //$primary;
     font-weight: 450;
     line-height: 1;
   }
 
   h5 {
-    background: $primary;
+    background: $black; //$primary;
     color: $white;
     padding: 4px 0;
   }
 
   p {
-    color: $primary;
+    color: $black; //$primary;
     padding: 5px;
   }
 
@@ -449,7 +455,7 @@ ul.share-buttons .fa {
 
   .column:hover {
     h5 {
-      background: $secondary;
+      background: $paleocore-grey-dark; //$secondary;
     }
 
     p {
@@ -859,4 +865,10 @@ footer {
       display: none;
     }
   }
+}
+
+/*** Overriding Default Styles ***/
+.bx-wrapper {
+    border: 0;
+    margin: 0;
 }
