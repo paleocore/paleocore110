@@ -82,7 +82,12 @@ $header-font-color: $dove-gray !default; // Responsive image/video classes
   height: 100%;
 }
 
+html {
+  //height: auto; //100%;
+}
+
 body {
+  // height: 100%;
   background: $off-white;
   color: $dove-gray;
 }
@@ -406,7 +411,7 @@ ul.share-buttons .fa {
 
 #intro,
 #testimonials {
-  padding: 50px 0 30px;
+  padding: 1rem 0 3rem; //50px 0 30px;
   background: $white; //#5E9CD1;
 
   h3,
@@ -422,6 +427,12 @@ ul.share-buttons .fa {
   .rich-text {
     margin-bottom: 20px;
   }
+}
+
+#intro {
+    padding: 1rem 0 3rem; //50px 0 30px;
+    background: $white; //#5E9CD1;
+    border-bottom: 1px solid $paleocore-grey;
 }
 
 #media,
@@ -793,9 +804,13 @@ ul.share-buttons .fa {
 }
 
 footer {
-  background-color: #333;
-  color: $white; // padding: 20px 0 0;
+  position: sticky;
+  bottom: 0 !important;
+  margin: 0;
   padding: 0;
+  height: 4rem;
+  background-color: #333;
+  color: $white;
 
   a,
   h5 {
