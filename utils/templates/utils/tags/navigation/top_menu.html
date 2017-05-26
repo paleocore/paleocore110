@@ -57,14 +57,15 @@
                     <li>
                         <a href="/login"><strong>Login</strong></a>
                     </li>
-                    {% endif %}
                     <li>
                         <a href="/register"><strong>Register</strong></a>
                     </li>
-                    <!-- Profile is only visible if user is authenticated -->
-                    {% if user.is_authenticated %}
+                    {% else %}
                     <li>
                         <a href="/profile"><strong>Profile</strong></a>
+                    </li>
+                    <li>
+                        <a href="/logout"><strong>logout</strong></a>
                     </li>
                     {% endif %}
                     <li class="has-form show-for-small-only" style="background: transparent;">
