@@ -106,7 +106,7 @@ body {
 }
 
 a {
-  color: $primary;
+  color: $black; //$primary;
 }
 
 a:hover {
@@ -115,7 +115,7 @@ a:hover {
 
 .button,
 button {
-  background: $paleocore-grey-dark; //$primary;
+  background: $dark-metal; //$paleocore-grey-dark; //$primary;
 }
 
 .button.secondary,
@@ -131,7 +131,7 @@ button:hover {
 
 #social_bar {
   padding: 3px 0;
-  background: $paleocore-grey-dark; //$primary-dark;
+  background: $dark-metal; //$paleocore-grey-dark; //$primary-dark;
   text-align: right;
 
   a {
@@ -142,12 +142,14 @@ button:hover {
 }
 
 .title-bar {
-  background: $paleocore-grey-dark; //$primary;
+  background: $dark-metal; //$paleocore-grey-dark; //$primary;
+  border-bottom: 0.4rem solid $paleocore-orange;
 }
 
 .top-bar {
-  background: $paleocore-grey-dark; //$primary;
+  background: $dark-metal; //$paleocore-grey-dark; //$primary;
   padding: 0;
+  border-bottom: 0.4rem solid $paleocore-orange;
 
   a {
     color: $white;
@@ -321,7 +323,7 @@ button:hover {
   padding: 15px;
 
   a {
-    color: $primary;
+    color: $black; //$primary;
   }
 }
 
@@ -411,8 +413,9 @@ ul.share-buttons .fa {
 
 #intro,
 #testimonials {
-  padding: 1rem 0 3rem; //50px 0 30px;
-  background: $white; //#5E9CD1;
+  // padding: 50px 0 30px;
+  padding: 0.2rem 0 0.1rem;
+  background: $white;
 
   h3,
   p {
@@ -430,8 +433,8 @@ ul.share-buttons .fa {
 }
 
 #intro {
-    padding: 1rem 0 3rem; //50px 0 30px;
-    background: $white; //#5E9CD1;
+    padding: 2rem 0 0;
+    background: $white;
     border-bottom: 1px solid $paleocore-grey;
 }
 
@@ -679,7 +682,7 @@ ul.share-buttons .fa {
 #testimonials {
   .bx-wrapper .bx-viewport {
     background: transparent;
-    border: 0;
+    border: 1px solid $dark-metal;
     box-shadow: none;
   }
 
@@ -727,7 +730,7 @@ ul.share-buttons .fa {
   margin: 0 3px;
 
   a {
-    color: $primary;
+    color: $black; //$primary;
   };
 }
 
@@ -806,10 +809,10 @@ ul.share-buttons .fa {
 footer {
   position: sticky;
   bottom: 0 !important;
-  margin: 0;
-  padding: 0;
+  margin: 1rem 0 0;
+  padding: 0.5rem 0;
   height: 4rem;
-  background-color: #333;
+  background-color: $dark-metal; //#333;
   color: $white;
 
   a,
@@ -884,6 +887,8 @@ footer {
 
 /*** Overriding Default Styles ***/
 .bx-wrapper {
-    border: 0;
-    margin: 0;
+    border: 1px solid $paleocore-grey;
+}
+.rsImg {
+    width: 100%;
 }
