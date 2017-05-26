@@ -433,7 +433,7 @@ ul.share-buttons .fa {
 }
 
 #intro {
-    padding: 2rem 0 0;
+    padding: 1rem 0 0;
     background: $white;
     border-bottom: 1px solid $paleocore-grey;
 }
@@ -810,9 +810,9 @@ footer {
   position: sticky;
   bottom: 0 !important;
   margin: 1rem 0 0;
-  padding: 0.5rem 0;
-  height: 4rem;
-  background-color: $dark-metal; //#333;
+  padding: 0;
+  height: 2rem;
+  background-color: $dark-metal;
   color: $white;
 
   a,
