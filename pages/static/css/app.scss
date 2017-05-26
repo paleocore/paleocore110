@@ -56,6 +56,9 @@ $paleocore-offwhite: #f0f0f0;
 $paleocore-grey: #666666;
 $paleocore-grey-dark: #222222;
 $paleocore-orange: #f65d20;
+$paleocore-orange-dark: #762D0F;
+$paleocore-orange-light: #F8C9B5;
+$paleocore-sand: #FFE1D4;
 
 // Fonts
 $header-font-family: 'Lato', Helvetica, sans;
@@ -89,7 +92,7 @@ html {
 body {
   // height: 100%;
   background: $off-white;
-  color: $dove-gray;
+  color: $dark-metal; //$dove-gray;
 }
 
 .off-canvas-content,
@@ -106,11 +109,11 @@ body {
 }
 
 a {
-  color: $black; //$primary;
+  color: $paleocore-orange-dark; //$dove-gray; //$black; //$primary;
 }
 
 a:hover {
-  color: $paleocore-grey; //$secondary;
+  color: $paleocore-orange; //$secondary;
 }
 
 .button,
@@ -121,7 +124,7 @@ button {
 .button.secondary,
 button.secondary {
   background: $dove-gray;
-  color: $secondary;
+  color: $paleocore-orange; //$secondary;
 }
 
 .button:hover,
@@ -323,7 +326,7 @@ button:hover {
   padding: 15px;
 
   a {
-    color: $black; //$primary;
+    color: $dove-gray; //$black; //$primary;
   }
 }
 
@@ -401,6 +404,16 @@ ul.share-buttons .fa {
   transition: box-shadow 0.2s cubic-bezier(0, 0.2, 0.4, 1) 0s;
 }
 
+a > div.card > h5 {
+    margin: 0;
+}
+a:hover > div.card > h5 > strong {
+    color: $paleocore-orange;
+}
+a:hover > div.card > div.card-section {
+    background: $paleocore-sand;
+}
+
 #carousel {
   // margin-top: 30px;
 }
@@ -476,9 +489,9 @@ ul.share-buttons .fa {
       background: $paleocore-grey-dark; //$secondary;
     }
 
-    p {
-      color: $secondary;
-    }
+    // p {
+    //   color: $paleocore-orange; //$secondary;
+    // }
   }
 
   .grow {
@@ -495,7 +508,7 @@ ul.share-buttons .fa {
 
 #side_menu {
   h6.title {
-    background: $dark-metal; //$primary;
+    background: $black; //$dark-metal; //$primary;
     padding: 6px;
     color: $white;
   }
@@ -521,7 +534,7 @@ ul.share-buttons .fa {
 
 #news_feed {
   h6 {
-    color: $dark-metal; //$primary;
+    color: $black; //$dark-metal; //$primary;
   }
 
   h6.title {
@@ -564,13 +577,13 @@ ul.share-buttons .fa {
 
 #more_news {
   h6.title {
-    background: $dark-metal; //$primary;
+    background: $black; //$dark-metal; //$primary;
     padding: 6px;
     color: $white;
   }
 
   h5 {
-    color: $dark-metal; //$primary;
+    color: $black; //$primary;
     margin-bottom: 2px;
   }
 
@@ -594,7 +607,7 @@ ul.share-buttons .fa {
   }
 
   h6.title {
-    background: $dark-metal; //$primary;
+    background: $black; //$dark-metal; //$primary;
     padding: 6px;
     color: $white;
   }
@@ -734,7 +747,7 @@ ul.share-buttons .fa {
   margin: 0 3px;
 
   a {
-    color: $black; //$primary;
+    color: $dove-gray; //$black; //$primary;
   };
 }
 
