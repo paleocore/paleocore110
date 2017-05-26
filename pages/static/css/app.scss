@@ -133,7 +133,7 @@ button:hover, .button:hover {background: $primary-dark;}
           color: $white;
       }
       [type="text"],[type="submit"]  {height: 1.8rem;}
-  }   
+  }
 }
 
 .off-canvas {
@@ -382,7 +382,8 @@ ul.share-buttons .fa {min-width: 30px;}
 footer {
   background-color: #333;
   color: $white;
-  padding: 20px 0 0;
+  // padding: 20px 0 0;
+  padding: 0;
 
   a, h5{color: $white;}
 

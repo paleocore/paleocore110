@@ -7,7 +7,17 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>{% block title %}{% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %}{% endblock %}{% block title_suffix %}{% endblock %}</title>
+    <title>
+        {% block title %}
+            {% if self.seo_title %}
+                {{ self.seo_title }}
+            {% else %}
+                {{ self.title }}
+            {% endif %}
+        {% endblock title %}
+        {% block title_suffix %}
+        {% endblock title_suffix %}
+    </title>
     <meta name="description" content="{% if self.search_description %}{{ self.search_description }}{% endif %}">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}"/>
@@ -19,19 +29,20 @@
     <link rel="stylesheet" type="text/x-scss" href="{% static 'css/app.scss' %}">
     {% endcompress %}
 
-    {% block extra_css %}{% endblock %}
+    {% block extra_css %}
+    {% endblock extra_css %}
 
     {% block facebook_og %}
-    {% include "utils/includes/facebook_opengraph.html" %}
-    {% endblock %}
+        {% include "utils/includes/facebook_opengraph.html" %}
+    {% endblock facebook_og %}
 
     {% block twitter_og %}
-    {% include "utils/includes/twitter_cards.html" %}
-    {% endblock %}
+        {% include "utils/includes/twitter_cards.html" %}
+    {% endblock twitter_og %}
 
     {% block google_analytics %}
     {% include "utils/includes/google_analytics.html" %}
-    {% endblock %}
+    {% endblock google_analytics %}
 
   </head>
 
@@ -44,14 +55,18 @@
     <div class="off-canvas-content" data-off-canvas-content>
 
       {% block breadcrumbs %}
-      {% breadcrumbs %}
-      {% endblock %}
+        {% breadcrumbs %}
+      {% endblock breadcrumbs %}
 
-      {% block content %}{% endblock %}
+      {% block content %}
+      {% endblock content %}
 
-      <a href="#" class="scrollup"><img src="{% static 'img/top.png' %}"></i></a>
+      <a href="#" class="scrollup">
+          <img src="{% static 'img/top.png' %}" />
+      </a>
 
       <footer>
+        <!--
         <div class="row" style="max-width: 96%; padding-bottom: 20px;">
           <div id="contact-us" class="medium-4 columns">
             <h5><strong>Get in Contact</strong></h5>
@@ -82,9 +97,10 @@
             {% endif %}
           </div>
         </div>
+        -->
         <div id="copyright">
           <div class="row text-center">
-            <p>Copyright © 2016 ChrisDev. All rights reserved</p>
+            <p>© PaleoCore. All rights reserved. | Images: Denné Reed</p>
           </div>
         </div>
       </footer>
@@ -126,7 +142,9 @@
       $('#modal-content').load(link + " .modal-content");
     });
   </script>
-  {% endblock %}
-  {% block extra_js %}{% endblock %}
+  {% endblock site_js %}
+
+  {% block extra_js %}
+  {% endblock extra_js %}
   </body>
 </html>
