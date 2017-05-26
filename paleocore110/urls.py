@@ -3,6 +3,8 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
 
+from mlp import urls as mlp_urls
+
 from wagtail.wagtailadmin import urls as wagtailadmin_urls
 from wagtail.wagtailsearch import urls as wagtailsearch_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
@@ -27,6 +29,7 @@ urlpatterns = [
 
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's serving mechanism
+    #url(r'', include(mlp_urls)),
     url(r'', include(wagtail_urls)),
 ]
 

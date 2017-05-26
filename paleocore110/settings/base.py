@@ -85,7 +85,9 @@ INSTALLED_APPS = (
     'foundation_formtags',
     'wagtail_feeds',
 
-    'lgrp'
+    'lgrp',
+    'mlp',
+    'drp'
 )
 
 MIDDLEWARE_CLASSES = (
