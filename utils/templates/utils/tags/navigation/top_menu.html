@@ -52,6 +52,19 @@
                         {% endif %}
                     </li>
                     {% endfor %}
+                    <!-- User Auth -->
+                    <li>
+                        <a href="/login"><strong>Login</strong></a>
+                    </li>
+                    <li>
+                        <a href="/register"><strong>Register</strong></a>
+                    </li>
+                    <!-- Profile is only visible if user is authenticated -->
+                    {% if user.is_authenticated %}
+                    <li>
+                        <a href="/profile"><strong>Profile</strong></a>
+                    </li>
+                    {% endif %}
                     <li class="has-form show-for-small-only" style="background: transparent;">
                         <form action ="{% url 'wagtailsearch_search' %}" method="get">
                             <div class="row collapse">
