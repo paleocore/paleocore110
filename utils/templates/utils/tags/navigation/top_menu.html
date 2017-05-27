@@ -44,10 +44,15 @@
                     </li>
                     {% else %}
                     <li>
-                        <a href="/profile"><strong>{{ request.user.username }}</strong></a>
-                    </li>
-                    <li>
-                        <a href="/logout"><strong>Logout</strong></a>
+                        <a href="/profile"><strong>{{ request.user.username|capfirst }}</strong></a>
+                        <ul class="dropdown menu" data-dropdown-menu>
+                            <li>
+                                <a href="/profile"><strong>Profile</strong></a>
+                            </li>
+                          <li>
+                              <a href="/logout"><strong>Logout</strong></a>
+                          </li>
+                        </ul>
                     </li>
                     {% endif %}
                     <li class="has-form show-for-small-only" style="background: transparent;">

@@ -18,3 +18,4 @@ env.production
 pages/static/libs
 .python-version
 **/.idea/*
+jg.wagtail.*
