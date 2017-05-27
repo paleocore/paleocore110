@@ -1,9 +1,8 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags navigation_tags wagtailimages_tags %}
-{% load paleocore110_utils %}
+{% load static %}
 {% block content %}
 <div id="content" class="row">
-    <div id="sidebar" class="hide-for-small-only medium-4 columns">
+    <div class="hide-for-small-only medium-4 columns">
         {% include "pages/paleocore_workshops_sidebar.html" with intro=self.intro only %}
     </div>
     <div class="small-12 medium-8 columns">
@@ -11,11 +10,11 @@
             <!-- <h4><strong>{{ self.title }}</strong></h4> -->
             <!-- <h5 class="subheader">{{ self.subtitle }}</h5> -->
             <!-- <hr> -->
-            <!-- {% include "pages/includes/intro.html" with intro=self.intro only %} -->
+            <!--{# {% include "pages/includes/intro.html" with intro=self.intro only %} #}-->
             {% include "pages/includes/body.html" with body=self.body only %}
         </div>
     </div>
-    <div id="sidebar" class="show-for-small-only small-12 columns">
+    <div class="show-for-small-only small-12 columns">
         {% include "pages/paleocore_workshops_sidebar.html" %}
     </div>
 </div>
