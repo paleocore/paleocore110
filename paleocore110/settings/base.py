@@ -235,3 +235,4 @@ BROKER_URL = 'redis://'
 
 CELERY_SEND_TASK_ERROR_EMAILS = True
 CELERYD_LOG_COLOR = False
+DEFAULT_FROM_EMAIL = "noreply@paleocore.org"
