@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="row">
-    <form method="post" class="columns small-6 small-offset-3">
+    <form method="post" class="columns small-10 small-centered medium-6">
     {% if form.errors %}
     {% for error in form.non_field_errors %}
         <div class="alert alert-danger">
@@ -14,6 +14,7 @@
     <h2>{{registered}}</h2>
     {% if not registered %}
     <h2>Register</h2>
+    <p>All fields are required.</p>
     {% endif %}
         {% csrf_token %}
         {% for field in form %}

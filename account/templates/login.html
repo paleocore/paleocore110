@@ -4,11 +4,12 @@
 
 {% block content %}
 <div class="row">
-  <form method="post" class="columns small-6 small-offset-3">
+  <form method="post" class="columns small-10 small-centered medium-6">
     <h2>Login</h2>
     {% csrf_token %}
     {{ form.as_p }}
-    <input type="submit"></input>
+    <input type="submit"></input><br><br>
+    <a href="{% url 'password_reset' %}">Forgot your password?</a>
   </form>
 </div>
 {% endblock %}

@@ -11,14 +11,9 @@ class UserInstitution(models.Model):
 
 @receiver(post_save, sender=User)
 def update_user_institution(sender, instance, created, **kwargs):
-    print("line 14")
     if created:
-        print("line 16")
         UserInstitution.objects.create(user=instance, institution="None")
         try:
-            print("line 19")
             instance.userinstitution.save()
-            print(instance.userinstitution.institution)
         except Exception as e:
-            print("line 22")
             pass

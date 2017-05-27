@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.http import Http404
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
@@ -28,7 +29,6 @@ class RegisterUser(generic.TemplateView):
                 user.refresh_from_db()
                 user.userinstitution.institution = registration_form.cleaned_data['institution']
                 user.save()
-                print(user.userinstitution.institution)
                 current_site = get_current_site(request)
                 subject = 'Activate Your Paleocore Account'
                 message = render_to_string('account_activation_email.html', {
@@ -59,8 +59,6 @@ class LoginUser(generic.TemplateView):
         password = request.POST['password']
         user_auth = authenticate(request, username=username, password=password)
         user = User.objects.get(username=username)
-        print('logging in')
-        print(user)
         if user_auth is not None:
             login(request, user_auth)
             return redirect('/')
@@ -69,6 +67,19 @@ class LoginUser(generic.TemplateView):
         else:
             # Return an 'invalid login' error message. TODO
             return redirect('/login')
+
+class PasswordReset(PasswordResetView):
+    template_name = "password_reset.html"
+    email_template_name = "password_reset_email.html"
+
+class PasswordResetDone(PasswordResetDoneView):
+    template_name = "password_reset_done.html"
+
+class PasswordResetConfirm(PasswordResetConfirmView):
+    template_name = "password_reset_confirm.html"
+
+class PasswordResetComplete(PasswordResetCompleteView):
+    template_name = "password_reset_complete.html"
 
 def logout_user(request):
     logout(request)
@@ -85,11 +96,6 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.userinstitution.email_confirmed = True
         user.save()
-        print('activating user')
-        print(user)
-        print(user.is_active)
-        print(user.userinstitution.institution)
-        print(user.userinstitution.email_confirmed)
         login(request, user)
         return redirect('/')
     else:
