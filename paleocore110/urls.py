@@ -5,6 +5,8 @@ from django.contrib import admin
 
 from mlp import urls as mlp_urls
 
+from pages import views as pages_views
+
 from wagtail.wagtailadmin import urls as wagtailadmin_urls
 from wagtail.wagtailsearch import urls as wagtailsearch_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
@@ -19,6 +21,9 @@ admin.autodiscover()
 urlpatterns = [
     url(r'^django-admin/', include(admin.site.urls)),
 
+    # override default wagtail view.
+    url(r'^documents/(\d+)/(.*)$', pages_views.serve_wagtail_doc, name='wagtaildocs_serve'),
+
     url(r'^admin/', include(wagtailadmin_urls)),
     url(r'^search/', include(wagtailsearch_urls)),
     url(r'^documents/', include(wagtaildocs_urls)),
@@ -30,6 +35,8 @@ urlpatterns = [
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's serving mechanism
     #url(r'', include(mlp_urls)),
+
+    # wagtail includes.
     url(r'', include(wagtail_urls)),
 ]
 
