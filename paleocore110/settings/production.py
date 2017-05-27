@@ -76,6 +76,10 @@ EMAIL_HOST_USER = env('EMAIL_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_PASSWD')
 EMAIL_PORT = 587
 
+# This needs to be here as it is ignored in the base.py
+DATABASES['default']['ATOMIC_REQUESTS'] = True
+DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+
 
 # LOGGING CONFIGURATION
 # Sends an email to site admins on every HTTP 500 error when DEBUG=False.

@@ -9,6 +9,12 @@ https://docs.djangoproject.com/en/1.8/howto/deployment/wsgi/
 """
 
 import os
+import sys
+
+sys.path.append('/usr/local/paleocore110')
+sys.path.append('/usr/local/paleocore110/paleocore110')
+sys.path.append('/usr/local/paleocore110/paleocore110/settings')
+
 os.environ.setdefault(
     "DJANGO_SETTINGS_MODULE",
     "paleocore110.settings.production"
