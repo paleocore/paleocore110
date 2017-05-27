@@ -81,7 +81,7 @@ INSTALLED_APPS = (
     'photo_gallery',
     'products',
     'documents_gallery',
-
+    'account',
     'foundation_formtags',
     'wagtail_feeds',
 
