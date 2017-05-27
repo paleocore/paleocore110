@@ -44,7 +44,7 @@
                     </li>
                     {% else %}
                     <li>
-                        <a href="/profile"><strong>Profile</strong></a>
+                        <a href="/profile"><strong>{{ request.user.username }}</strong></a>
                     </li>
                     <li>
                         <a href="/logout"><strong>Logout</strong></a>
