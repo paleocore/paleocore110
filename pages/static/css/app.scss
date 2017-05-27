@@ -824,11 +824,12 @@ a:hover > div.card > div.card-section {
 }
 
 footer {
-  position: sticky;
+  position: fixed; //sticky;
   bottom: 0 !important;
   margin: 1rem 0 0;
   padding: 0;
   height: 2rem;
+  width: 100%;
   background-color: $dark-metal;
   color: $white;
 
