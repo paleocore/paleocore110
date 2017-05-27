@@ -21,7 +21,7 @@ class DGGeoAdmin(OSMGeoAdmin):
     GeoModelAdmin -> OSMGeoAdmin -> DGGeoAdmin
     """
     # turban - removed for now till this can be comprehensively added back in.
-    map_template = 'mlp\digital_globe.html'
+    map_template = 'mlp/digital_globe.html'
 
 class OccurrenceAdmin(admin.GeoModelAdmin):
     actions = ["create_data_csv", "change_xy", "change_occurrence2biology"]
