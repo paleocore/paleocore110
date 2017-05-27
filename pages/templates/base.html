@@ -33,18 +33,6 @@
     {% block extra_css %}
     {% endblock extra_css %}
 
-    <!--{#
-    {% block facebook_og %}
-        {% include "utils/includes/facebook_opengraph.html" %}
-    {% endblock facebook_og %}
-    #}-->
-
-    <!--{#
-    {% block twitter_og %}
-        {% include "utils/includes/twitter_cards.html" %}
-    {% endblock twitter_og %}
-    #}-->
-
     {% block google_analytics %}
         {% include "utils/includes/google_analytics.html" %}
     {% endblock google_analytics %}
@@ -99,16 +87,25 @@
         //   autoControls: true,
           mode: 'vertical'
         });
+
+        $('#faq .block-faq_question').click(function() {
+          $(this).next('.block-faq_answer').slideToggle(500);
+          $(this).toggleClass('close');
+        });
+
+        $('a[href^="http://"]').attr('target', '_blank');
+
+        $('a[href^="https://"]').attr('target', '_blank');
     });
     </script>
-    <script>
+    <!-- <script>
     $(document).ready(function() {
       $('#faq .block-faq_question').click(function() {
         $(this).next('.block-faq_answer').slideToggle(500);
         $(this).toggleClass('close');
       });
     });
-    </script>
+    </script> -->
     <script>
     $('.reveal_modal').click(function(event) {
       event.preventDefault();
