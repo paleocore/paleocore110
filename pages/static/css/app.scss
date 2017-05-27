@@ -85,14 +85,11 @@ $header-font-color: $dove-gray !default; // Responsive image/video classes
   height: 100%;
 }
 
-html {
-  //height: auto; //100%;
-}
-
 body {
-  // height: 100%;
+  margin: 0;
+  padding: 0;
   background: $off-white;
-  color: $dark-metal; //$dove-gray;
+  color: $dark-metal;
 }
 
 .off-canvas-content,
@@ -109,32 +106,32 @@ body {
 }
 
 a {
-  color: $paleocore-orange-dark; //$dove-gray; //$black; //$primary;
+  color: $paleocore-orange-dark;
 }
 
 a:hover {
-  color: $paleocore-orange; //$secondary;
+  color: $paleocore-orange;
 }
 
 .button,
 button {
-  background: $dark-metal; //$paleocore-grey-dark; //$primary;
+  background: $dark-metal;
 }
 
 .button.secondary,
 button.secondary {
   background: $dove-gray;
-  color: $paleocore-orange; //$secondary;
+  color: $paleocore-orange;
 }
 
 .button:hover,
 button:hover {
-  background: $paleocore-grey; //$primary-dark;
+  background: $paleocore-grey;
 }
 
 #social_bar {
   padding: 3px 0;
-  background: $dark-metal; //$paleocore-grey-dark; //$primary-dark;
+  background: $dark-metal;
   text-align: right;
 
   a {
@@ -145,12 +142,12 @@ button:hover {
 }
 
 .title-bar {
-  background: $dark-metal; //$paleocore-grey-dark; //$primary;
+  background: $dark-metal;
   border-bottom: 0.4rem solid $paleocore-orange;
 }
 
 .top-bar {
-  background: $dark-metal; //$paleocore-grey-dark; //$primary;
+  background: $dark-metal;
   padding: 0;
   border-bottom: 0.4rem solid $paleocore-orange;
 
@@ -167,7 +164,7 @@ button:hover {
   }
 
   li a:hover {
-    background-color: $paleocore-orange; //$paleocore-grey; //$secondary;
+    background-color: $paleocore-orange;
   }
 
   li.menu-text {
@@ -184,17 +181,17 @@ button:hover {
   }
 
   .menu .active a {
-    background: $paleocore-orange-dark; //$paleocore-grey; //$secondary;
+    background: $paleocore-orange-dark;
   }
 
   .dropdown.menu .submenu,
   ul {
-    background: $paleocore-grey-dark; //$primary;
+    background: $paleocore-grey-dark;
     border: 0;
   }
 
   .dropdown.menu .submenu {
-    border-top: 3px solid $paleocore-grey; //$secondary;
+    border-top: 3px solid $paleocore-grey;
   }
 
   .top-bar-right {
@@ -256,7 +253,7 @@ button:hover {
   }
 
   a:hover {
-    color: $paleocore-orange; //$secondary;
+    color: $paleocore-orange;
   }
 
   .is-accordion-submenu-parent a::after {
@@ -271,7 +268,7 @@ button:hover {
 
   .off-canvas.position-left,
   .off-canvas.position-right {
-    background: $dark-metal; //$primary;
+    background: $dark-metal;
     height: 100%;
 
     .menu {
@@ -297,7 +294,7 @@ button:hover {
   }
 
   .is-drilldown-submenu {
-    background: $dark-metal; //$primary;
+    background: $dark-metal;
     height: 100%;
   }
 
@@ -326,7 +323,7 @@ button:hover {
   padding: 15px;
 
   a {
-    color: $dove-gray; //$black; //$primary;
+    color: $dove-gray;
   }
 }
 
@@ -394,7 +391,7 @@ ul.share-buttons .fa {
 }
 
 #content {
-  padding: 15px 0;
+  padding: 0.2rem 0; // 15px 0;
   min-height: 100vh;
 }
 
@@ -426,7 +423,6 @@ a:hover > div.card > div.card-section {
 
 #intro,
 #testimonials {
-  // padding: 50px 0 30px;
   padding: 0.2rem 0 0.1rem;
   background: $white;
 
@@ -464,19 +460,19 @@ a:hover > div.card > div.card-section {
   padding: 20px 10px;
 
   h4 {
-    color: $black; //$primary;
+    color: $black;
     font-weight: 450;
     line-height: 1;
   }
 
   h5 {
-    background: $black; //$primary;
+    background: $black;
     color: $white;
     padding: 4px 0;
   }
 
   p {
-    color: $black; //$primary;
+    color: $black;
     padding: 5px;
   }
 
@@ -486,12 +482,8 @@ a:hover > div.card > div.card-section {
 
   .column:hover {
     h5 {
-      background: $paleocore-grey-dark; //$secondary;
+      background: $paleocore-grey-dark;
     }
-
-    // p {
-    //   color: $paleocore-orange; //$secondary;
-    // }
   }
 
   .grow {
@@ -508,7 +500,7 @@ a:hover > div.card > div.card-section {
 
 #side_menu {
   h6.title {
-    background: $black; //$dark-metal; //$primary;
+    background: $black;
     padding: 6px;
     color: $white;
   }
@@ -534,11 +526,11 @@ a:hover > div.card > div.card-section {
 
 #news_feed {
   h6 {
-    color: $black; //$dark-metal; //$primary;
+    color: $black;
   }
 
   h6.title {
-    background: $dark-metal; //$primary;
+    background: $dark-metal;
     padding: 6px;
     color: $white;
   }
@@ -577,13 +569,13 @@ a:hover > div.card > div.card-section {
 
 #more_news {
   h6.title {
-    background: $black; //$dark-metal; //$primary;
+    background: $black;
     padding: 6px;
     color: $white;
   }
 
   h5 {
-    color: $black; //$primary;
+    color: $black;
     margin-bottom: 2px;
   }
 
@@ -607,7 +599,7 @@ a:hover > div.card > div.card-section {
   }
 
   h6.title {
-    background: $black; //$dark-metal; //$primary;
+    background: $black;
     padding: 6px;
     color: $white;
   }
@@ -716,7 +708,7 @@ a:hover > div.card > div.card-section {
   h6,
   li,
   p {
-    color: $black; //$primary;
+    color: $black;
   }
 
   p {
@@ -747,7 +739,7 @@ a:hover > div.card > div.card-section {
   margin: 0 3px;
 
   a {
-    color: $dove-gray; //$black; //$primary;
+    color: $dove-gray;
   };
 }
 
@@ -759,7 +751,7 @@ a:hover > div.card > div.card-section {
   .block-faq_question {
     background: url('/#{$static}/img/faq/open.png') right no-repeat;
     font-size: 15px;
-    color: $black; //$primary;
+    color: $black;
     padding: 12px 25px 12px 0;
     cursor: pointer;
     margin: 0;
@@ -767,7 +759,7 @@ a:hover > div.card > div.card-section {
   }
 
   .block-faq_question:hover {
-    color: $black; //$primary;
+    color: $black;
   }
 
   .block-faq_question.close {
@@ -824,7 +816,7 @@ a:hover > div.card > div.card-section {
 }
 
 footer {
-  position: fixed; //sticky;
+  position: fixed;
   bottom: 0 !important;
   margin: 1rem 0 0;
   padding: 0;
@@ -904,6 +896,9 @@ footer {
 }
 
 /*** Overriding Default Styles ***/
+.base-footer-spacer {
+    padding-bottom: 5rem;
+}
 .bx-wrapper {
     border: 1px solid $paleocore-grey;
 }
@@ -911,5 +906,5 @@ footer {
     width: 100%;
 }
 .sidebar {
-    margin: 1rem 0 0;
+    padding-top: 0.5rem;
 }

@@ -151,7 +151,9 @@ class StandardPage(Page):
         ('pages/paleocore_project_page.html', 'Paleocore Project Page'),
         ('pages/paleocore_workshops_page.html', 'Paleocore Workshops Page'),
         ('pages/paleocore_workshop_page.html', 'Paleocore Workshop Page'),
+        ('pages/paleocore_tools_page.html', 'Paleocore Tools Page'),
         ('pages/paleocore_standards_page.html', 'Paleocore Standards Page'),
+        ('pages/paleocore_help_page.html', 'Paleocore Help Page'),
     ]
     subtitle = models.CharField(max_length=255, blank=True)
     intro = RichTextField(blank=True)
