@@ -83,6 +83,7 @@ class HomePage(Page):
     class Meta:
         verbose_name = "Homepage"
 
+
 HomePage.content_panels = [
     FieldPanel('title', classname="full title"),
     FieldPanel('title_text', classname="full"),
@@ -116,6 +117,7 @@ class StandardIndexPage(Page):
 
     indexed_fields = ('intro', )
 
+
 StandardIndexPage.content_panels = [
     FieldPanel('title', classname="full title"),
     FieldPanel('subtitle', classname="full title"),
@@ -143,6 +145,13 @@ class StandardPage(Page):
     TEMPLATE_CHOICES = [
         ('pages/standard_page.html', 'Default Template'),
         ('pages/standard_page_full.html', 'Standard Page Full'),
+        ('pages/paleocore_about_page.html', 'Paleocore About Page'),
+        ('pages/paleocore_goals_page.html', 'Paleocore Goals Page'),
+        ('pages/paleocore_projects_page.html', 'Paleocore Projects Page'),
+        ('pages/paleocore_project_page.html', 'Paleocore Project Page'),
+        ('pages/paleocore_workshops_page.html', 'Paleocore Workshops Page'),
+        ('pages/paleocore_workshop_page.html', 'Paleocore Workshop Page'),
+        ('pages/paleocore_standards_page.html', 'Paleocore Standards Page'),
     ]
     subtitle = models.CharField(max_length=255, blank=True)
     intro = RichTextField(blank=True)
@@ -208,6 +217,7 @@ class ContentBlock(LinkFields):
     def __unicode__(self):
         return u"{0}[{1}]".format(self.title, self.slug)
 
+
 register_snippet(ContentBlock)
 
 
@@ -234,6 +244,7 @@ class Testimonial(LinkFields):
 
     def __unicode__(self):
         return self.name
+
 
 register_snippet(Testimonial)
 
@@ -262,6 +273,7 @@ class Advert(LinkFields):
     def __unicode__(self):
         return self.title
 
+
 register_snippet(Advert)
 
 
@@ -272,6 +284,7 @@ class FaqsPage(Page):
         ('faq_question', blocks.CharBlock(classname="full title")),
         ('faq_answer', blocks.RichTextBlock()),
     ])
+
 
 FaqsPage.content_panels = [
     FieldPanel('title', classname="full title"),

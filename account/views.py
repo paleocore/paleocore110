@@ -58,15 +58,17 @@ class LoginUser(generic.TemplateView):
         username = request.POST['username']
         password = request.POST['password']
         user_auth = authenticate(request, username=username, password=password)
-        user = User.objects.get(username=username)
+        user = User.objects.filter(username=username).first()
         if user_auth is not None:
             login(request, user_auth)
             return redirect('/')
         elif user is not None and not user.userinstitution.email_confirmed:
+            print(user)
+            print(user.userinstitution.email_confirmed)
             return render(request, 'inactive.html')
         else:
             # Return an 'invalid login' error message. TODO
-            return redirect('/login')
+            return render(request, 'login.html', {'form': AuthenticationForm(), 'error': 'username or password incorrect'})
 
 class PasswordReset(PasswordResetView):
     template_name = "password_reset.html"
@@ -95,6 +97,7 @@ def activate(request, uidb64, token):
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
         user.userinstitution.email_confirmed = True
+        user.userinstitution.save()
         user.save()
         login(request, user)
         return redirect('/')
