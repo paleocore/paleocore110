@@ -15,6 +15,8 @@ from wagtail.contrib.wagtailsitemaps.views import sitemap
 
 from wagtail_feeds.feeds import BasicFeed, ExtendedFeed
 
+from account import urls as account_urls
+
 admin.autodiscover()
 
 
@@ -31,6 +33,7 @@ urlpatterns = [
     url('^sitemap\.xml$', sitemap),
     url(r'^blog/feed/basic$', BasicFeed(), name='basic_feed'),
     url(r'^blog/feed/extended$', ExtendedFeed(), name='extended_feed'),
+    url(r'', include(account_urls)),
 
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's serving mechanism

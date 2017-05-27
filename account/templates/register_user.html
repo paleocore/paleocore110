@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<div class="row">
+    <form method="post" class="columns small-6 small-offset-3">
+    {% if form.errors %}
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+            <strong>{{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+    {% endif %}
+    <h2>{{registered}}</h2>
+    {% if not registered %}
+    <h2>Register</h2>
+    {% endif %}
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="fieldWrapper {% if field.errors %}has-error{% endif %}">
+                {{ field.errors }}
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text|safe }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+        {% if not registered %}
+        <input type="submit" value="Register"/>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+{% block extra_css %}
+    <style type="text/css">
+        .has-error label {
+            color: #a94442;
+        }
+        .has-error input {
+            border-color: #a94442;
+        }
+    </style>
+{% endblock %}
