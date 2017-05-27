@@ -6,10 +6,18 @@
 <div class="row">
   <form method="post" class="columns small-10 small-centered medium-6">
     <h2>Login</h2>
+    {% if error %}<p class="has-error">{{error}}</p>{% endif %}
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit"></input><br><br>
     <a href="{% url 'password_reset' %}">Forgot your password?</a>
   </form>
 </div>
+{% endblock %}
+{% block extra_css %}
+    <style type="text/css">
+        .has-error {
+            color: #a94442;
+        }
+    </style>
 {% endblock %}
