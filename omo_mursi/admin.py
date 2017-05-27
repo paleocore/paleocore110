@@ -1,61 +1,76 @@
 from django.contrib import admin
-import default_project.admin  # import default PaleoCore admin classes
 from .models import Occurrence, Biology
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 import unicodecsv
 from django.core.exceptions import ObjectDoesNotExist
+
 from django.contrib.gis import admin
 from django.contrib.gis.admin import OSMGeoAdmin
+
+
+default_biology_inline_fieldsets = (
+
+    ('Element', {
+        'fields': (('side',), )
+    }),
+
+    ('Taxonomy', {
+        'fields': (('taxon',), ("id",))
+    }),
+)
+default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
+default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_record', 'item_type',
+                        'collecting_method', 'collector', 'item_scientific_name', 'item_description', 'year_collected',
+                        'in_situ', 'problem', 'disposition', 'easting', 'northing')
+
 
 class BiologyInline(admin.TabularInline):
     model = Biology
     extra = 0
     readonly_fields = ("id",)
-    fieldsets = default_project.admin.default_biology_inline_fieldsets
+    fieldsets = default_biology_inline_fieldsets
 
-# TODO: Not using this yet because it seems to mess up the admin list table. Works in hrp and drp
+
 class DGGeoAdmin(OSMGeoAdmin):
     """
     Modified Geographic Admin Class using Digital Globe basemaps
     GeoModelAdmin -> OSMGeoAdmin -> DGGeoAdmin
     """
     # turban - removed for now till this can be comprehensively added back in.
-    map_template = 'mlp\digital_globe.html'
+    map_template = 'omo_mursi\digital_globe.html'
 
-class OccurrenceAdmin(admin.GeoModelAdmin):
-    actions = ["create_data_csv", "change_xy", "change_occurrence2biology"]
-    default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
-    readonly_fields = default_read_only_fields+('photo',)  # defaults plus photo
-    default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_record', 'item_type',
-                            'collecting_method', 'collector', 'item_scientific_name', 'item_description',
-                            'year_collected',
-                            'in_situ', 'problem', 'disposition', 'easting', 'northing')
-    list_display = default_list_display+('thumbnail',)  # defaults plus thumbnail
-    list_filter = ['basis_of_record', 'item_type', 'field_season',
-                   'field_number', 'collector', 'problem', 'disposition']
 
-    fieldsets = [
+class BiologyAdmin(OSMGeoAdmin):
+    models = Biology
+
+
+class OccurrenceAdmin(OSMGeoAdmin):
+    actions = ["create_data_csv", "change_xy"]
+    readonly_fields = default_read_only_fields+('photo',)
+    list_display = default_list_display+('thumbnail',)
+    fieldsets = (
         ('Curatorial', {
             'fields': [('barcode', 'catalog_number', 'id'),
-                       ('field_number', 'year_collected', 'field_season', 'date_last_modified'),
+                       ('field_number', 'year_collected', 'date_last_modified'),
                        ('collection_code', 'item_number', 'item_part')]
         }),
+
         ('Occurrence Details', {
             'fields': [('basis_of_record', 'item_type', 'disposition', 'preparation_status'),
-                       ('collector', 'finder', 'collecting_method', 'individual_count'),
+                       ('collecting_method', 'finder', 'collector', 'individual_count'),
                        ('item_description', 'item_scientific_name',),
                        ('problem', 'problem_comment'),
                        ('remarks',)],
-            'classes': ['collapse']
+            # 'classes': ['collapse']
         }),
         ('Photos', {
             'fields': [('photo', 'image')],
-            'classes': ['collapse'],
+            # 'classes': ['collapse'],
         }),
         ('Taphonomic Details', {
             'fields': [('weathering', 'surface_modification')],
-            'classes': ['collapse'],
+            # 'classes': ['collapse'],
         }),
         ('Provenience', {
             'fields': [('analytical_unit',),
@@ -64,22 +79,16 @@ class OccurrenceAdmin(admin.GeoModelAdmin):
                        ('point_x', 'point_y'),
                        ('easting', 'northing'),
                        ('geom',)],
-            'classes': ['collapse'],
+            # 'classes': ['collapse'],
         })
-    ]
+    )
 
     # admin action to manually enter coordinates
     def change_xy(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        redirect_url = reverse("projects:mlp:mlp_change_xy")
+        redirect_url = reverse("projects:omo_mursi:omo_mursi_change_xy")
         return HttpResponseRedirect(redirect_url + "?ids=%s" % (",".join(selected)))
     change_xy.short_description = "Manually change coordinates for a point"
-
-    def change_occurrence2biology(self, request, queryset):
-        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        redirect_url = reverse("projects:mlp:mlp_occurrence2biology")
-        return HttpResponseRedirect(redirect_url + "?ids=%s" % (",".join(selected)))
-    change_occurrence2biology.short_description = "Change Occurrence to Biology"
 
     # admin action to download data in csv format
     def create_data_csv(self, request, queryset):
@@ -140,23 +149,8 @@ class OccurrenceAdmin(admin.GeoModelAdmin):
 
     create_data_csv.short_description = "Download Selected to .csv"
 
-
-class BiologyAdmin(OccurrenceAdmin):
-    biology_fieldsets = list(OccurrenceAdmin.fieldsets)  # creates a separate copy of the fielset list
-    taxonomy_fieldsets = ('Identification', {'fields': [('taxon', 'identification_qualifier', 'identified_by')]})
-    element_fieldsets = ('Detailed Description', {'fields': [('element', 'element_modifier')]})
-    biology_fieldsets.insert(2, taxonomy_fieldsets)
-    biology_fieldsets.insert(3, element_fieldsets)
-    fieldsets = biology_fieldsets
-
-default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_record', 'item_type',
-                        'collecting_method', 'collector', 'item_scientific_name', 'item_description', 'year_collected',
-                        'in_situ', 'problem', 'disposition', 'easting', 'northing')
-
-
-
 ############################
-#  Register Admin Classes  #
+## Register Admin Classes ##
 ############################
 admin.site.register(Occurrence, OccurrenceAdmin)
 admin.site.register(Biology, BiologyAdmin)

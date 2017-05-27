@@ -97,7 +97,7 @@ class OccurrenceCreationMethodTests(TestCase):
         self.assertEqual(new_occurrence.date_last_modified.day, now.day)  # test date last modified is correct
         self.assertEqual(new_occurrence.point_x(), 41.3)
 
-        response = self.client.get('/admin/drp/', follow=True)
+        response = self.client.get('/admin/mlp/', follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Username')  # redirects to login form
 
@@ -235,13 +235,13 @@ class BiologyMethodTests(TestCase):
         self.assertEqual(new_occurrence.point_x(), 41.21)
         self.assertEqual(Biology.objects.count(), biology_starting_record_count+1)  # no biology record was added?
         self.assertEqual(Biology.objects.filter(basis_of_record__exact="HumanObservation").count(), 1)
-        response = self.client.get('/admin/drp/', follow=True)
+        response = self.client.get('/admin/mlp/', follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Username')  # redirects to login form
 
-#        response = self.client.get('/admin/drp/biology/')
+#        response = self.client.get('/admin/mlp/biology/')
 #        self.assertEqual(response.status_code, 200)
-#        response = self.client.get('/admin/drp/biology/'+str(new_occurrence.pk)+'/')
+#        response = self.client.get('/admin/mlp/biology/'+str(new_occurrence.pk)+'/')
 #        self.assertEqual(response.status_code, 200)
 
 
@@ -301,7 +301,7 @@ class DRPViewsTests(TestCase):
         self.assertEqual(Occurrence.objects.count(), len(mammal_orders))
 
     def test_admin_list_view(self):
-        response = self.client.get('/admin/drp/', follow=True)
+        response = self.client.get('/admin/mlp/', follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Username')  # redirects to login form
 
@@ -366,7 +366,7 @@ class DRPAdminViewTests(TestCase):
         test_user.save()
 
     def test_admin_list_view(self):
-        response = self.client.get('/admin/drp/', follow=True)
+        response = self.client.get('/admin/mlp/', follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Username')  # redirects to login form
 
@@ -374,6 +374,6 @@ class DRPAdminViewTests(TestCase):
         test_user = User.objects.get(username='test_user')
         self.assertEqual(test_user.is_staff, True)  # Test user is staff
         self.client.login(username='test_user', password='password')
-        response = self.client.get('/admin/drp/', follow=True)
+        response = self.client.get('/admin/mlp/', follow=True)
         self.assertEqual(response.status_code, 403)
         #self.assertContains(response, 'Username')  # redirects to login form

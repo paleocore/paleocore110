@@ -80,7 +80,7 @@ class DGGeoAdmin(OSMGeoAdmin):
     GeoModelAdmin -> OSMGeoAdmin -> DGGeoAdmin
     """
     # turban - removed for now till this can be comprehensively added back in.
-    map_template = 'drp\digital_globe.html'
+    map_template = 'mlp\digital_globe.html'
 
 
 ###################

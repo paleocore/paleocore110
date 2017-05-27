@@ -87,7 +87,9 @@ INSTALLED_APPS = (
 
     'lgrp',
     'mlp',
-    'drp'
+    'drp',
+    'hrp',
+    'omo_mursi'
 )
 
 MIDDLEWARE_CLASSES = (

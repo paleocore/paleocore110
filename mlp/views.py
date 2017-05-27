@@ -308,9 +308,11 @@ def change_coordinates_view(request):
         form = ChangeXYForm(request.POST)
         if form.is_valid():
             obs = Occurrence.objects.get(pk=request.POST["DB_id"])
-            coordinates = utm.to_latlon(float(request.POST["new_easting"]),
-                                        float(request.POST["new_northing"]), 37, "N")
-            pnt = GEOSGeometry("POINT (" + str(coordinates[1]) + " " + str(coordinates[0]) + ")", 4326)  # WKT
+            #coordinates = utm.to_latlon(float(request.POST["new_easting"]),
+            #                            float(request.POST["new_northing"]), 37, "N")
+            #pnt = GEOSGeometry("POINT (" + str(coordinates[1]) + " " + str(coordinates[0]) + ")", 4326)  # WKT
+            pnt = GEOSGeometry("POINT (" + request.POST["new_easting"] + " " + request.POST["new_northing"] + ")",
+                               32637)
             obs.geom = pnt
             obs.save()
             messages.add_message(request, messages.INFO,
