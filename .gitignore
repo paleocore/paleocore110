@@ -19,3 +19,5 @@ pages/static/libs
 .python-version
 **/.idea/*
 jg.wagtail.*
+/fixtures/
+/media_backups/
