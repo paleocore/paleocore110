@@ -168,6 +168,8 @@ button:hover {
   }
 
   li.menu-text {
+    // margin-right: 2rem;
+    // min-width: 10rem;
     font-size: 18px;
     color: $white;
 
@@ -177,7 +179,9 @@ button:hover {
   }
 
   .menu li:not(.menu-text) a {
-    padding: 13px 15px;
+    // padding: 13px 15px;
+    padding: 1rem;
+    margin: 0;
   }
 
   .menu .active a {
@@ -192,6 +196,10 @@ button:hover {
 
   .dropdown.menu .submenu {
     border-top: 3px solid $paleocore-grey;
+  }
+
+  .top-bar-center {
+    //   text-align: center;
   }
 
   .top-bar-right {
@@ -317,13 +325,14 @@ button:hover {
 }
 
 .breadcrumbs {
-  margin: 20px 0 10px;
-  background: $white;
-  border-radius: 15px;
-  padding: 15px;
+  // margin: 20px 0 10px;
+  margin: 0.5rem 0;
+  // background: $dove-gray; //$white;
+  // border-radius: 15px;
+  // padding: 15px;
 
   a {
-    color: $dove-gray;
+    color: $paleocore-orange-dark; //$dove-gray;
   }
 }
 
