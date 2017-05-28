@@ -13,7 +13,7 @@ class UserInstitution(models.Model):
 def update_user_institution(sender, instance, created, **kwargs):
     if created:
         UserInstitution.objects.create(user=instance, institution="None")
-        try:
-            instance.userinstitution.save()
-        except Exception as e:
-            pass
+    try:
+        instance.userinstitution.save()
+    except Exception as e:
+        pass

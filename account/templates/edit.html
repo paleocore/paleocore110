@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit your account{% endblock %}
+
+{% block content %}
+<div class="row">
+  <form method="post" class="columns small-10 small-centered medium-6">
+    <h2>Edit your account</h2>
+    {% if message %}<p>{{message}}</p>{% endif %}
+    {% if error %}<p class="has-error">{{error}}</p>{% endif %}
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit"></input><br><br>
+    <a href="/password">Click here to change your password</a>
+  </form>
+</div>
+{% endblock %}
+{% block extra_css %}
+    <style type="text/css">
+        .has-error {
+            color: #a94442;
+        }
+    </style>
+{% endblock %}

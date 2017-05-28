@@ -209,7 +209,7 @@ STATIC_MAP_URL = ''
 
 # Wagtail settings
 
-LOGIN_URL = 'wagtailadmin_login'
+LOGIN_URL = 'login_user'
 LOGIN_REDIRECT_URL = 'wagtailadmin_home'
 
 WAGTAIL_SITE_NAME = "paleocore110"
