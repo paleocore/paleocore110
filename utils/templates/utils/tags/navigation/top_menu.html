@@ -8,19 +8,12 @@
             <button class="menu-icon" type="button" style="background: transparent;"data-toggle></button>
             <div class="title-bar-title">Paleocore</div>
         </div>
-
         <div class="top-bar" id="menu">
             <div class="top-bar-left hide-for-small-only">
-                <ul class="dropdown menu">
+                <!-- <ul class="dropdown menu"> -->
+                <ul class="vertical medium-horizontal menu" data-responsive-menu="drilldown medium-dropdown">
                     <li class="menu-text">
                         <a href="{% pageurl site_root %}" style="padding: 0;">Paleocore</a>
-                    </li>
-                </ul>
-            </div>
-            <div class="top-bar-right">
-                <ul class="vertical medium-horizontal menu" data-responsive-menu="drilldown medium-dropdown">
-                    <li class="{% if calling_page.url == site_root %} active{% endif %}">
-                        <a href="{% pageurl site_root %}"><strong>Home</strong></a>
                     </li>
                     {% for menuitem in menuitems %}
                     <li class="{% if menuitem.show_dropdown %}has-submenu{% endif %} {% if calling_page.url == menuitem.url %} active{% endif %}">
@@ -34,6 +27,11 @@
                         {% endif %}
                     </li>
                     {% endfor %}
+                </ul>
+            </div>
+            <div class="top-bar-right">
+                <ul class="vertical medium-horizontal menu" data-responsive-menu="drilldown medium-dropdown">
+
                     <!-- User Auth -->
                     {% if not request.user.is_authenticated %}
                     <li>
@@ -55,7 +53,7 @@
                         </ul>
                     </li>
                     {% endif %}
-                    <li class="has-form show-for-small-only" style="background: transparent;">
+                    <!-- <li class="has-form show-for-small-only" style="background: transparent;">
                         <form action ="{% url 'wagtailsearch_search' %}" method="get">
                             <div class="row collapse">
                                 <div class="small-8 columns">
@@ -66,7 +64,7 @@
                                 </div>
                             </div>
                         </form>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
         </div>
