@@ -30,6 +30,8 @@ CACHES = {
     }
 }
 
+GOOGLE_MAPS_V3_APIKEY = "AIzaSyBCtGokC5i-3mXlJnB8MTvpRCdIF56TrBg"
+
 # Process all tasks synchronously.
 # Helpful for local development and running tests
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
