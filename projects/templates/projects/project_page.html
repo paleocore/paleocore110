@@ -1,0 +1,12 @@
+{% extends "projects/projects_base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block article_content %}
+<article>
+  <!--{% include "utils/includes/social_share.html" %}-->
+  {% include "projects/includes/project_header.html" %}
+  {% include "projects/includes/project_body.html" with body=self.body only %}
+  <br>
+  {% include "utils/includes/related_links.html" with related_links=self.related_links.all only %}
+</article>
+{% endblock %}
