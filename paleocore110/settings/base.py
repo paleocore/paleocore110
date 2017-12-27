@@ -81,12 +81,16 @@ INSTALLED_APPS = (
     'account',
     'foundation_formtags',
     'wagtail_feeds',
+    'leaflet',
+    'djgeojson',
 
+    'projects',
     'lgrp',
     'mlp',
     'drp',
     'hrp',
     'omo_mursi',
+    'origins',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -105,7 +109,7 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'paleocore110.urls'
 
-#Admins see https://docs.djangoproject.com/en/dev/ref/settings/#admins
+# Admins see https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = (
     ("""Denne Reed""", 'denne.reed@gmail.com'),
 )
@@ -136,18 +140,22 @@ WSGI_APPLICATION = 'paleocore110.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-# DATABASES = {
-#     'default': env.db('DATABASE_URL', default='postgres:///paleocore110'),
-# }
-
 DATABASES = {
-    'default': {
-         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-         'NAME': 'paleocore110',
-         'USER': '',
-    },
+    'default': env.db('DATABASE_URL', default='postgres:///paleocore110'),
 }
 
+# DATABASES = {
+#     'default': {
+#          'ENGINE': 'django.contrib.gis.db.backends.postgis',
+#          'NAME': 'paleocore110',
+#          'USER': '',
+#     },
+# }
+
+# DATABASES = {
+#     'default': env.db()
+# }
+DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
