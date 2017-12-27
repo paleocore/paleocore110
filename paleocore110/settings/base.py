@@ -83,6 +83,7 @@ INSTALLED_APPS = (
     'wagtail_feeds',
     'leaflet',
     'djgeojson',
+    'wagtailgeowidget',
 
     'projects',
     'lgrp',
