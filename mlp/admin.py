@@ -1,29 +1,22 @@
 from django.contrib import admin
-import default_project.admin  # import default PaleoCore admin classes
+import projects.admin  # import default PaleoCore admin classes
 from .models import Occurrence, Biology
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 import unicodecsv
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.gis import admin
-from django.contrib.gis.admin import OSMGeoAdmin
+# from django.contrib.gis.admin import OSMGeoAdmin
+
 
 class BiologyInline(admin.TabularInline):
     model = Biology
     extra = 0
     readonly_fields = ("id",)
-    fieldsets = default_project.admin.default_biology_inline_fieldsets
+    fieldsets = projects.admin.default_biology_inline_fieldsets
 
-# TODO: Not using this yet because it seems to mess up the admin list table. Works in hrp and drp
-class DGGeoAdmin(OSMGeoAdmin):
-    """
-    Modified Geographic Admin Class using Digital Globe basemaps
-    GeoModelAdmin -> OSMGeoAdmin -> DGGeoAdmin
-    """
-    # turban - removed for now till this can be comprehensively added back in.
-    map_template = 'mlp/digital_globe.html'
 
-class OccurrenceAdmin(admin.GeoModelAdmin):
+class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     actions = ["create_data_csv", "change_xy", "change_occurrence2biology"]
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     readonly_fields = default_read_only_fields+('photo',)  # defaults plus photo
@@ -142,7 +135,7 @@ class OccurrenceAdmin(admin.GeoModelAdmin):
 
 
 class BiologyAdmin(OccurrenceAdmin):
-    biology_fieldsets = list(OccurrenceAdmin.fieldsets)  # creates a separate copy of the fielset list
+    biology_fieldsets = list(OccurrenceAdmin.fieldsets)  # creates a separate copy of the fieldset list
     taxonomy_fieldsets = ('Identification', {'fields': [('taxon', 'identification_qualifier', 'identified_by')]})
     element_fieldsets = ('Detailed Description', {'fields': [('element', 'element_modifier')]})
     biology_fieldsets.insert(2, taxonomy_fieldsets)

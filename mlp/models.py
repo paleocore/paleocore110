@@ -2,18 +2,23 @@ from django.contrib.gis.db import models
 import os
 from mlp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
     COLLECTOR_CHOICES, SIDE_VOCABULARY
+import projects.models
 
 
-class TaxonRank(models.Model):
-    name = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    ordinal = models.IntegerField(null=False, blank=False, unique=True)
-
-    def __unicode__(self):
-        return str(self.name)
-
+class TaxonRank(projects.models.TaxonRank):
     class Meta:
         verbose_name = "Taxon Rank"
+
+# class TaxonRank(models.Model):
+#     name = models.CharField(null=False, blank=False, max_length=50, unique=True)
+#     plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
+#     ordinal = models.IntegerField(null=False, blank=False, unique=True)
+#
+#     def __unicode__(self):
+#         return str(self.name)
+#
+#     class Meta:
+#         verbose_name = "Taxon Rank"
 
 
 class Taxon(models.Model):
@@ -132,7 +137,7 @@ class Occurrence(models.Model):
         verbose_name = 'MLP Occurrence'
         verbose_name_plural = 'MLP Occurrences'
 
-    def __unicode__(self):
+    def __str__(self):
         """
         What is the best string representation for an occurrence instance?
         All collected items have catalogue numbers, but observations do not

@@ -1,8 +1,8 @@
 from django.conf.urls import url
-from mlp import views as mlp_views
+from . import views as mlp_views
 from django.contrib.auth.decorators import login_required
 
-urllopatterns = [
+urlpatterns = [
     # Project URLs are included by main urls.py
 
     # /projects/mlp/upload/
