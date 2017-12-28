@@ -1,6 +1,6 @@
 # Subclassing the django TestCase with Test Case for Abstract Models
 # from django.test import TestCase
-from projects.test_abstract import ModelMixinTestCase
+from projects.test_abstract_classes import ModelMixinTestCase
 
 from projects.models import PaleoCoreBaseClass
 from django.contrib.gis.geos import Point, Polygon
