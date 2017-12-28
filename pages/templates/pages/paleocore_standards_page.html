@@ -3,7 +3,7 @@
 {% block content %}
 <div id="content" class="row">
     <div class="hide-for-small-only medium-4 columns">
-        {% include "pages/paleocore_standards_sidebar.html" with intro=self.intro only %}
+{#        {% include "pages/paleocore_standards_sidebar.html" with intro=self.intro only %}#}
     </div>
     <div class="small-12 medium-8 columns">
         <!-- <h4><strong>{{ self.title }}</strong></h4> -->
@@ -11,10 +11,10 @@
         <!-- <hr> -->
         <!--{# {% include "pages/includes/intro.html" with intro=self.intro only %} #}-->
         {% include "pages/includes/body.html" with body=self.body only %}
-        {% include "pages/paleocore_standards_class_descriptions.html" %}
+{#        {% include "pages/paleocore_standards_class_descriptions.html" %}#}
     </div>
     <div class="show-for-small-only small-12 columns">
-        {% include "pages/paleocore_standards_sidebar.html" %}
+{#        {% include "pages/paleocore_standards_sidebar.html" %}#}
     </div>
 </div>
 {% endblock %}
