@@ -3,39 +3,41 @@
 <div class="small-12 columns">-->
 {% for project in projects %}
 
-    <div id="article" class="column">
-        <article class="project">
-            <a href="{% pageurl project %}">
-                <div class="small-2 column">
-                    {% if project.feed_image %}
-	                    {% image project.feed_image fill-300x300 %}
-	                {% endif %}
+<div class="row">
+
+<a href="{% pageurl project %}">
+    <div class="column">
+        <div class="card">
+            <div class="card-section" style="padding: 12px;">
+
+                <div class="row">
+                    <div class="small-2 column">
+                        {% if project.feed_image %}
+                        {% image project.feed_image fill-100x100 %}
+                        {% endif %}
+                    </div>
+                    <div class="small-10 column">
+                    <h5><strong>{{ project.title }}</strong></h5>
+                        {% if project.intro %}
+                            {{ project.intro|richtext|truncatewords:25 }}
+                        {% endif %}
+                    </div>
                 </div>
-            	<div class="card">
-	                <!--
-                    {% if project.feed_image %}
-	                    {% image project.feed_image fill-1200x600 %}
-	                {% endif %}
-	                -->
-                	<div class="card-section" style="padding: 12px;">
-                    	<h5><strong>{{ project.title }}</strong></h5>
-                		<!--
-                        <h6><strong>{{ project.date|date:"j F Y" }}</strong></h6>
-                        -->
-                		<div class="text" data-equalizer-watch>
-	                    	{% if project.intro %}
-	                        	{{ project.intro|richtext|truncatewords:25 }}
-	                    	{% endif %}
-	                    </div>
-                    	<div class="medium-12 columns">
-                        	<p><a class="float-right button tiny" href="{% pageurl project %}"><strong>Details &raquo;</strong></a></p>
-                        </div>
-                        <br>
-                     </div>
-                </div>
-            </a>
-        </article>
+{#                <div class="small-12 columns">#}
+{#                <p>#}
+{#                    <a class="float-right button tiny"#}
+{#                      href="{% pageurl project %}"><strong>Details &raquo;</strong>#}
+{#                    </a>#}
+{#                </p>#}
+{#                </div>#}
+                <!-- <br> -->
+            </div>
+        </div>
     </div>
+
+</a>
+</div>
+
 {% empty %}
     No projects found
 {% endfor %}
