@@ -3,10 +3,10 @@
 {% load paleocore110_utils %}
 {% block content %}
 <div id="content" class="row">
-    <div id="sidebar" class="hide-for-small-only medium-4 columns">
-        <!-- {% secondary_menu calling_page=self %} -->
-        {% include "pages/paleocore_sidebar.html" with intro=self.intro only %}
-    </div>
+{#    <div id="sidebar" class="hide-for-small-only medium-4 columns">#}
+{#         {% secondary_menu calling_page=self %}#}
+{#         {% include "pages/paleocore_sidebar.html" with intro=self.intro only %} #}
+{#    </div>#}
     <div class="small-12 medium-8 columns">
         <div class="small-12 columns">
             <!-- <h4><strong>{{ self.title }}</strong></h4> -->
@@ -16,9 +16,9 @@
         </div>
     </div>
     <div id="sidebar" class="show-for-small-only small-12 columns">
-        <!-- {% secondary_menu calling_page=self %} -->
-        <!--{# {% include "pages/paleocore_sidebar.html" with intro=self.intro only %} #}-->
-        {% include "pages/paleocore_sidebar.html" %}
+{#        {% secondary_menu calling_page=self %}#}
+{#        {% include "pages/paleocore_sidebar.html" with intro=self.intro only %} #}
+{#        {% include "pages/paleocore_sidebar.html" %}#}
     </div>
 </div>
 {% endblock %}
