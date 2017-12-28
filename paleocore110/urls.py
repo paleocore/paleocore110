@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
 
-from mlp import urls as mlp_urls
+
 
 from pages import views as pages_views
 
@@ -16,6 +16,7 @@ from wagtail.contrib.wagtailsitemaps.views import sitemap
 from wagtail_feeds.feeds import BasicFeed, ExtendedFeed
 
 from account import urls as account_urls
+from mlp import urls as mlp_urls
 
 admin.autodiscover()
 
@@ -37,7 +38,8 @@ urlpatterns = [
 
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's serving mechanism
-    #url(r'', include(mlp_urls)),
+    url(r'', include(mlp_urls)),
+    url(r'^projects/', include('projects.urls', namespace='projects')),
 
     # wagtail includes.
     url(r'', include(wagtail_urls)),
