@@ -5,37 +5,41 @@
 
 <div class="row">
 
-<a href="{% pageurl project %}">
+
     <div class="column">
         <div class="card">
             <div class="card-section" style="padding: 12px;">
 
                 <div class="row">
+
+                        <div class="small-2 column">
+                            {% if project.feed_image %}
+                                <a href="{% pageurl project %}">
+                                    {% image project.feed_image fill-100x100 %}
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="small-8 column">
+                            <a href="{% pageurl project %}">
+                                <h5><strong>{{ project.title }}</strong></h5>
+                                {% if project.intro %}
+                                    {{ project.intro|richtext|truncatewords:25 }}
+                                {% endif %}
+                                {% if project.record_count %}
+                                    {{ project.record_count }} records
+                                {% endif %}
+                            </a>
+                        </div>
+
                     <div class="small-2 column">
-                        {% if project.feed_image %}
-                        {% image project.feed_image fill-100x100 %}
-                        {% endif %}
-                    </div>
-                    <div class="small-10 column">
-                    <h5><strong>{{ project.title }}</strong></h5>
-                        {% if project.intro %}
-                            {{ project.intro|richtext|truncatewords:25 }}
-                        {% endif %}
+                        <a class="button small" href="{%  pageurl project %}">Details &raquo;</a>
+                        <a class="button warning small" href="/django-admin/{{ project.slug }}">Admin &raquo;</a>
                     </div>
                 </div>
-{#                <div class="small-12 columns">#}
-{#                <p>#}
-{#                    <a class="float-right button tiny"#}
-{#                      href="{% pageurl project %}"><strong>Details &raquo;</strong>#}
-{#                    </a>#}
-{#                </p>#}
-{#                </div>#}
-                <!-- <br> -->
             </div>
         </div>
     </div>
 
-</a>
 </div>
 
 {% empty %}
