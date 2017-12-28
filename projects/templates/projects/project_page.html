@@ -1,12 +1,67 @@
 {% extends "projects/projects_base.html" %}
 {% load wagtailcore_tags wagtailimages_tags %}
+{% load leaflet_tags %}
+
+{% block extra_js %}
+    {% leaflet_js %}
+    {% leaflet_css %}
+{% endblock %}
 
 {% block article_content %}
 <article>
-  <!--{% include "utils/includes/social_share.html" %}-->
-  {% include "projects/includes/project_header.html" %}
-  {% include "projects/includes/project_body.html" with body=self.body only %}
-  <br>
-  {% include "utils/includes/related_links.html" with related_links=self.related_links.all only %}
+    <!--{% include "utils/includes/social_share.html" %}-->
+    {% include "projects/includes/project_header.html" %}
+    <div class="row">
+        <div class="medium-5 columns">
+            {% if self.feed_image %}
+                {% image self.feed_image fill-300x300 %}
+            {% endif %}
+
+        </div>
+        <div class="medium-7 columns">
+            {% leaflet_map "main" callback="main_map_init" %}
+
+            <script type="text/javascript">
+
+                function filterFeatures(feature, layer){
+                    var currentProjectID = {{ self.id }}
+                    if(feature.id === currentProjectID) return true
+                }
+
+                function onEachFeature(feature, layer) {
+                    layer.bindPopup(feature.properties.title);
+                }
+
+                function main_map_init (map, options) {
+
+                var dataurl = '{% url "projects:projects_geojson" %}';
+                // Download GeoJSON via Ajax
+                $.getJSON(dataurl, function (data) {
+                    // Add GeoJSON layer
+                    L.geoJson(data, {
+                    onEachFeature: onEachFeature,
+                    filter: filterFeatures
+                    }).addTo(map);
+                });
+
+                map.setView([{{ self.location.coords.1 }}, {{ self.location.coords.0 }}], 6);
+                // map.scrollWheelZoom.disable();
+                map.eachLayer(function(marker) {
+                    marker.openPopup()
+                });
+
+                }
+            </script>
+        </div>
+    </div>
+    <div class="row"><hr/></div>
+
+    <div class="row">
+        <div class="column">
+            {% include "projects/includes/project_body.html" with body=self.body only %}
+            <br>
+            {% include "utils/includes/related_links.html" with related_links=self.related_links.all only %}
+        </div>
+    </div>
 </article>
 {% endblock %}
