@@ -310,6 +310,7 @@ class ProjectPage(Page):
     search_fields = Page.search_fields + [
         index.SearchField('body'),
     ]
+    is_public = models.BooleanField(default=False)
 
     def record_count(self):
         result = 0
