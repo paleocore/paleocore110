@@ -50,19 +50,30 @@ $global-font-size: 100%;
 $global-width: rem-calc(1200);
 $global-lineheight: 1.5;
 $foundation-palette: (
-  primary: #3E50B4,
-  secondary: #FF3F80,
+  primary: #043a62,
+  secondary: #ad8961,
+  tertiary: #6d9dbd, //90d9e5
+  quaternary: #e5ecea,
   success: #3adb76,
   warning: #ffae00,
   alert: #cc4b37
 );
+//$foundation-palette: (
+//  primary: #3E50B4,
+//  secondary: #FF3F80,
+//  success: #3adb76,
+//  warning: #ffae00,
+//  alert: #cc4b37
+//);
 $light-gray: #e6e6e6;
 $medium-gray: #cacaca;
 $dark-gray: #8a8a8a;
+$dove-gray: #666666;
 $black: #0a0a0a;
 $white: #fefefe;
-$body-background: $white;
-$body-font-color: $black;
+$off-white : #F8F8FA;
+$body-background: $off-white; //$white
+$body-font-color: $dove-gray; //$black
 $body-font-family: 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;
 $body-antialiased: true;
 $global-margin: 1rem;
@@ -142,7 +153,7 @@ $code-background: $light-gray;
 $code-border: 1px solid $medium-gray;
 $code-padding: rem-calc(2 5 1);
 $anchor-color: $primary-color;
-$anchor-color-hover: scale-color($anchor-color, $lightness: -14%);
+$anchor-color-hover: scale-color($anchor-color, $lightness: 30%); //-14%
 $anchor-text-decoration: none;
 $anchor-text-decoration-hover: none;
 $hr-width: $global-width;
@@ -285,7 +296,7 @@ $callout-link-tint: 30%;
 // 14. Card
 // --------
 
-$card-background: $white;
+$card-background: $light-gray; //$white
 $card-font-color: $body-font-color;
 $card-divider-background: $light-gray;
 $card-border: 1px solid $light-gray;
@@ -581,14 +592,14 @@ $tab-content-padding: 1rem;
 $thumbnail-border: solid 4px $white;
 $thumbnail-margin-bottom: $global-margin;
 $thumbnail-shadow: 0 0 0 1px rgba($black, 0.2);
-$thumbnail-shadow-hover: 0 0 6px 1px rgba($primary-color, 0.5);
+$thumbnail-shadow-hover: 0 0 6px 1px rgba(get-color(primary), 0.5);
 $thumbnail-transition: box-shadow 200ms ease-out;
 $thumbnail-radius: $global-radius;
 
 // 35. Title Bar
 // -------------
 
-$titlebar-background: $black;
+$titlebar-background: $medium-gray;
 $titlebar-color: $white;
 $titlebar-padding: 0.5rem;
 $titlebar-text-font-weight: bold;
@@ -613,8 +624,9 @@ $tooltip-radius: $global-radius;
 // -----------
 
 $topbar-padding: 0.5rem;
-$topbar-background: $light-gray;
+$topbar-background: get-color(primary); //$light-gray
 $topbar-submenu-background: $topbar-background;
 $topbar-title-spacing: 0.5rem 1rem 0.5rem 0;
 $topbar-input-width: 200px;
 $topbar-unstack-breakpoint: medium;
+$topbar-bottom-border-color: get-color(secondary);
