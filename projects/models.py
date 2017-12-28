@@ -4,6 +4,8 @@ from django.contrib.gis.db import models
 from paleocore110.settings.base import INSTALLED_APPS
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.apps import apps
+
 
 # Python imports
 import math
@@ -308,6 +310,16 @@ class ProjectPage(Page):
     search_fields = Page.search_fields + [
         index.SearchField('body'),
     ]
+
+    def record_count(self):
+        result = 0
+        if apps.is_installed(self.slug):  # check if slug matches an installed app name
+            content_type = ContentType.objects.get(app_label=self.slug, model='occurrence')
+            model_class = content_type.model_class()
+            result = model_class.objects.all().count()
+        return result
+
+
 
     @property
     def project_index(self):
