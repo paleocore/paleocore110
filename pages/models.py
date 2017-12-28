@@ -186,6 +186,7 @@ StandardPage.content_panels = [
     FieldPanel('intro', classname="full"),
     FieldPanel('body', classname="full"),
     FieldPanel('template_string'),
+    # InlinePanel('content_items', label="Content Blocks"),
     InlinePanel('carousel_items', label="Carousel items"),
     InlinePanel('related_links', label="Related links"),
 
