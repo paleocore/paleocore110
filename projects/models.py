@@ -18,6 +18,7 @@ from wagtail.wagtailsearch import index
 from wagtail.wagtailadmin.edit_handlers import (
     FieldPanel, InlinePanel, StreamFieldPanel
 )
+from wagtailgeowidget.edit_handlers import GeoPanel
 from modelcluster.fields import ParentalKey
 from modelcluster.tags import ClusterTaggableManager
 from taggit.models import TaggedItemBase
@@ -237,7 +238,7 @@ class ProjectsIndexPage(Page):
         projects = ProjectPage.objects.live().descendant_of(self)
 
         # Order by most recent date first
-        projects = projects.order_by('-date')
+        projects = projects.order_by('title')
 
         return projects
 
@@ -302,6 +303,7 @@ class ProjectPage(Page):
         on_delete=models.SET_NULL,
         related_name='+'
     )
+    location = models.PointField(srid=4326, null=True, blank=True)
 
     search_fields = Page.search_fields + [
         index.SearchField('body'),
@@ -319,6 +321,7 @@ ProjectPage.content_panels = [
     StreamFieldPanel('body'),
     InlinePanel('carousel_items', label="Carousel items"),
     InlinePanel('related_links', label="Related links"),
+    GeoPanel('location')
 ]
 
 ProjectPage.promote_panels = Page.promote_panels + [
