@@ -1,23 +1,9 @@
 from django.contrib import admin
 from origins.models import *
-from pcbase.admin import BingGeoAdmin
+from projects.admin import BingGeoAdmin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.contrib.gis.measure import Distance
-
-
-def get_latitude(obj):
-    if obj.geom:
-        return obj.geom.y
-    else:
-        return None
-
-
-def get_longitude(obj):
-    if obj.geom:
-        return obj.geom.x
-    else:
-        return None
 
 
 class ReferenceAdmin(admin.ModelAdmin):
@@ -37,27 +23,27 @@ class ContextInline(admin.TabularInline):
 
 
 class SiteAdmin(BingGeoAdmin):
-    list_display = ['id', 'name', 'verbatim_collection_name', 'verbatim_early_interval',
+    list_display = ['id', 'name', 'country', 'verbatim_collection_name', 'verbatim_early_interval',
                     'verbatim_late_interval', 'verbatim_max_ma', 'verbatim_min_ma', 'verbatim_reference_no']
     readonly_fields = ['get_latitude', 'get_longitude']
     search_fields = list_display
-    list_filter = ['mio_plio']
+    list_filter = ['origins']
     list_per_page = 500
     # inlines = [ContextInline]
 
     fieldsets = [
         ('Occurrence Details', {
-            'fields': [('name', 'source', 'mio_plio')],
+            'fields': [('name',), ('origins',)],
         }),
         ('Verbatim', {
-            'fields': ['verbatim_collection_no', 'verbatim_record_type', 'verbatim_formation',
+            'fields': ['source', 'verbatim_collection_no', 'verbatim_record_type', 'verbatim_formation',
                        'verbatim_lng', 'verbatim_lat', 'verbatim_collection_name', 'verbatim_collection_subset',
                        'verbatim_collection_aka', 'verbatim_n_occs', 'verbatim_early_interval',
                        'verbatim_late_interval', 'verbatim_max_ma', 'verbatim_min_ma', 'verbatim_reference_no'],
             'classes': ['collapse'],
         }),
         ('Location', {
-            'fields': [('get_latitude', 'get_longitude'), ('geom',)]
+            'fields': [('country', ), ('get_latitude', 'get_longitude'), ('geom',)]
         }),
     ]
 
@@ -81,19 +67,19 @@ class ContextAdmin(BingGeoAdmin):
                     'older_interval', 'younger_interval', 'max_age', 'min_age', 'best_age']
     search_fields = ['id', 'name', 'geological_formation', 'geological_member',
                      'older_interval', 'younger_interval', 'max_age', 'min_age', 'best_age']
-    list_filter = ['mio_plio']
+    list_filter = ['origins']
     list_per_page = 500
+    readonly_fields = ['latitude', 'longitude']
     fieldsets = [
         ('Context Details', {
-            'fields': [('name', 'site', 'mio_plio', 'source')],
+            'fields': [('name', 'site', 'origins', 'source')],
         }),
         ('Stratigraphy', {
             'fields': [('geological_formation', 'geological_member',)],
         }),
         ('Geochronology', {
             'fields': [('older_interval', 'younger_interval',),
-                       ('max_age', 'min_age', 'best_age'),
-                       ('mio_plio',)],
+                       ('max_age', 'min_age', 'best_age')],
         }),
         ('Verbatim', {
             'fields': ['verbatim_collection_no', 'verbatim_record_type', 'verbatim_formation',
@@ -102,7 +88,7 @@ class ContextAdmin(BingGeoAdmin):
                        'verbatim_late_interval', 'verbatim_max_ma', 'verbatim_min_ma', 'verbatim_reference_no'],
             'classes': ['collapse'],
         }),
-        ('Location', {'fields': ['geom']})
+        ('Location', {'fields': [('longitude', 'latitude',), ('geom',)]})
     ]
 
     def site_link(self, obj):

@@ -1,16 +1,16 @@
 from django.contrib.gis.db import models
-import pcbase.models
+import projects.models
 import uuid, datetime, os
 from django_countries.fields import CountryField
 
 
 # Taxonomy models inherited from paleo core base project
-class TaxonRank(pcbase.models.TaxonRank):
+class TaxonRank(projects.models.TaxonRank):
     class Meta:
         verbose_name = "Taxon Rank"
 
 
-class Taxon(pcbase.models.Taxon):
+class Taxon(projects.models.Taxon):
     parent = models.ForeignKey('self', null=True, blank=True)
     rank = models.ForeignKey(TaxonRank, null=True, blank=True)
 
@@ -20,7 +20,7 @@ class Taxon(pcbase.models.Taxon):
         ordering = ['rank__ordinal', 'name']
 
 
-class IdentificationQualifier(pcbase.models.IdentificationQualifier):
+class IdentificationQualifier(projects.models.IdentificationQualifier):
     class Meta:
         verbose_name = "Identification Qualifier"
 
@@ -70,7 +70,17 @@ class Reference(models.Model):
 
 
 class Site(models.Model):
+    name = models.CharField(max_length=40, null=True, blank=True)
+
+    # Location
+    country = CountryField('Country', blank=True, null=True)
+    geom = models.PointField(srid=4326, null=True, blank=True)
+
+    # Filter and Search
+    origins = models.BooleanField(default=False)  # in scope for origins project
+
     # Original fields from Paleobiology DB
+    source = models.CharField(max_length=20, null=True, blank=True)
     verbatim_collection_no = models.IntegerField(blank=True, null=True)
     verbatim_record_type = models.CharField(max_length=20, null=True, blank=True)
     verbatim_formation = models.CharField(max_length=50, null=True, blank=True)
@@ -86,14 +96,6 @@ class Site(models.Model):
     verbatim_min_ma = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
     verbatim_reference_no = models.IntegerField(null=True, blank=True)
 
-    # Added fields
-    name = models.CharField(max_length=40, null=True, blank=True)
-    source = models.CharField(max_length=20, null=True, blank=True)
-    mio_plio = models.BooleanField(default=False)
-
-    # spatial
-    geom = models.PointField(srid=4326, null=True, blank=True)
-
     def __str__(self):
         unicode_string = '['+str(self.id)+']'
         if self.name:
@@ -103,8 +105,22 @@ class Site(models.Model):
         return unicode_string
 
 
-class Context(models.Model):
+class Context(projects.models.PaleoCoreContextBaseClass):
+    """
+    Inherits the following fields
+    name, geom, geological_formation, geological_member, geological_bed, older_interval, younger_interval,
+    max_age, min_age, best_age
+    """
+
+    # Filter fields
+    origins = models.BooleanField(default=False)
+
+    # foreign keys
+    reference = models.ForeignKey(to=Reference, null=True, blank=True)
+    site = models.ForeignKey(to=Site, on_delete=models.CASCADE, null=True, blank=True)
+
     # Original Fields from Paleobiology DB
+    source = models.CharField(max_length=20, null=True, blank=True)
     verbatim_collection_no = models.IntegerField(blank=True, null=True)
     verbatim_record_type = models.CharField(max_length=20, null=True, blank=True)
     verbatim_formation = models.CharField(max_length=50, null=True, blank=True)
@@ -122,47 +138,57 @@ class Context(models.Model):
     verbatim_min_ma = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
     verbatim_reference_no = models.IntegerField(null=True, blank=True)
 
-    # Added fields
-    source = models.CharField(max_length=20, null=True, blank=True)
-    name = models.CharField(max_length=200, null=True, blank=True)
-    geological_formation = models.CharField("Formation", max_length=50, null=True, blank=True)
-    geological_member = models.CharField("Member", max_length=50, null=True, blank=True)
-    geological_bed = models.CharField(max_length=50, null=True, blank=True)
-    older_interval = models.CharField(max_length=50, null=True, blank=True)
-    younger_interval = models.CharField(max_length=50, null=True, blank=True)
-    max_age = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
-    min_age = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
-    best_age = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
-    mio_plio = models.BooleanField(default=False)
-
-    # spatial
-    geom = models.PointField(srid=4326, null=True, blank=True)
-    # foreign keys
-    reference = models.ForeignKey(to=Reference, null=True, blank=True)
-    site = models.ForeignKey(to=Site, on_delete=models.CASCADE, null=True, blank=True)
-
-    def __str__(self):
-        unicode_string = '['+str(self.id)+']'
-        if self.name:
-            unicode_string = unicode_string+' '+self.name
-        return unicode_string
-
     def has_ref(self):
         has_ref = False
         if self.reference:
             has_ref = True
         return has_ref
 
-    def get_concrete_field_names(self):
-        """
-        Get field names that correspond to columns in the DB
-        :return: returns a lift
-        """
-        field_list = self._meta.get_fields()
-        return [f.name for f in field_list if f.concrete]
+    def latitude(self):
+        return self.gcs_coordinates('lat')
+
+    def longitude(self):
+        return self.gcs_coordinates('lon')
 
 
 class Fossil(models.Model):
+    # Foreign keys
+    context = models.ForeignKey(to=Context, on_delete=models.CASCADE, null=True, blank=True)
+
+    # Fossil(Find)
+    guid = models.URLField(null=True, blank=True)
+    uuid = models.UUIDField(default=uuid.uuid4)
+    catalog_number = models.CharField(max_length=40, null=True, blank=True)
+    organism_id = models.CharField(max_length=40, null=True, blank=True)
+    nickname = models.CharField(max_length=40, null=True, blank=True)
+    holotype = models.BooleanField(default=False)
+    lifestage = models.CharField(max_length=20, null=True, blank=True)
+    sex = models.CharField(max_length=10, null=True, blank=True)
+
+    # Project
+    project_name = models.CharField(max_length=100, null=True, blank=True)
+    project_abbreviation = models.CharField(max_length=10, null=True, blank=True)
+    collection_code = models.CharField(max_length=10, null=True, blank=True)
+
+    # Location
+    place_name = models.CharField(max_length=100, null=True, blank=True)
+    locality = models.CharField(max_length=40, null=True, blank=True)
+    # country = models.CharField(max_length=10, null=True, blank=True)
+    country = CountryField('Country', blank=True, null=True)
+    continent = models.CharField(max_length=20, null=True, blank=True)
+
+    # Media
+    image = models.ImageField(max_length=255, blank=True, upload_to="uploads/images/origins", null=True)
+
+    # Record
+    created_by = models.CharField(max_length=100, null=True, blank=True)
+    created = models.DateTimeField('Modified', auto_now_add=True)
+    modified = models.DateTimeField('Modified', auto_now=True,
+                                    help_text='The date and time this resource was last altered.')
+
+    # Search and Filter Fields
+    origins = models.BooleanField(default=False)  # in scope for origins project
+
     # Original Fields from Human Origins Program DB
     verbatim_PlaceName = models.CharField(max_length=100, null=True, blank=True)
     verbatim_HomininElement = models.CharField(max_length=40, null=True, blank=True)
@@ -176,42 +202,9 @@ class Fossil(models.Model):
     verbatim_SkeletalElementClass = models.CharField(max_length=40, null=True, blank=True)
     verbatim_Locality = models.CharField(max_length=40, null=True, blank=True)
     verbatim_Country = models.CharField(max_length=20, null=True, blank=True)
-
-    # Added fields
-    place_name = models.CharField(max_length=100, null=True, blank=True)
-
-    # Fossil(Find)
-    guid = models.URLField(null=True, blank=True)
-    uuid = models.UUIDField(default=uuid.uuid4)
-    catalog_number = models.CharField(max_length=40, null=True, blank=True)
-    organism_id = models.CharField(max_length=40, null=True, blank=True)
-    nickname = models.CharField(max_length=40, null=True, blank=True)
-    holotype = models.BooleanField(default=False)
-    lifestage = models.CharField(max_length=20, null=True, blank=True)
-    sex = models.CharField(max_length=10, null=True, blank=True)
-
-    project_name = models.CharField(max_length=100, null=True, blank=True)
-    project_abbreviation = models.CharField(max_length=10, null=True, blank=True)
-    collection_code = models.CharField(max_length=10, null=True, blank=True)
-    origins = models.BooleanField(default=False)
-
-    # Record
-    created_by = models.CharField(max_length=100, null=True, blank=True)
-    created = models.DateTimeField('Modified', auto_now_add=True)
-    modified = models.DateTimeField('Modified', auto_now=True,
-                                    help_text='The date and time this resource was last altered.')
-
-    # Location
-    locality = models.CharField(max_length=40, null=True, blank=True)
-    # country = models.CharField(max_length=10, null=True, blank=True)
-    country = CountryField('Country', blank=True, null=True)
-    continent = models.CharField(max_length=20, null=True, blank=True)
     verbatim_provenience = models.TextField(null=True, blank=True)
 
-    image = models.ImageField(max_length=255, blank=True, upload_to="uploads/images/origins", null=True)
 
-    # Added foreign keys
-    context = models.ForeignKey(to=Context, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(self.id)+' '+str(self.catalog_number)
