@@ -9,8 +9,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 from sys import path
-
-
 import environ
 env = environ.Env()
 

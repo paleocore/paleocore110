@@ -17,9 +17,9 @@ COMPRESS_CSS_FILTERS = [
     'compressor.filters.cssmin.CSSMinFilter',
 ]
 
-ALLOWED_HOSTS = [env("DJANGO_ALLOWED_HOST_NAME"), ]
-
-DATABASES['default'] = env.db('PROD_DATABASE_URL')
+# ALLOWED_HOSTS = [env("DJANGO_ALLOWED_HOST_NAME", 'paleocore110-qa.tacc.utexas.edu')]
+ALLOWED_HOSTS = ['paleocore110-qa.tacc.utexas.edu']
+# DATABASES['default'] = env.db('PROD_DATABASE_URL')
 
 INSTALLED_APPS += (
     "wagtail.contrib.wagtailfrontendcache",
