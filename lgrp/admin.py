@@ -166,75 +166,10 @@ class PersonAdmin(admin.ModelAdmin):
 ####################
 # Occurrence Admin #
 ####################
-class OccurrenceAdminOld(projects.admin.BingGeoAdmin):
-    """
-    OccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
-    """
-    list_display = list(lgrp_default_list_display)  # use list() to clone rather than modify in place
-    default_read_only_fields = Occurrence.method_fields_to_export()
-    readonly_fields = ['id', 'date_created', 'date_last_modified'] + default_read_only_fields
-
-    fieldsets = lgrp_occurrence_fieldsets
-    list_filter = list(default_list_filter)
-    search_fields = list(default_search_fields)
-    list_per_page = 500
-    actions = ['create_data_csv']
-
-    # Admin Actions
-    # TODO update occurrence download
-    def create_data_csv(self, request, queryset):
-        response = HttpResponse(content_type='text/csv')  # declare the response type
-        response['Content-Disposition'] = 'attachment; filename="LGRP_Occurrences.csv"'  # declare the file name
-        writer = unicodecsv.writer(response)  # open a .csv writer
-        o = Occurrence()  # create an empty instance of an occurrence object
-
-        occurrence_field_list = o.__dict__.keys()  # fetch the fields names from the instance dictionary
-        try:  # try removing the state field from the list
-            occurrence_field_list.remove('_state')  # remove the _state field
-        except ValueError:  # raised if _state field is not in the dictionary list
-            pass
-        try:  # try removing the geom field from the list
-            occurrence_field_list.remove('geom')
-        except ValueError:  # raised if geom field is not in the dictionary list
-            pass
-        # Replace the geom field with new fields
-        occurrence_field_list.append('longitude')  # add new fields for coordinates of the geom object
-        occurrence_field_list.append('latitude')
-        occurrence_field_list.append('easting')
-        occurrence_field_list.append('northing')
-
-        writer.writerow(occurrence_field_list)  # write column headers
-
-        for occurrence in queryset:  # iterate through the occurrence instances selected in the admin
-            # The next line uses string comprehension to build a list of values for each field
-            occurrence_dict = occurrence.__dict__
-            # Check that instance has geom
-            try:
-                occurrence_dict['longitude'] = occurrence.longitude()  # translate the occurrence geom object
-                occurrence_dict['latitude'] = occurrence.latitude()
-                occurrence_dict['easting'] = occurrence.easting()
-                occurrence_dict['northing'] = occurrence.northing()
-            except AttributeError:  # If no geom data exists write None to the dictionary
-                occurrence_dict['longitude'] = None
-                occurrence_dict['latitude'] = None
-                occurrence_dict['easting'] = None
-                occurrence_dict['northing'] = None
-
-            # Next we use the field list to fetch the values from the dictionary.
-            # Dictionaries do not have a reliable ordering. This code insures we get the values
-            # in the same order as the field list.
-            try:  # Try writing values for all keys listed in both the occurrence and biology tables
-                writer.writerow([occurrence.__dict__.get(k) for k in occurrence_field_list])
-            except ObjectDoesNotExist:  # Django specific exception
-                writer.writerow([occurrence.__dict__.get(k) for k in occurrence_field_list])
-            except AttributeError:  # Django specific exception
-                writer.writerow([occurrence.__dict__.get(k) for k in occurrence_field_list])
-
-        return response
-    create_data_csv.short_description = 'Download Selected to .csv'
-
-
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
+    """
+    OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
+    """
     list_display = lgrp_default_list_display  # use list() to clone rather than modify in place
     list_filter = lgrp_default_list_filter
     fieldsets = lgrp_occurrence_fieldsets
@@ -249,7 +184,7 @@ class BiologyAdmin(OccurrenceAdmin):
     list_display = list(lgrp_default_list_display)
     list_display.insert(lgrp_default_list_display.index('item_scientific_name'), 'taxon')
     fieldsets = biology_fieldsets
-    # inlines = (ImagesInline, FilesInline)
+    actions = ['create_data_csv']
 
     def create_data_csv(self, request, queryset):
         """
