@@ -1,249 +1,120 @@
 from django.contrib.gis.db import models
+import projects.models
 from lgrp.ontologies import *
+from projects.ontologies import ITEM_TYPE_VOCABULARY
 import os
 from django.contrib.gis.geos import Point
 
 
-class TaxonRank(models.Model):
-    name = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    ordinal = models.IntegerField(null=False, blank=False, unique=True)
-
-    def __unicode__(self):
-        return str(self.name)
+class TaxonRank(projects.models.TaxonRank):
 
     class Meta:
-        verbose_name = "Taxon Rank"
+        verbose_name = "LGRP Taxon Rank"
 
 
-class Taxon(models.Model):
-    name = models.CharField(null=False, blank=False, max_length=255, unique=False)
+class Taxon(projects.models.Taxon):
     parent = models.ForeignKey('self', null=True, blank=True)
     rank = models.ForeignKey(TaxonRank)
 
-    def parent_rank(self):
-        return self.parent.rank.name
+    class Meta:
+        verbose_name = "LGRP Taxon"
+        verbose_name_plural = "LGRP Taxa"
 
-    def rank_ordinal(self):
-        return self.rank.ordinal
 
-    def parent_name(self):
-        if self.parent is None:
-            return "NA"
-        else:
-            return self.parent.name
-
-    def full_name(self):
-        if self.parent is None:
-            return self.name
-        elif self.parent.parent is None:
-            return self.name
-        else:
-            return self.parent.full_name() + ", " + self.name
-
-    def full_lineage(self):
-        """
-        Get a list of taxon object representing the full lineage hierarchy
-        :return: list of taxon objects ordered highest rank to lowest
-        """
-        if self.parent is None:
-            return [self]
-        if self.parent.parent is None:
-            return [self]
-        else:
-            return self.parent.full_lineage()+[self]
-
-    def __unicode__(self):
-        if self.rank.name == 'Species' and self.parent:
-            return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
-        else:
-            return "[" + self.rank.name + "] " + str(self.name)
+class IdentificationQualifier(projects.models.IdentificationQualifier):
 
     class Meta:
-        verbose_name = "Taxon"
-        verbose_name_plural = "taxa"
-        ordering = ['rank__ordinal', 'name']
+        verbose_name = "LGRP ID Qualifier"
 
 
-class IdentificationQualifier(models.Model):
-    name = models.CharField(null=False, blank=True, max_length=15, unique=True)
-    qualified = models.BooleanField()
+class Person(projects.models.Person):
 
-    def __unicode__(self):
-        return self.name
+    class Meta:
+        verbose_name = "LGRP Person"
+        verbose_name_plural = "LGRP People"
 
+
+class CollectionCode(projects.models.PaleoCoreCollectionCodeBaseClass):
+
+    class Meta:
+        verbose_name = "LGRP Collection Code"
 
 # Occurrence Class and Subclasses
-class Occurrence(models.Model):
-    geom = models.PointField(srid=4326, blank=True, null=True)  # NOT NULL
-    # TODO basis is Null for import Not Null afterwards
+class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
+    """
+    lgrp.Occurrence <- projects.models.PaleoCoreOccurrenceBaseClass <- projects.models.PaleoCoreBaseClass
+    """
+    # Record-level
     basis_of_record = models.CharField("Basis of Record", max_length=50, blank=True, null=False,
                                        choices=LGRP_BASIS_OF_RECORD_VOCABULARY)  # NOT NULL
+    # Event - inherited
+
+    # Find
+
+
+
     item_type = models.CharField("Item Type", max_length=255, blank=True, null=False,
                                  choices=ITEM_TYPE_VOCABULARY)  # NOT NULL
-    # During initial import remove collection code choices. Add later for validation.
-    collection_code = models.CharField("Collection Code", max_length=20, blank=True, null=True)
-    locality_number = models.IntegerField("Locality", null=True, blank=True)
-    # Splitting item number and part allows more fine grained searches
-    item_number = models.CharField("Item #",  max_length=10, null=True, blank=True)
-    item_part = models.CharField("Item Part", max_length=10, null=True, blank=True)
-
-    # Keep catalog number temporarily, but going forward create method to build from other fields
-    # catalog_number = models.CharField("Catalog #", max_length=255, blank=True, null=True)
-
-    #  max length influences size of input widget for TextField but not amount of text stored in DB
-    remarks = models.TextField(max_length=500, null=True, blank=True)
+    # item_scientific_name should be transfered to inherited name field
     item_scientific_name = models.CharField("Sci Name", max_length=255, null=True, blank=True)
     item_description = models.CharField("Description", max_length=255, blank=True, null=True)
-    georeference_remarks = models.TextField(max_length=500, null=True, blank=True)
+
+    item_count = models.IntegerField(blank=True, null=True, default=1)
+    collector = models.CharField(max_length=50, blank=True, null=True,
+                                 choices=LGRP_COLLECTOR_CHOICES)  # dwc:recordedBy
+    finder = models.CharField(null=True, blank=True, max_length=50,
+                              choices=LGRP_FINDER_CHOICES)
+    collector_person = models.ForeignKey(Person, null=True, blank=True,
+                                         related_name='person_collector',
+                                         on_delete=models.SET_NULL)
+    finder_person = models.ForeignKey(Person, null=True, blank=True,
+                                      related_name='person_finder',
+                                      on_delete=models.SET_NULL)
     collecting_method = models.CharField(max_length=50,
-                                         choices=LGRP_COLLECTING_METHOD_VOCABULARY, null=True)
-    related_catalog_items = models.CharField("Related Catalog Items", max_length=50, null=True, blank=True)
-    field_number = models.CharField(max_length=50, null=True, blank=True)
-    collector = models.CharField(max_length=50, blank=True, null=True, choices=LGRP_COLLECTOR_CHOICES)
-    finder = models.CharField(null=True, blank=True, max_length=50, choices=LGRP_FINDER_CHOICES)
-    disposition = models.CharField(max_length=255, blank=True, null=True)
-    collection_remarks = models.TextField(max_length=500, null=True, blank=True)
-    date_recorded = models.DateTimeField(blank=True, null=True, editable=True)
-    year_collected = models.IntegerField(blank=True, null=True)
-    individual_count = models.IntegerField(blank=True, null=True, default=1)
-    preparation_status = models.CharField(max_length=50, blank=True, null=True)
-    stratigraphic_marker_upper = models.CharField(max_length=255, blank=True, null=True)
-    distance_from_upper = models.DecimalField(max_digits=38, decimal_places=8, blank=True, null=True)
-    stratigraphic_marker_lower = models.CharField(max_length=255, blank=True, null=True)
-    distance_from_lower = models.DecimalField(max_digits=38, decimal_places=8, blank=True, null=True)
-    stratigraphic_marker_found = models.CharField(max_length=255, blank=True, null=True)
-    distance_from_found = models.DecimalField(max_digits=38, decimal_places=8, blank=True, null=True)
-    stratigraphic_marker_likely = models.CharField(max_length=255, blank=True, null=True)
-    distance_from_likely = models.DecimalField(max_digits=38, decimal_places=8, blank=True, null=True)
-    stratigraphic_formation = models.CharField(max_length=255, blank=True, null=True)
-    stratigraphic_member = models.CharField(max_length=255, blank=True, null=True)
+                                         choices=LGRP_COLLECTING_METHOD_VOCABULARY,
+                                         null=True, blank=True)  # dwc:sampling_protocol
+    # locality number is deprecated
+    locality_number = models.IntegerField("Locality", null=True, blank=True)
+    # item number is deprecated
+    item_number = models.CharField("Item #", max_length=10, null=True, blank=True)
+    # item part is deprecated
+    item_part = models.CharField("Item Part", max_length=10, null=True, blank=True)
+    old_cat_number = models.CharField("Old Cat Number", max_length=255, blank=True, null=True)
+    disposition = models.CharField(max_length=255, blank=True, null=True)  # dwc:disposition
+    preparation_status = models.CharField(max_length=50, blank=True, null=True)  # Drop? - 2 specimens with entries
+    # TODO rename collection_remarks to find_remarks
+    collection_remarks = models.TextField(max_length=500, null=True, blank=True)  # dwc:occurrence_remarks
+
+    # Geological Context
+    stratigraphic_formation = models.CharField("Formation", max_length=255, blank=True, null=True)  # dwc:formation
+    stratigraphic_member = models.CharField("Member", max_length=255, blank=True, null=True)  # dwc:member
     analytical_unit_1 = models.CharField(max_length=255, blank=True, null=True)
     analytical_unit_2 = models.CharField(max_length=255, blank=True, null=True)
     analytical_unit_3 = models.CharField(max_length=255, blank=True, null=True)
     analytical_unit_found = models.CharField(max_length=255, blank=True, null=True)
     analytical_unit_likely = models.CharField(max_length=255, blank=True, null=True)
-    analytical_unit_simplified = models.CharField(max_length=255, blank=True, null=True)
+    analytical_unit_simplified = models.CharField(max_length=255, blank=True, null=True)  # dwc:bed
     in_situ = models.BooleanField(default=False)
-    ranked = models.BooleanField(default=False)
-    geology_remarks = models.TextField(max_length=500, null=True, blank=True)
-    image = models.FileField(max_length=255, blank=True, upload_to="uploads/images/lgrp", null=True)
+    ranked = models.BooleanField(default=False)  # Drop? One record is True
     weathering = models.SmallIntegerField(blank=True, null=True, choices=LGRP_WEATHERING_CHOICES)
     surface_modification = models.CharField(max_length=255, blank=True, null=True)
-    problem = models.BooleanField(default=False)
-    problem_comment = models.TextField(max_length=255, blank=True, null=True)
-    barcode = models.IntegerField("Barcode", null=True, blank=True)
-    date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
-    objects = models.GeoManager()
-    old_cat_number = models.CharField(max_length=255, blank=True, null=True)
+    geology_remarks = models.TextField(max_length=500, null=True, blank=True)
 
-    # LGRP Specific Fields
-    drainage_region = models.CharField(null=True, blank=True, max_length=255)
+    # Location
+    # TODO merge collection_code and drainage region
+    coll_code = models.ForeignKey(CollectionCode, null=True, blank=True)
+    collection_code = models.CharField(max_length=20, blank=True, null=True,
+                                       choices=LGRP_COLLECTION_CODES)  # dwc:collectionCode, change to locality?
+    drainage_region = models.CharField(null=True, blank=True, max_length=255)  # merge with collection_code?
 
-    @staticmethod
-    def fields_to_display():
-        fields = ("id", "barcode")
-        return fields
+    # Media
+    image = models.FileField(max_length=255, blank=True, upload_to="uploads/images/lgrp", null=True)
 
-    def point_x(self):
-        """
-        Return the x coordinate for the point in its native coordinate system
-        :return:
-        """
-        if self.geom and type(self.geom) == Point:
-            return self.geom.x
-        else:
-            return None
+    # Verbatim
+    verbatim_kml_data = models.TextField(null=True, blank=True)
+    related_catalog_items = models.CharField("Related Catalog Items", max_length=50, null=True, blank=True)
 
-    def point_y(self):
-        """
-        Return the y coordinate for the point in its native coordinate system
-        :return:
-        """
-        if self.geom and type(self.geom) == Point:
-            return self.geom.y
-        else:
-            return None
-
-    def longitude(self):
-        """
-        Return the longitude for the point in the WGS84 datum
-        :return:
-        """
-        if self.geom and type(self.geom) == Point:
-            pt = self.geom
-            pt.transform(4326)  # transform to GCS WGS84
-            return pt.x
-        else:
-            return None
-
-    def latitude(self):
-        """
-        Return the latitude for the point in the WGS84 datum
-        :return:
-        """
-        if self.geom and type(self.geom) == Point:
-            pt = self.geom
-            pt.transform(4326)
-            return pt.y
-        else:
-            return None
-
-    def easting(self):
-        """
-        Return the easting for the point in UTM meters using the WGS84 datum
-        :return:
-        """
-        try:
-            utm_point = self.geom.transform(32637, clone=True)  # get a copy of the point in utm
-            return utm_point.x
-        except:
-            return None
-
-    def northing(self):
-        """
-        Return the easting for the point in UTM meters using the WGS84 datum
-        :return:
-        """
-        try:
-            utm_point = self.geom.transform(32637, clone=True)
-            return utm_point.y
-        except:
-            return None
-
-    def catalog_number(self):
-        """
-        Generate a pretty string formatted catalog number from constituent fields
-        :return: catalog number as string
-        """
-
-        if self.basis_of_record == 'Collection':
-            catalog_number_string = str(self.collection_code) + " " + str(self.barcode)
-            return catalog_number_string.replace('None', '').replace('- ', '')  # replace None with empty string
-        else:
-            return None
-
-    def old_catalog_number(self):
-        """
-        Generate a pretty string formated catalog number from constituent fields
-        :return: old version of catalog number as string
-        """
-        if self.basis_of_record == 'Collection':
-            #  Crate catalog number string. Null values become None when converted to string
-            if self.item_number:
-                if self.item_part:
-                    item_text = '-' + str(self.item_number) + str(self.item_part)
-                else:
-                    item_text = '-' + str(self.item_number)
-            else:
-                item_text = ''
-
-            catalog_number_string = str(self.collection_code) + " " + str(self.locality_number) + item_text
-            return catalog_number_string.replace('None', '').replace('- ', '')  # replace None with empty string
-        else:
-            return None
-
-    def __unicode__(self):
+    def __str__(self):
         nice_name = str(self.catalog_number()) + ' ' + '[' + str(self.item_scientific_name) + ' ' \
                     + str(self.item_description) + "]"
         return nice_name.replace("None", "").replace("--", "")
@@ -277,8 +148,104 @@ class Occurrence(models.Model):
     thumbnail.allow_tags = True
     thumbnail.mark_safe = True
 
-    def get_all_field_names(self):
-        return self._meta.get_all_field_names()
+    @staticmethod
+    def fields_to_display():
+        fields = ("id", "barcode")
+        return fields
+
+    @staticmethod
+    def method_fields_to_export():
+        """
+        Method to store a list of fields that should be added to data exports.
+        Called by export admin actions.
+        These fields are defined in methods and are not concrete fields in the DB so have to be declared.
+        :return:
+        """
+        return ['longitude', 'latitude', 'easting', 'northing', 'catalog_number', 'photo']
+
+    def point_x(self):
+        """
+        Return the x coordinate for the point in its native coordinate system
+        :return:
+        """
+        if self.geom and type(self.geom) == Point:
+            return self.geom.x
+        else:
+            return None
+
+    def point_y(self):
+        """
+        Return the y coordinate for the point in its native coordinate system
+        :return:
+        """
+        if self.geom and type(self.geom) == Point:
+            return self.geom.y
+        else:
+            return None
+
+    def longitude(self):
+        """
+        Return the longitude for the point in the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
+        :return:
+        """
+        return self.gcs_coordinates(coordinate='lon')
+
+    def latitude(self):
+        """
+        Return the latitude for the point in the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
+        :return:
+        """
+        return self.gcs_coordinates(coordinate='lat')
+
+    def easting(self):
+        """
+        Return the easting for the point in UTM meters using the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.utm_coordinates
+        :return:
+        """
+        return self.utm_coordinates(coordinate='easting')
+
+    def northing(self):
+        """
+        Return the easting for the point in UTM meters using the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.utm_coordinates
+        :return:
+        """
+        return self.utm_coordinates(coordinate='northing')
+
+    def catalog_number(self):
+        """
+        Generate a pretty string formatted catalog number from constituent fields
+        :return: catalog number as string
+        """
+
+        if self.basis_of_record == 'Collection':
+            catalog_number_string = str(self.collection_code) + " " + str(self.barcode)
+            return catalog_number_string.replace('None', '').replace('- ', '')  # replace None with empty string
+        else:
+            return None
+
+    def old_catalog_number(self):
+        """
+        Generate a pretty string formated catalog number from constituent fields
+        :return: old version of catalog number as string
+        """
+        if self.basis_of_record == 'Collection':
+            #  Crate catalog number string. Null values become None when converted to string
+            if self.item_number:
+                if self.item_part:
+                    item_text = '-' + str(self.item_number) + str(self.item_part)
+                else:
+                    item_text = '-' + str(self.item_number)
+            else:
+                item_text = ''
+
+            catalog_number_string = str(self.collection_code) + " " + str(self.locality_number) + item_text
+            return catalog_number_string.replace('None', '').replace('- ', '')  # replace None with empty string
+        else:
+            return None
 
     class Meta:
         verbose_name = "LGRP Occurrence"
@@ -287,6 +254,12 @@ class Occurrence(models.Model):
 
 
 class Biology(Occurrence):
+    # Biology
+    sex = models.CharField(null=True, blank=True, max_length=50)
+    life_stage = models.CharField(null=True, blank=True, max_length=50)
+    biology_remarks = models.TextField(max_length=500, null=True, blank=True)
+
+    # Taxon
     taxon = models.ForeignKey(Taxon,
                               default=0, on_delete=models.SET_DEFAULT,  # prevent deletion when taxa deleted
                               related_name='lgrp_taxon_bio_occurrences')
@@ -298,41 +271,29 @@ class Biology(Occurrence):
                                         on_delete=models.SET_NULL,
                                         related_name='lgrp_qualifier_taxon_bio_occurrences')
     verbatim_taxon = models.CharField(null=True, blank=True, max_length=1024)
-    taxonomy_remarks = models.TextField(max_length=500, null=True, blank=True)
     verbatim_identification_qualifier = models.CharField(null=True, blank=True, max_length=255)
+    taxonomy_remarks = models.TextField(max_length=500, null=True, blank=True)
 
+    # Identification
     identified_by = models.CharField(null=True, blank=True, max_length=100, choices=LGRP_IDENTIFIER_CHOICES)
     year_identified = models.IntegerField(null=True, blank=True)
     type_status = models.CharField(null=True, blank=True, max_length=50)
-    sex = models.CharField(null=True, blank=True, max_length=50)
-    life_stage = models.CharField(null=True, blank=True, max_length=50)
-    biology_remarks = models.TextField(max_length=500, null=True, blank=True)
-    preparations = models.CharField(null=True, blank=True, max_length=50)
-    morphobank_number = models.IntegerField(null=True, blank=True)
-    side = models.CharField(null=True, blank=True, max_length=50, choices=LGRP_SIDE_CHOICES)
-    attributes = models.CharField(null=True, blank=True, max_length=50)
+
     fauna_notes = models.TextField(null=True, blank=True, max_length=64000)
-    tooth_upper_or_lower = models.CharField(null=True, blank=True, max_length=50)
-    tooth_number = models.CharField(null=True, blank=True, max_length=50)
-    tooth_type = models.CharField(null=True, blank=True, max_length=50)
-    um_tooth_row_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    um_1_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    um_1_width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    um_2_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    um_2_width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    um_3_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    um_3_width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    lm_tooth_row_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    lm_1_length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    lm_1_width = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    lm_2_length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    lm_2_width = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    lm_3_length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    lm_3_width = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+
+    # Element
+    side = models.CharField(null=True, blank=True, max_length=50, choices=LGRP_SIDE_CHOICES)
+
     element = models.CharField(null=True, blank=True, max_length=50, choices=LGRP_ELEMENT_CHOICES)
     element_modifier = models.CharField(null=True, blank=True, max_length=50, choices=LGRP_ELEMENT_MODIFIER_CHOICES)
     element_portion = models.CharField(null=True, blank=True, max_length=50, choices=LGRP_ELEMENT_PORTION_CHOICES)
     element_number = models.CharField(null=True, blank=True, max_length=50, choices=LGRP_ELEMENT_NUMBER_CHOICES)
+    element_remarks = models.TextField(max_length=500, null=True, blank=True)
+
+    tooth_upper_or_lower = models.CharField(null=True, blank=True, max_length=50)
+    tooth_number = models.CharField(null=True, blank=True, max_length=50)
+    tooth_type = models.CharField(null=True, blank=True, max_length=50)
+
     # upper dentition fields
     uli1 = models.BooleanField(default=False)
     uli2 = models.BooleanField(default=False)
@@ -394,15 +355,49 @@ class Biology(Occurrence):
     indet_molar = models.BooleanField(default=False)
     indet_tooth = models.BooleanField(default=False)
     deciduous = models.BooleanField(default=False)
-    element_remarks = models.TextField(max_length=500, null=True, blank=True)
+
+    # Measurements
+    um_tooth_row_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    um_1_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    um_1_width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    um_2_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    um_2_width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    um_3_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    um_3_width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    lm_tooth_row_length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    lm_1_length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    lm_1_width = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    lm_2_length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    lm_2_width = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    lm_3_length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    lm_3_width = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
 
     class Meta:
         verbose_name = "LGRP Biology"
         verbose_name_plural = "LGRP Biology"
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.id)
-        # return str(self.taxon.__unicode__())
+
+    @staticmethod
+    def find_unmatched_values(field_name):
+        """
+        For every field in the data model this function compares the values in the DB against the values
+        in the choice lists and reports any unmatched values, i.e. DB values not in choices lists.
+        :param field_name:
+        :return:
+        """
+        lgrp_bio = Biology.objects.all()
+        values = list(set([getattr(bio, field_name) for bio in lgrp_bio]))
+        field = Biology._meta.get_field_by_name(field_name)[0]
+        choices = [i[0] for i in field.choices]
+        result = [v for v in values if v not in choices]
+        if (not result) or result == [None]:
+            result_tuple = (False, None, None)
+            return result_tuple
+        else:
+            result_tuple = (True, len(result), result)
+            return result_tuple
 
 
 class Archaeology(Occurrence):
@@ -436,7 +431,7 @@ class Hydrology(models.Model):
     geom = models.LineStringField(srid=4326)
     objects = models.GeoManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name)
 
     class Meta:
@@ -446,13 +441,23 @@ class Hydrology(models.Model):
 
 # Media Classes
 class Image(models.Model):
-    occurrence = models.ForeignKey("Occurrence", related_name='lgrp_occurrences')
+    occurrence = models.ForeignKey("Occurrence", related_name='occurrence_images')
     image = models.ImageField(upload_to="uploads/images", null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
+    def thumbnail(self):
+        try:
+            return '<a href="%s"><img src="%s" style="width:100px" /></a>' \
+                   % (os.path.join(self.image.url), os.path.join(self.image.url))
+        except:
+            return None
+    thumbnail.short_description = 'Thumb'
+    thumbnail.allow_tags = True
+    thumbnail.mark_safe = True
+
 
 class File(models.Model):
-    occurrence = models.ForeignKey("Occurrence")
+    occurrence = models.ForeignKey("Occurrence", related_name='occurrence_files')
     file = models.FileField(upload_to="uploads/files", null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
