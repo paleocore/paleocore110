@@ -6,16 +6,11 @@ import unicodecsv
 import projects.admin
 
 
-
-###########
-# Inlines #
-###########
 class ImagesInline(admin.TabularInline):
     model = Image
     readonly_fields = ['id', 'thumbnail']
     fields = ['id', 'image', 'thumbnail', 'description',]
     extra = 0
-
 
 
 class FilesInline(admin.TabularInline):
@@ -24,9 +19,6 @@ class FilesInline(admin.TabularInline):
     readonly_fields = ("id",)
 
 
-##############
-# Fieldsets  #
-##############
 lgrp_default_list_display = ('catalog_number',
                              'basis_of_record',
                              'item_type',
@@ -36,8 +28,7 @@ lgrp_default_list_display = ('catalog_number',
                              'item_description',
                              'year_collected',
                              'in_situ',
-                             'thumbnail'
-                             )
+                             'thumbnail')
 
 lgrp_default_list_filter = ('basis_of_record',
                             'item_type',
@@ -52,17 +43,15 @@ lgrp_readonly_fields = ('id',
                         'date_last_modified',
                         'easting', 'northing',
                         'longitude', 'latitude',
-                        'photo'
-                        )
-
+                        'photo')
 
 lgrp_occurrence_fieldsets = (
-    ('Record Details', {  # lgrp_occurrence_fieldsets[0]
+    ('Record Details', {
         'fields': [('id', 'date_created', 'date_last_modified',),
                    ('basis_of_record',),
                    ('remarks',)]
-    }),
-    ('Find Details', {  # lgrp_occurrence_fieldsets[1]
+    }),         # lgrp_occurrence_fieldsets[0]
+    ('Find Details', {
         'fields': [('date_recorded', 'year_collected',),
                    ('barcode', 'catalog_number', 'old_cat_number', 'field_number',),
                    ('item_type', 'item_scientific_name', 'item_description', 'item_count',),
@@ -72,34 +61,35 @@ lgrp_occurrence_fieldsets = (
                    ('collection_remarks',),
                    ('verbatim_kml_data',),
                    ]
-    }),
-    ('Photos', {  # lgrp_occurrence_fieldsets[2]
+    }),           # lgrp_occurrence_fieldsets[1]
+    ('Photos', {
         'fields': [('photo', 'image')],
         # 'classes': ['collapse'],
-    }),
-    ('Geological Context', {  # lgrp_occurrence_fieldsets[3]
+    }),                 # lgrp_occurrence_fieldsets[2]
+    ('Geological Context', {
         'fields': [('analytical_unit_found', 'analytical_unit_likely', 'analytical_unit_simplified'),
                    ('analytical_unit_1', 'analytical_unit_2', 'analytical_unit_3'),
                    ('stratigraphic_formation', 'stratigraphic_member',),
                    ('in_situ', 'ranked'),
                    ('geology_remarks',)]
-    }),
-    ('Location', {  # lgrp_occurrence_fieldsets[4]
+    }),     # lgrp_occurrence_fieldsets[3]
+    ('Location', {
         'fields': [('coll_code', 'collection_code', 'drainage_region'),
                    ('georeference_remarks',),
                    ('longitude', 'latitude'),
                    ('easting', 'northing',),
                    ('geom',)]
-    }),
-    ('Problems', {  # lgrp_occurrence_fieldsets[5]
+    }),               # lgrp_occurrence_fieldsets[4]
+    ('Problems', {
         'fields': [('problem', 'problem_comment'),
                    ],
         'classes': ['collapse']
-    }),
+    }),               # lgrp_occurrence_fieldsets[5]
 )
 
 biology_additional_fieldsets = (
-    ('Elements', {'fields': [  # biology_additional_fieldsets[0]
+    ('Elements', {
+        'fields': [
         ('element', 'element_portion', 'side', 'element_number', 'element_modifier'),
         ('uli1', 'uli2', 'ulc', 'ulp3', 'ulp4', 'ulm1', 'ulm2', 'ulm3'),
         ('uri1', 'uri2', 'urc', 'urp3', 'urp4', 'urm1', 'urm2', 'urm3'),
@@ -107,16 +97,17 @@ biology_additional_fieldsets = (
         ('lli1', 'lli2', 'llc', 'llp3', 'llp4', 'llm1', 'llm2', 'llm3'),
         ('indet_incisor', 'indet_canine', 'indet_premolar', 'indet_molar', 'indet_tooth'), 'deciduous',
         ('element_remarks',)]
-    }),
-    ('Taxonomy', {'fields': [  # biology_additional_fieldsets[1]
+    }),               # biology_additional_fieldsets[0]
+    ('Taxonomy', {
+        'fields': [
         ('taxon', 'identification_qualifier'),
                              ('identified_by', 'year_identified', 'type_status'),
                              ('taxonomy_remarks',)]
-                  }),
+                  }),               # biology_additional_fieldsets[1]
     ('Taphonomy', {  # biology_additional_fieldsets[2]
         'fields': [('weathering', 'surface_modification')],
         # 'classes': ['collapse'],
-    }),
+    }),              # biology_additional_fieldsets[2]
 )
 
 biology_fieldsets = (
@@ -132,40 +123,11 @@ biology_fieldsets = (
 )
 
 
-default_list_filter = ['basis_of_record',
-                       'item_type',
-                       'year_collected',
-                       'collection_code',
-                       'collector_person__name',
-                       'problem'
-                       ]
-
-default_search_fields = ['id',
-                         'item_scientific_name',
-                         'item_description',
-                         'barcode',
-                         'collection_code',
-                         'locality_number',
-                         'item_number', 'item_part',
-                         'old_cat_number',
-                         'collector_person__name',
-                         'finder_person__name',
-                         ]
-
-
-###################
-# Person Admin    #
-###################
-
 class PersonAdmin(admin.ModelAdmin):
     list_display = ['name']
-    fields = ['name']
-    search_fields = ['name']
+    ordering = ['name']
 
 
-####################
-# Occurrence Admin #
-####################
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
     OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
@@ -176,9 +138,6 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     readonly_fields = lgrp_readonly_fields
     inlines = (ImagesInline, FilesInline)
 
-#################
-# Biology Admin #
-#################
 
 class BiologyAdmin(OccurrenceAdmin):
     list_display = list(lgrp_default_list_display)
@@ -258,9 +217,6 @@ class GeologyAdmin(OccurrenceAdmin):
     pass
 
 
-###################
-# Hydrology Admin #
-###################
 class HydrologyAdmin(projects.admin.BingGeoAdmin):
     list_display = ("id", "size")
     search_fields = ("id",)
@@ -270,9 +226,6 @@ class HydrologyAdmin(projects.admin.BingGeoAdmin):
         'layers': ['google.terrain']
     }
 
-##########################
-# Register Admin Classes #
-##########################
 
 admin.site.register(Biology, BiologyAdmin)
 admin.site.register(Archaeology, ArchaeologyAdmin)
@@ -283,3 +236,4 @@ admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
 admin.site.register(IdentificationQualifier, projects.admin.IDQAdmin)
 admin.site.register(TaxonRank, projects.admin.TaxonRankAdmin)
 admin.site.register(Person, PersonAdmin)
+admin.site.register(CollectionCode)
