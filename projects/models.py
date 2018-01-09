@@ -5,6 +5,7 @@ from paleocore110.settings.base import INSTALLED_APPS
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.apps import apps
+from django.utils import timezone
 
 
 # Python imports
@@ -29,22 +30,77 @@ from utils.models import RelatedLink, CarouselItem
 
 # MODELS
 # Abstract Models - Not managed by migrations, not in DB
-class TaxonRank(models.Model):
+class PaleoCoreBaseClass(models.Model):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    date_created = models.DateTimeField('Created',
+                                        default = timezone.now,
+                                        # auto_now_add=True,
+                                        help_text='The date and time this resource was first created.')
+    date_last_modified = models.DateTimeField('Modified',
+                                              default=timezone.now,
+                                              # auto_now=True,
+                                              help_text='The date and time this resource was last altered.')
+    problem = models.BooleanField(default=False,
+                                  help_text='Is there a problem with this record that needs attention?')
+    problem_comment = models.TextField(max_length=255, blank=True, null=True,
+                                       help_text='Description of the problem.')
+    remarks = models.TextField("Record Remarks", max_length=500, null=True, blank=True,
+                               help_text='General remarks about this database record.')
+    def __str__(self):
+        id_string = '['+str(self.id)+']'
+        if self.name:
+            id_string = id_string+' '+self.name
+        return id_string
+
+    def get_concrete_field_names(self):
+        """
+        Get field names that correspond to columns in the DB
+        :return: returns a lift
+        """
+        field_list = self._meta.get_fields()
+        return [f.name for f in field_list if f.concrete]
+
+
+    def get_all_field_names(self):
+        """
+        Field names from model
+        :return: list with all field names
+        """
+        field_list = self._meta.get_fields()  # produce a list of field objects
+        return [f.name for f in field_list]  # return a list of names from each field
+
+    def get_foreign_key_field_names(self):
+        """
+        Get foreign key fields
+        :return: returns a list of for key field names
+        """
+        field_list = self._meta.get_fields()  # produce a list of field objects
+        return [f.name for f in field_list if f.is_relation]  # return a list of names for fk fields
+
+
+    class Meta:
+        abstract = True
+
+
+class TaxonRank(PaleoCoreBaseClass):
+    """
+    The rank of a taxon in the standard Linaean hierarchy, e.g. Kingdom, Phylum, Class, Order etc.
+    """
     name = models.CharField(null=False, blank=False, max_length=50, unique=True)
     plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
     ordinal = models.IntegerField(null=False, blank=False, unique=True)
-
-    def __str__(self):
-        return str(self.name)
 
     class Meta:
         abstract = True
         verbose_name = "Taxon Rank"
 
 
-class Taxon(models.Model):
-    name = models.CharField(null=False, blank=False, max_length=255, unique=False)
-    # can't inlcude foreign key to an abstract model
+class Taxon(PaleoCoreBaseClass):
+    """
+    A biological taxon at any rank, e.g. Mammalia, Homo, Homo sapiens idaltu
+    The rank field will need to be defined in each implementation because it is a foreign key relation.
+    The methods included in this abstract class assume that the fields rank and parent are defined.
+    """
 
     def parent_rank(self):
         return self.parent.rank.name
@@ -78,7 +134,7 @@ class Taxon(models.Model):
         else:
             return self.parent.full_lineage()+[self]
 
-    def __unicode__(self):
+    def __str__(self):
         if self.rank.name == 'Species' and self.parent:
             return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
         else:
@@ -87,20 +143,30 @@ class Taxon(models.Model):
     class Meta:
         abstract = True
         verbose_name = "Taxon"
-        verbose_name_plural = "taxa"
+        verbose_name_plural = "Taxa"
         ordering = ['rank__ordinal', 'name']
 
 
-class IdentificationQualifier(models.Model):
+class IdentificationQualifier(PaleoCoreBaseClass):
+    """
+    A modifier to a taxonomic designation, e.g. cf., aff.
+    """
     name = models.CharField(null=False, blank=True, max_length=15, unique=True)
     qualified = models.BooleanField()
-
-    def __unicode__(self):
-        return self.name
 
     class Meta:
         abstract = True
 
+
+class Person(PaleoCoreBaseClass):
+    """
+    A person or agent.
+    """
+
+    class Meta:
+        abstract = True
+        verbose_name = "Person"
+        verbose_name_plural = "People"
 
 # exclude any installed apps that have 'django' in the name
 app_CHOICES = [(name, name) for name in INSTALLED_APPS if name.find("django") == -1]
@@ -113,18 +179,30 @@ display_fields_help_text = "A list of fields to display in the public view of th
 display_filter_fields_help_text = "A list of fields to filter on in the public view of the data, can be empty list []"
 
 
-# Abstract Context Classes inherited by projects
-class PaleoCoreBaseClass(models.Model):
-    name = models.CharField(max_length=200, null=True, blank=True)
+class PaleoCoreOccurrenceBaseClass(PaleoCoreBaseClass):
+    """
+    An Occurrence == Find; a general class for things discovered in the field.
+    Occurrences-Find's have three subtypes: Archaeology, Biology, Geology
+    Occurrence is a deprecated terminology, replaced by Find.
+    Model fields below are grouped by their ontological classes in Darwin Core: Occurrence, Event, etc.
+    """
+    # Record-level - inherited from PaleoCoreBaseClass
+
+    # Event
+    date_recorded = models.DateTimeField("Date Rec", blank=True, null=True, editable=True,
+                                         help_text='Date and time the item was observed or collected.')
+    year_collected = models.IntegerField("Year", blank=True, null=True,
+                                         help_text='The year, event or field campaign during which the item was found.')
+    # Find
+    barcode = models.IntegerField("Barcode", null=True, blank=True,
+                                  help_text='For collected items only.')  # dwc:recordNumber
+    field_number = models.CharField(max_length=50, null=True, blank=True)  # dwc:fieldNumber
+
+    # Location
+    georeference_remarks = models.TextField(max_length=500, null=True, blank=True)
     geom = models.PointField(srid=4326, null=True, blank=True)
+    objects = models.GeoManager()
 
-    def __str__(self):
-        unicode_string = '['+str(self.id)+']'
-        if self.name:
-            unicode_string = unicode_string+' '+self.name
-        return unicode_string
-
-    # shared functions
     def gcs_coordinates(self, coordinate):
         """
         Get the wgs84 gcs coordinates for a point regardless of the point's srs.  Assumes gdal can transform any srs
@@ -154,7 +232,7 @@ class PaleoCoreBaseClass(models.Model):
         """
         Get the get the wgs84 Universal Transverse Mercator (UTM) coordinates for any point.
         :param coordinate: easting, northing, both
-        :return: lon, lat, (lon, lat)
+        :return: easting, northing, (easting, northing)
         """
         def get_epsg(pt):
             if pt.srid != 4326:
@@ -188,14 +266,6 @@ class PaleoCoreBaseClass(models.Model):
                     result = pt.coords
         return result
 
-    def get_concrete_field_names(self):
-        """
-        Get field names that correspond to columns in the DB
-        :return: returns a lift
-        """
-        field_list = self._meta.get_fields()
-        return [f.name for f in field_list if f.concrete]
-
     class Meta:
         abstract = True
 
@@ -213,6 +283,12 @@ class PaleoCoreContextBaseClass(PaleoCoreBaseClass):
     class Meta:
         abstract = True
 
+
+class PaleoCoreCollectionCodeBaseClass(PaleoCoreBaseClass):
+    drainage_region = models.CharField(null=True, blank=True, max_length=255)
+
+    class Meta:
+        abstract=True
 
 # Wagtail models
 # class ProjectsIndexPage(Page):
