@@ -1,7 +1,8 @@
 from django.contrib import admin
-from django.core.exceptions import ObjectDoesNotExist
+from django.conf.urls import url
 from django.http import HttpResponse
 from .models import *
+import lgrp.views
 import unicodecsv
 import projects.admin
 
@@ -19,7 +20,8 @@ class FilesInline(admin.TabularInline):
     readonly_fields = ("id",)
 
 
-lgrp_default_list_display = ('catalog_number',
+lgrp_default_list_display = ('coll_code',
+                             'barcode',
                              'basis_of_record',
                              'item_type',
                              'collecting_method',
@@ -30,12 +32,19 @@ lgrp_default_list_display = ('catalog_number',
                              'in_situ',
                              'thumbnail')
 
-lgrp_default_list_filter = ('basis_of_record',
+lgrp_default_list_select_related = ('coll_code',
+                                    'collector_person',
+                                    'finder_person',
+                                    'unit_found',
+                                    'unit_likely',
+                                    'unit_simplified')
+
+lgrp_default_list_filter = ('coll_code',
+                            'basis_of_record',
                             'item_type',
                             'collecting_method',
                             'collector_person',
-                            'year_collected',
-                            'coll_code')
+                            'year_collected')
 
 lgrp_readonly_fields = ('id',
                         'catalog_number',
@@ -44,6 +53,25 @@ lgrp_readonly_fields = ('id',
                         'easting', 'northing',
                         'longitude', 'latitude',
                         'photo')
+
+lgrp_search_fields = ('id',
+                      'basis_of_record',
+                      'item_type',
+                      'barcode',
+                      'collection_code',
+                      'coll_code__name',
+                      'item_scientific_name',
+                      'item_description',
+                      'analytical_unit_found',
+                      'analytical_unit_likely',
+                      'finder',
+                      'collector',
+                      'finder_person__name',
+                      'collector_person__name',
+                      'old_cat_number',
+                      'unit_found__name',
+                      'unit_likely__name',
+                      'unit_simplified__name')
 
 lgrp_occurrence_fieldsets = (
     ('Record Details', {
@@ -67,7 +95,7 @@ lgrp_occurrence_fieldsets = (
         # 'classes': ['collapse'],
     }),                 # lgrp_occurrence_fieldsets[2]
     ('Geological Context', {
-        'fields': [('analytical_unit_found', 'analytical_unit_likely', 'analytical_unit_simplified'),
+        'fields': [('unit_found', 'unit_likely', 'unit_simplified'),
                    ('analytical_unit_1', 'analytical_unit_2', 'analytical_unit_3'),
                    ('stratigraphic_formation', 'stratigraphic_member',),
                    ('in_situ', 'ranked'),
@@ -133,16 +161,28 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
     """
     list_display = lgrp_default_list_display  # use list() to clone rather than modify in place
+    list_select_related = lgrp_default_list_select_related + ('archaeology', 'biology', 'geology')
+    list_display_links = ['coll_code', 'barcode']
     list_filter = lgrp_default_list_filter
     fieldsets = lgrp_occurrence_fieldsets
     readonly_fields = lgrp_readonly_fields
+    search_fields = lgrp_search_fields
     inlines = (ImagesInline, FilesInline)
+    change_list_template = 'admin/lgrp/Occurrence/change_list.html'
+
+    # Add to the admin urls
+    def get_urls(self):
+        return [
+                   url(r'^import_kmz/$', lgrp.views.ImportKMZ.as_view(), name="import_kmz"),
+               ] + super(OccurrenceAdmin, self).get_urls()
 
 
 class BiologyAdmin(OccurrenceAdmin):
     list_display = list(lgrp_default_list_display)
+    list_select_related = lgrp_default_list_select_related
     list_display.insert(lgrp_default_list_display.index('item_scientific_name'), 'taxon')
     fieldsets = biology_fieldsets
+    search_fields = lgrp_search_fields + ('taxon__name',)
     actions = ['create_data_csv']
 
     def create_data_csv(self, request, queryset):
@@ -210,11 +250,11 @@ class BiologyAdmin(OccurrenceAdmin):
 
 
 class ArchaeologyAdmin(OccurrenceAdmin):
-    pass
+    list_select_related = lgrp_default_list_select_related
 
 
 class GeologyAdmin(OccurrenceAdmin):
-    pass
+    list_select_related = lgrp_default_list_select_related
 
 
 class HydrologyAdmin(projects.admin.BingGeoAdmin):
@@ -226,6 +266,14 @@ class HydrologyAdmin(projects.admin.BingGeoAdmin):
         'layers': ['google.terrain']
     }
 
+class CollectionCodeAdmin(projects.admin.CollectionCodeAdmin):
+    pass
+
+class StratigraphicUnitAdmin(admin.ModelAdmin):
+    list_display = ['name', 'description', 'facies_type', 'age_ma']
+    ordering = ['name']
+
+
 
 admin.site.register(Biology, BiologyAdmin)
 admin.site.register(Archaeology, ArchaeologyAdmin)
@@ -236,4 +284,5 @@ admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
 admin.site.register(IdentificationQualifier, projects.admin.IDQAdmin)
 admin.site.register(TaxonRank, projects.admin.TaxonRankAdmin)
 admin.site.register(Person, PersonAdmin)
-admin.site.register(CollectionCode)
+admin.site.register(CollectionCode, CollectionCodeAdmin)
+admin.site.register(StratigraphicUnit, StratigraphicUnitAdmin)
