@@ -5,47 +5,6 @@ from projects.ontologies import ITEM_TYPE_VOCABULARY
 import os
 from django.contrib.gis.geos import Point
 
-
-class TaxonRank(projects.models.TaxonRank):
-
-    class Meta:
-        verbose_name = "LGRP Taxon Rank"
-
-
-class Taxon(projects.models.Taxon):
-    parent = models.ForeignKey('self', null=True, blank=True)
-    rank = models.ForeignKey(TaxonRank)
-
-    class Meta:
-        verbose_name = "LGRP Taxon"
-        verbose_name_plural = "LGRP Taxa"
-
-
-class IdentificationQualifier(projects.models.IdentificationQualifier):
-
-    class Meta:
-        verbose_name = "LGRP ID Qualifier"
-
-
-class Person(projects.models.Person):
-
-    class Meta:
-        verbose_name = "LGRP Person"
-        verbose_name_plural = "LGRP People"
-
-
-class CollectionCode(projects.models.PaleoCoreCollectionCodeBaseClass):
-
-    class Meta:
-        verbose_name = "LGRP Collection Code"
-
-
-class StratigraphicUnit(projects.models.PaleoCoreStratigraphicUnitBaseClass):
-
-    class Meta:
-        verbose_name = "LGRP Stratigraphic Unit"
-
-
 # Occurrence Class and Subclasses
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     """
@@ -71,10 +30,10 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
                                  choices=LGRP_COLLECTOR_CHOICES)  # dwc:recordedBy
     finder = models.CharField(null=True, blank=True, max_length=50,
                               choices=LGRP_FINDER_CHOICES)
-    collector_person = models.ForeignKey(Person, null=True, blank=True,
+    collector_person = models.ForeignKey('Person', null=True, blank=True,
                                          related_name='person_collector',
                                          on_delete=models.SET_NULL)
-    finder_person = models.ForeignKey(Person, null=True, blank=True,
+    finder_person = models.ForeignKey('Person', null=True, blank=True,
                                       related_name='person_finder',
                                       on_delete=models.SET_NULL)
     collecting_method = models.CharField(max_length=50,
@@ -106,18 +65,18 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     weathering = models.SmallIntegerField(blank=True, null=True, choices=LGRP_WEATHERING_CHOICES)
     surface_modification = models.CharField(max_length=255, blank=True, null=True)
     geology_remarks = models.TextField(max_length=500, null=True, blank=True)
-    unit_found = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
+    unit_found = models.ForeignKey('StratigraphicUnit', null=True, blank=True,
                                    related_name='occurrence_unit_found',
                                    on_delete=models.SET_NULL)
-    unit_likely = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
+    unit_likely = models.ForeignKey('StratigraphicUnit', null=True, blank=True,
                                     related_name='occurrence_unit_likely',
                                     on_delete=models.SET_NULL)
-    unit_simplified = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
+    unit_simplified = models.ForeignKey('StratigraphicUnit', null=True, blank=True,
                                         related_name='occurrence_unit_simplified',
                                         on_delete=models.SET_NULL)
 
     # Location
-    coll_code = models.ForeignKey(CollectionCode, null=True, blank=True,
+    coll_code = models.ForeignKey('CollectionCode', null=True, blank=True,
                                   on_delete=models.SET_NULL)
     collection_code = models.CharField(max_length=20, blank=True, null=True,
                                        choices=LGRP_COLLECTION_CODES)  # dwc:collectionCode, change to locality?
@@ -264,9 +223,19 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
             return None
 
     class Meta:
-        verbose_name = "LGRP Occurrence"
-        verbose_name_plural = "LGRP Occurrences"
+        verbose_name = "01 LGRP Occurrence"
+        verbose_name_plural = "01 LGRP Occurrences"
         ordering = ["collection_code", "item_number", "item_part"]
+
+
+class Archaeology(Occurrence):
+    find_type = models.CharField(null=True, blank=True, max_length=255)
+    length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+    width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "02 LGRP Archaeology"
+        verbose_name_plural = "02 LGRP Archaeology"
 
 
 class Biology(Occurrence):
@@ -276,14 +245,14 @@ class Biology(Occurrence):
     biology_remarks = models.TextField(max_length=500, null=True, blank=True)
 
     # Taxon
-    taxon = models.ForeignKey(Taxon,
+    taxon = models.ForeignKey('Taxon',
                               default=0, on_delete=models.SET_DEFAULT,  # prevent deletion when taxa deleted
                               related_name='lgrp_taxon_bio_occurrences')
-    identification_qualifier = models.ForeignKey(IdentificationQualifier,
+    identification_qualifier = models.ForeignKey('IdentificationQualifier',
                                                  on_delete=models.SET_NULL,
                                                  related_name='lgrp_id_qualifier_bio_occurrences',
                                                  null=True, blank=True)
-    qualifier_taxon = models.ForeignKey(Taxon, null=True, blank=True,
+    qualifier_taxon = models.ForeignKey('Taxon', null=True, blank=True,
                                         on_delete=models.SET_NULL,
                                         related_name='lgrp_qualifier_taxon_bio_occurrences')
     verbatim_taxon = models.CharField(null=True, blank=True, max_length=1024)
@@ -388,12 +357,14 @@ class Biology(Occurrence):
     lm_3_length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
     lm_3_width = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
 
-    class Meta:
-        verbose_name = "LGRP Biology"
-        verbose_name_plural = "LGRP Biology"
-
     def __str__(self):
         return str(self.id)
+
+    class Meta:
+        verbose_name = "03 LGRP Biology"
+        verbose_name_plural = "03 LGRP Biology"
+
+
 
     @staticmethod
     def find_unmatched_values(field_name):
@@ -416,16 +387,6 @@ class Biology(Occurrence):
             return result_tuple
 
 
-class Archaeology(Occurrence):
-    find_type = models.CharField(null=True, blank=True, max_length=255)
-    length_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-    width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
-
-    class Meta:
-        verbose_name = "LGRP Archaeology"
-        verbose_name_plural = "LGRP Archaeology"
-
-
 class Geology(Occurrence):
     find_type = models.CharField(null=True, blank=True, max_length=255)
     dip = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
@@ -434,9 +395,48 @@ class Geology(Occurrence):
     texture = models.CharField(null=True, blank=True, max_length=255)
 
     class Meta:
-        verbose_name = "LGRP Geology"
-        verbose_name_plural = "LGRP Geology"
+        verbose_name = "04 LGRP Geology"
+        verbose_name_plural = "04 LGRP Geology"
 
+
+class Person(projects.models.Person):
+
+    class Meta:
+        verbose_name = "05 LGRP Person"
+        verbose_name_plural = "05 LGRP People"
+
+
+class CollectionCode(projects.models.PaleoCoreCollectionCodeBaseClass):
+
+    class Meta:
+        verbose_name = "06 LGRP Collection Code"
+
+
+class StratigraphicUnit(projects.models.PaleoCoreStratigraphicUnitBaseClass):
+
+    class Meta:
+        verbose_name = "07 LGRP Stratigraphic Unit"
+
+
+class TaxonRank(projects.models.TaxonRank):
+
+    class Meta:
+        verbose_name = "08 LGRP Taxon Rank"
+
+
+class Taxon(projects.models.Taxon):
+    parent = models.ForeignKey('self', null=True, blank=True)
+    rank = models.ForeignKey('TaxonRank')
+
+    class Meta:
+        verbose_name = "09 LGRP Taxon"
+        verbose_name_plural = "09 LGRP Taxa"
+
+
+class IdentificationQualifier(projects.models.IdentificationQualifier):
+
+    class Meta:
+        verbose_name = "10 LGRP ID Qualifier"
 
 # Hydrology Class
 class Hydrology(models.Model):
@@ -451,8 +451,8 @@ class Hydrology(models.Model):
         return str(self.name)
 
     class Meta:
-        verbose_name = "LGRP Hydrology"
-        verbose_name_plural = "LGRP Hydrology"
+        verbose_name = "11 LGRP Hydrology"
+        verbose_name_plural = "11 LGRP Hydrology"
 
 
 # Media Classes
