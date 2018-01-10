@@ -19,7 +19,7 @@ from account import urls as account_urls
 from mlp import urls as mlp_urls
 
 admin.autodiscover()
-
+admin.site.site_header = 'Paleo Core Administration'
 
 urlpatterns = [
     url(r'^django-admin/', include(admin.site.urls)),
