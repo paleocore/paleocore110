@@ -82,6 +82,7 @@ INSTALLED_APPS = (
     'leaflet',
     'djgeojson',
     'wagtailgeowidget',
+    'mapwidgets',
 
     'projects',
     'lgrp',
@@ -209,10 +210,14 @@ GA_VIEW_ID = env('GA_VIEW_ID', default='ga:xxxxxxxxxxxxx')
 
 
 # Google Maps Key
-
-GOOGLE_MAPS_KEY = ''
+GOOGLE_MAPS_KEY = 'AIzaSyAMODxiUnSdRtzHAnDBYxZZ2QBJHLJxpSA'
 DYNAMIC_MAP_URL = ''
 STATIC_MAP_URL = ''
+
+MAP_WIDGETS = {
+    "GooglePointFieldWidget": (),
+    "GOOGLE_MAP_API_KEY": GOOGLE_MAPS_KEY
+}
 
 # Wagtail settings
 
