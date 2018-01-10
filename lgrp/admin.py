@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required, permission_required
 from django.conf.urls import url
 from django.http import HttpResponse
 from .models import *
@@ -151,11 +152,6 @@ biology_fieldsets = (
 )
 
 
-class PersonAdmin(admin.ModelAdmin):
-    list_display = ['name']
-    ordering = ['name']
-
-
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
     OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
@@ -173,8 +169,12 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     # Add to the admin urls
     def get_urls(self):
         return [
-                   url(r'^import_kmz/$', lgrp.views.ImportKMZ.as_view(), name="import_kmz"),
+                   url(r'^import_kmz/$', permission_required('lgrp.add_occurrence', login_url='login/')(lgrp.views.ImportKMZ.as_view()), name="import_kmz"),
                ] + super(OccurrenceAdmin, self).get_urls()
+
+
+class ArchaeologyAdmin(OccurrenceAdmin):
+    list_select_related = lgrp_default_list_select_related
 
 
 class BiologyAdmin(OccurrenceAdmin):
@@ -249,12 +249,22 @@ class BiologyAdmin(OccurrenceAdmin):
     create_data_csv.short_description = 'Download Selected to .csv'
 
 
-class ArchaeologyAdmin(OccurrenceAdmin):
-    list_select_related = lgrp_default_list_select_related
-
-
 class GeologyAdmin(OccurrenceAdmin):
     list_select_related = lgrp_default_list_select_related
+
+
+class PersonAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    ordering = ['name']
+
+
+class CollectionCodeAdmin(projects.admin.CollectionCodeAdmin):
+    pass
+
+
+class StratigraphicUnitAdmin(admin.ModelAdmin):
+    list_display = ['name', 'description', 'facies_type', 'age_ma']
+    ordering = ['name']
 
 
 class HydrologyAdmin(projects.admin.BingGeoAdmin):
@@ -265,14 +275,6 @@ class HydrologyAdmin(projects.admin.BingGeoAdmin):
     options = {
         'layers': ['google.terrain']
     }
-
-class CollectionCodeAdmin(projects.admin.CollectionCodeAdmin):
-    pass
-
-class StratigraphicUnitAdmin(admin.ModelAdmin):
-    list_display = ['name', 'description', 'facies_type', 'age_ma']
-    ordering = ['name']
-
 
 
 admin.site.register(Biology, BiologyAdmin)
