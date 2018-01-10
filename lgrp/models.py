@@ -107,14 +107,18 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     surface_modification = models.CharField(max_length=255, blank=True, null=True)
     geology_remarks = models.TextField(max_length=500, null=True, blank=True)
     unit_found = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
-                                   related_name='occurrence_unit_found')
+                                   related_name='occurrence_unit_found',
+                                   on_delete=models.SET_NULL)
     unit_likely = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
-                                    related_name='occurrence_unit_likely')
+                                    related_name='occurrence_unit_likely',
+                                    on_delete=models.SET_NULL)
     unit_simplified = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
-                                        related_name='occurrence_unit_simplified')
+                                        related_name='occurrence_unit_simplified',
+                                        on_delete=models.SET_NULL)
 
     # Location
-    coll_code = models.ForeignKey(CollectionCode, null=True, blank=True)
+    coll_code = models.ForeignKey(CollectionCode, null=True, blank=True,
+                                  on_delete=models.SET_NULL)
     collection_code = models.CharField(max_length=20, blank=True, null=True,
                                        choices=LGRP_COLLECTION_CODES)  # dwc:collectionCode, change to locality?
     drainage_region = models.CharField(null=True, blank=True, max_length=255)  # merge with collection_code?
@@ -453,6 +457,7 @@ class Hydrology(models.Model):
 
 # Media Classes
 class Image(models.Model):
+    # Default is cascade on delete.
     occurrence = models.ForeignKey("Occurrence", related_name='occurrence_images')
     image = models.ImageField(upload_to="uploads/images", null=True, blank=True)
     description = models.TextField(null=True, blank=True)
