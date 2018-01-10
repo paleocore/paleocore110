@@ -2,8 +2,7 @@ from django.contrib import admin
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.db import models
 from django.forms import TextInput, Textarea  # import custom form widgets
-from django.http import HttpResponse
-import unicodecsv
+from mapwidgets.widgets import GooglePointFieldWidget
 
 
 class BingGeoAdmin(OSMGeoAdmin):
@@ -91,10 +90,11 @@ default_biology_admin_fieldsets = (
 )
 
 
-class PaleoCoreOccurrenceAdmin(BingGeoAdmin):
+class PaleoCoreOccurrenceAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.CharField: {'widget': TextInput(attrs={'size': '25'})},
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
+        models.PointField: {"widget": GooglePointFieldWidget}
     }
 
 
@@ -110,6 +110,9 @@ class PaleoCoreOccurrenceAdmin(BingGeoAdmin):
         else:
             queryset |= self.model.objects.filter(barcode=search_term_as_int)
         return queryset, use_distinct
+
+    class Media:
+        js = ['admin/js/list_filter_collapse.js']
 
 
 class PaleoCoreLocalityAdmin(BingGeoAdmin):
@@ -132,5 +135,11 @@ class IDQAdmin(admin.ModelAdmin):
 
 class TaxonRankAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'ordinal']
+
+
+class CollectionCodeAdmin(admin.ModelAdmin):
+    list_display =['id', 'name', 'drainage_region']
+    list_display_links = ['id']
+    list_editable = ['name', 'drainage_region']
 
 

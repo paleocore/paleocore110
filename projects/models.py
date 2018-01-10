@@ -46,6 +46,8 @@ class PaleoCoreBaseClass(models.Model):
                                        help_text='Description of the problem.')
     remarks = models.TextField("Record Remarks", max_length=500, null=True, blank=True,
                                help_text='General remarks about this database record.')
+    last_import = models.BooleanField(default=False)
+
     def __str__(self):
         id_string = '['+str(self.id)+']'
         if self.name:
@@ -80,6 +82,7 @@ class PaleoCoreBaseClass(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['name']
 
 
 class TaxonRank(PaleoCoreBaseClass):
@@ -169,6 +172,7 @@ class Person(PaleoCoreBaseClass):
         abstract = True
         verbose_name = "Person"
         verbose_name_plural = "People"
+
 
 # exclude any installed apps that have 'django' in the name
 app_CHOICES = [(name, name) for name in INSTALLED_APPS if name.find("django") == -1]
@@ -289,8 +293,20 @@ class PaleoCoreContextBaseClass(PaleoCoreBaseClass):
 class PaleoCoreCollectionCodeBaseClass(PaleoCoreBaseClass):
     drainage_region = models.CharField(null=True, blank=True, max_length=255)
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         abstract=True
+
+
+class PaleoCoreStratigraphicUnitBaseClass(PaleoCoreBaseClass):
+    age_ma = models.DecimalField(max_digits=10, decimal_places=5, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    facies_type = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        abstract = True
 
 # Wagtail models
 # class ProjectsIndexPage(Page):
