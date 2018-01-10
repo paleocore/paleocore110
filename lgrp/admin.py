@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import permission_required
 from django.conf.urls import url
 from django.http import HttpResponse
 from .models import *
@@ -169,8 +169,9 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
 
     # Add to the admin urls
     def get_urls(self):
-        return [
-                   url(r'^import_kmz/$', permission_required('lgrp.add_occurrence', login_url='login/')(lgrp.views.ImportKMZ.as_view()), name="import_kmz"),
+        return [url(r'^import_kmz/$',
+                    permission_required('lgrp.add_occurrence', login_url='login/')(lgrp.views.ImportKMZ.as_view()),
+                    name="import_kmz"),
                ] + super(OccurrenceAdmin, self).get_urls()
 
 

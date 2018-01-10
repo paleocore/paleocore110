@@ -223,8 +223,8 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
             return None
 
     class Meta:
-        verbose_name = "01 LGRP Occurrence"
-        verbose_name_plural = "01 LGRP Occurrences"
+        verbose_name = "01-LGRP Occurrence"
+        verbose_name_plural = "01-LGRP Occurrences"
         ordering = ["collection_code", "item_number", "item_part"]
 
 
@@ -234,8 +234,8 @@ class Archaeology(Occurrence):
     width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
 
     class Meta:
-        verbose_name = "02 LGRP Archaeology"
-        verbose_name_plural = "02 LGRP Archaeology"
+        verbose_name = "02-LGRP Archaeology"
+        verbose_name_plural = "02-LGRP Archaeology"
 
 
 class Biology(Occurrence):
@@ -361,8 +361,8 @@ class Biology(Occurrence):
         return str(self.id)
 
     class Meta:
-        verbose_name = "03 LGRP Biology"
-        verbose_name_plural = "03 LGRP Biology"
+        verbose_name = "03-LGRP Biology"
+        verbose_name_plural = "03-LGRP Biology"
 
 
 
@@ -395,33 +395,33 @@ class Geology(Occurrence):
     texture = models.CharField(null=True, blank=True, max_length=255)
 
     class Meta:
-        verbose_name = "04 LGRP Geology"
-        verbose_name_plural = "04 LGRP Geology"
+        verbose_name = "04-LGRP Geology"
+        verbose_name_plural = "04-LGRP Geology"
 
 
 class Person(projects.models.Person):
 
     class Meta:
-        verbose_name = "05 LGRP Person"
-        verbose_name_plural = "05 LGRP People"
+        verbose_name = "05-LGRP Person"
+        verbose_name_plural = "05-LGRP People"
 
 
 class CollectionCode(projects.models.PaleoCoreCollectionCodeBaseClass):
 
     class Meta:
-        verbose_name = "06 LGRP Collection Code"
+        verbose_name = "06-LGRP Collection Code"
 
 
 class StratigraphicUnit(projects.models.PaleoCoreStratigraphicUnitBaseClass):
 
     class Meta:
-        verbose_name = "07 LGRP Stratigraphic Unit"
+        verbose_name = "07-LGRP Stratigraphic Unit"
 
 
 class TaxonRank(projects.models.TaxonRank):
 
     class Meta:
-        verbose_name = "08 LGRP Taxon Rank"
+        verbose_name = "08-LGRP Taxon Rank"
 
 
 class Taxon(projects.models.Taxon):
@@ -429,14 +429,14 @@ class Taxon(projects.models.Taxon):
     rank = models.ForeignKey('TaxonRank')
 
     class Meta:
-        verbose_name = "09 LGRP Taxon"
-        verbose_name_plural = "09 LGRP Taxa"
+        verbose_name = "09-LGRP Taxon"
+        verbose_name_plural = "09-LGRP Taxa"
 
 
 class IdentificationQualifier(projects.models.IdentificationQualifier):
 
     class Meta:
-        verbose_name = "10 LGRP ID Qualifier"
+        verbose_name = "10-LGRP ID Qualifier"
 
 # Hydrology Class
 class Hydrology(models.Model):
@@ -451,8 +451,8 @@ class Hydrology(models.Model):
         return str(self.name)
 
     class Meta:
-        verbose_name = "11 LGRP Hydrology"
-        verbose_name_plural = "11 LGRP Hydrology"
+        verbose_name = "11-LGRP Hydrology"
+        verbose_name_plural = "11-LGRP Hydrology"
 
 
 # Media Classes
