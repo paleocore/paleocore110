@@ -39,6 +39,13 @@ class CollectionCode(projects.models.PaleoCoreCollectionCodeBaseClass):
     class Meta:
         verbose_name = "LGRP Collection Code"
 
+
+class StratigraphicUnit(projects.models.PaleoCoreStratigraphicUnitBaseClass):
+
+    class Meta:
+        verbose_name = "LGRP Stratigraphic Unit"
+
+
 # Occurrence Class and Subclasses
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     """
@@ -99,9 +106,14 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     weathering = models.SmallIntegerField(blank=True, null=True, choices=LGRP_WEATHERING_CHOICES)
     surface_modification = models.CharField(max_length=255, blank=True, null=True)
     geology_remarks = models.TextField(max_length=500, null=True, blank=True)
+    unit_found = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
+                                   related_name='occurrence_unit_found')
+    unit_likely = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
+                                    related_name='occurrence_unit_likely')
+    unit_simplified = models.ForeignKey(StratigraphicUnit, null=True, blank=True,
+                                        related_name='occurrence_unit_simplified')
 
     # Location
-    # TODO merge collection_code and drainage region
     coll_code = models.ForeignKey(CollectionCode, null=True, blank=True)
     collection_code = models.CharField(max_length=20, blank=True, null=True,
                                        choices=LGRP_COLLECTION_CODES)  # dwc:collectionCode, change to locality?
@@ -389,7 +401,7 @@ class Biology(Occurrence):
         """
         lgrp_bio = Biology.objects.all()
         values = list(set([getattr(bio, field_name) for bio in lgrp_bio]))
-        field = Biology._meta.get_field_by_name(field_name)[0]
+        field = Biology._meta.get_field(field_name)[0]
         choices = [i[0] for i in field.choices]
         result = [v for v in values if v not in choices]
         if (not result) or result == [None]:
