@@ -1,8 +1,7 @@
 from django.shortcuts import render
 
 import os
-import urllib
-from django.contrib.admin.views.decorators import staff_member_required
+
 from django.conf import settings
 from django.views import generic
 from django.http import HttpResponse
@@ -10,11 +9,7 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext, loader, response
 from django.contrib import messages
 from django.contrib.gis.geos import GEOSGeometry, Point
-from django.core.files import File
 from django.core.files.base import ContentFile
-# from django.contrib.admin.utils import get_deleted_objects
-from django.db import router
-
 from .models import Occurrence, Biology, Archaeology, Geology, Person, Taxon, IdentificationQualifier
 from .forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology
 from .utilities import match_taxon, match_element
@@ -93,7 +88,7 @@ class ImportKMZ(generic.FormView):
     template_name = 'admin/lgrp/occurrence/import_kmz.html'
     form_class = UploadKMLForm
     context_object_name = 'upload'
-    success_url = '../'
+    success_url = '../?last_import__exact=1'
 
     def form_valid(self, form):
         # This method is called when valid form data has been POSTed.
@@ -115,8 +110,8 @@ class ImportKMZ(generic.FormView):
             :param kml_placemark_list:
             :return:
             """
-            feature_count = 0
-
+            occurrence_count, archaeology_count, biology_count, geology_count = [0,0,0,0]
+            Occurrence.objects.all().update(last_import=False)  # Toggle off all last imports
             for o in kml_placemark_list:
 
                 # Check to make sure that the object is a Placemark, filter out folder objects
@@ -139,12 +134,16 @@ class ImportKMZ(generic.FormView):
                     lgrp_occ = None
                     # Determine the appropriate subtype and initialize
                     item_type = attributes_dict.get("Item Type")
+                    occurrence_count += 1
                     if item_type in ("Artifact", "Artifactual", "Archeology", "Archaeological"):
                         lgrp_occ = Archaeology()
+                        archaeology_count += 1
                     elif item_type in ("Faunal", "Fauna", "Floral", "Flora"):
                         lgrp_occ = Biology()
+                        biology_count +=1
                     elif item_type in ("Geological", "Geology"):
                         lgrp_occ = Geology()
+                        geology_count += 1
 
                     # Step 3 - Copy attributes from dictionary to Occurrence object, validate as we go.
                     # Improve by checking each field to see if it has a choice list. If so validate against choice
@@ -253,6 +252,7 @@ class ImportKMZ(generic.FormView):
                     lgrp_occ.analytical_unit_3 = attributes_dict.get("Unit 3")
                     lgrp_occ.analytical_unit_likely = attributes_dict.get("Unit Likely")
                     # Save Occurrence before saving media. Need id to rename media files
+                    lgrp_occ.last_import = True
                     lgrp_occ.save()
 
                     # Save image
@@ -278,6 +278,12 @@ class ImportKMZ(generic.FormView):
 
                 elif type(o) is not Placemark:
                     raise IOError("KML File is badly formatted")
+            if occurrence_count == 1:
+                message_string = '1 occurrence'
+            if occurrence_count > 1:
+                message_string = '{} occurrences'.format(occurrence_count)
+            messages.add_message(self.request, messages.INFO,
+                                 'Successfully imported {} occurrences'.format(message_string))
 
         kml_file = kml.KML()
         if kml_file_extension == "kmz":
