@@ -57,7 +57,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
                        ('point_x', 'point_y'),
                        ('easting', 'northing'),
                        ('geom',)],
-            'classes': ['collapse'],
+            #'classes': ['collapse'],
         })
     ]
 
