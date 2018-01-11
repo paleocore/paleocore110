@@ -197,7 +197,7 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
         """
 
         if self.basis_of_record == 'Collection':
-            catalog_number_string = str(self.collection_code) + " " + str(self.barcode)
+            catalog_number_string = str(self.coll_code.name) + " " + str(self.barcode)
             return catalog_number_string.replace('None', '').replace('- ', '')  # replace None with empty string
         else:
             return None
