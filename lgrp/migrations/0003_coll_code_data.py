@@ -22,7 +22,7 @@ def update_collection_codes(apps, schema_editor):
             o.drainage_region = 'Hawoona Dora'
         if o.collection_code == 'LD' and o.drainage_region is None:
             o.drainage_region = 'Lee Adoyta'
-        if o.collection_code == 'LG' and o.drainage_region == 'Lee Adoyta' and o.id == 115168:
+        if o.collection_code == 'LG' and o.drainage_region == 'Lee Adoyta' and o.barcode == 115168:
             o.collection_code = 'LD'
         if o.collection_code == 'LG' and o.drainage_region == 'Laa Yaggili':
             o.drainage_region = 'Markaytoli'
@@ -58,7 +58,7 @@ def update_collection_codes(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('lgrp', '0003_auto_20180108_2019'),
+        ('lgrp', '0002_load_initial_data'),
     ]
 
     operations = [
