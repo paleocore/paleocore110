@@ -216,7 +216,7 @@ class ImportKMZ(generic.FormView):
                     finder_string = attributes_dict.get("Finder")
                     lgrp_occ.finder = finder_string
                     # import person object, validated against look up data in Person table
-                    lgrp_occ.finder_person = Person.objects.get_or_create(name=finder_string)
+                    lgrp_occ.finder_person, created = Person.objects.get_or_create(name=finder_string)
 
                     collector_string = attributes_dict.get("Collector")
                     lgrp_occ.collector = collector_string
