@@ -261,7 +261,7 @@ class PersonAdmin(admin.ModelAdmin):
 
 
 class CollectionCodeAdmin(projects.admin.CollectionCodeAdmin):
-    pass
+    ordering = ['name', 'drainage_region']
 
 
 class StratigraphicUnitAdmin(admin.ModelAdmin):
