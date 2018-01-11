@@ -46,7 +46,9 @@ lgrp_default_list_filter = ('coll_code',
                             'collecting_method',
                             'collector_person',
                             'year_collected',
-                            'last_import')
+                            'last_import',
+                            'date_created',
+                            'date_last_modified')
 
 lgrp_readonly_fields = ('id',
                         'catalog_number',
