@@ -112,6 +112,8 @@ class OccurrenceMethodTests(TestCase):
         self.assertTrue('basis_of_record' in concrete_field_list)
         self.assertFalse('biology' in concrete_field_list)
 
+class ImportKMZTests(TestCase):
+    pass
 
 # class BiologyMethodTests(TestCase):
 #     """

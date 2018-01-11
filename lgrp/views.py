@@ -10,7 +10,7 @@ from django.template import RequestContext, loader, response
 from django.contrib import messages
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.files.base import ContentFile
-from .models import Occurrence, Biology, Archaeology, Geology, Person, Taxon, IdentificationQualifier
+from .models import Occurrence, Biology, Archaeology, Geology, Person, Taxon, IdentificationQualifier, StratigraphicUnit
 from .forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology
 from .utilities import match_taxon, match_element
 
@@ -216,23 +216,12 @@ class ImportKMZ(generic.FormView):
                     finder_string = attributes_dict.get("Finder")
                     lgrp_occ.finder = finder_string
                     # import person object, validated against look up data in Person table
-                    from django.core.exceptions import ObjectDoesNotExist
-                    try:
-                        lgrp_occ.finder_person = Person.objects.get(name=finder_string)
-                    except ObjectDoesNotExist:
-                        if finder_string:  # if finder is not None
-                            p = Person.objects.create(name=finder_string)
-                            lgrp_occ.finder_person = p
+                    lgrp_occ.finder_person = Person.objects.get_or_create(name=finder_string)
 
                     collector_string = attributes_dict.get("Collector")
                     lgrp_occ.collector = collector_string
                     # import person object, validated against look up data in Person table
-                    try:
-                        lgrp_occ.collector_person = Person.objects.get(name=collector_string)
-                    except ObjectDoesNotExist:
-                        if collector_string:  # if finder is not None
-                            p = Person.objects.create(name=collector_string)
-                            lgrp_occ.collector_person = p
+                    lgrp_occ.collector_person, created = Person.objects.get_or_create(name=collector_string)
 
                     lgrp_occ.individual_count = attributes_dict.get("Count")
 
@@ -246,11 +235,18 @@ class ImportKMZ(generic.FormView):
                     elif attributes_dict.get("Ranked Unit") in ('Yes', "YES", 'yes'):
                         lgrp_occ.ranked = True
 
-                    lgrp_occ.analytical_unit_found = attributes_dict.get("Unit Found")
+                    unit_found_string = attributes_dict.get("Unit Found")
+                    unit_likely_string = attributes_dict.get("Unit Likely")
+                    lgrp_occ.analytical_unit_found = unit_found_string
+                    lgrp_occ.analytical_unit_likely = unit_likely_string
                     lgrp_occ.analytical_unit_1 = attributes_dict.get("Unit 1")
                     lgrp_occ.analytical_unit_2 = attributes_dict.get("Unit 2")
                     lgrp_occ.analytical_unit_3 = attributes_dict.get("Unit 3")
-                    lgrp_occ.analytical_unit_likely = attributes_dict.get("Unit Likely")
+
+                    # import statigraphy object, validate against look up data in Stratigraphy table
+                    lgrp_occ.unit_found, created = StratigraphicUnit.objects.get_or_create(name=unit_found_string)
+                    lgrp_occ.unit_likly, created = StratigraphicUnit.objects.get_or_create(name=unit_likely_string)
+
                     # Save Occurrence before saving media. Need id to rename media files
                     lgrp_occ.last_import = True
                     lgrp_occ.save()
