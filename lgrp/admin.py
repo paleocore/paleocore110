@@ -104,7 +104,7 @@ lgrp_occurrence_fieldsets = (
                    ('geology_remarks',)]
     }),     # lgrp_occurrence_fieldsets[3]
     ('Location', {
-        'fields': [('coll_code', 'collection_code', 'drainage_region'),
+        'fields': [('coll_code',),
                    ('georeference_remarks',),
                    ('longitude', 'latitude'),
                    ('easting', 'northing',),

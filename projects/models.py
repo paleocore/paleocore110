@@ -294,7 +294,10 @@ class PaleoCoreCollectionCodeBaseClass(PaleoCoreBaseClass):
     drainage_region = models.CharField(null=True, blank=True, max_length=255)
 
     def __str__(self):
-        return self.name
+        name_string = self.name
+        if self.drainage_region:
+            name_string = self.name + ' [{}]'.format(self.drainage_region)
+        return name_string
 
     class Meta:
         abstract=True
