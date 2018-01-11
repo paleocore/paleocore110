@@ -1,8 +1,4 @@
-from django.contrib import admin
 from .models import *  # import database models from models.py
-from django.forms import TextInput, Textarea  # import custom form widgets
-#from olwidget.admin import GeoModelAdmin
-import default_project.admin
 import unicodecsv
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
