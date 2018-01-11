@@ -410,6 +410,7 @@ class CollectionCode(projects.models.PaleoCoreCollectionCodeBaseClass):
 
     class Meta:
         verbose_name = "06-LGRP Collection Code"
+        ordering = ['name']
 
 
 class StratigraphicUnit(projects.models.PaleoCoreStratigraphicUnitBaseClass):
