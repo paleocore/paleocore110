@@ -165,7 +165,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     readonly_fields = lgrp_readonly_fields
     search_fields = lgrp_search_fields
     inlines = (ImagesInline, FilesInline)
-    change_list_template = 'admin/lgrp/Occurrence/change_list.html'
+    change_list_template = 'admin/lgrp/occurrence/change_list.html'
 
     # Add to the admin urls
     def get_urls(self):
