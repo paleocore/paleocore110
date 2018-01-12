@@ -195,10 +195,16 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
         Generate a pretty string formatted catalog number from constituent fields
         :return: catalog number as string
         """
-
         if self.basis_of_record == 'Collection':
-            catalog_number_string = str(self.coll_code.name) + " " + str(self.barcode)
-            return catalog_number_string.replace('None', '').replace('- ', '')  # replace None with empty string
+            if self.coll_code and self.barcode:
+                catalog_number_string = self.coll_code.name + " " + str(self.barcode)
+            elif self.coll_code:
+                catalog_number_string = self.coll_code.name + " ??"
+            elif self.barcode:
+                catalog_number_string = "?? " + str(self.barcode)
+            else:
+                catalog_number_string = "[{}]".format(self.id)
+            return catalog_number_string
         else:
             return None
 
