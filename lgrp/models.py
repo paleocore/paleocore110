@@ -432,6 +432,7 @@ class Taxon(projects.models.Taxon):
     class Meta:
         verbose_name = "09-LGRP Taxon"
         verbose_name_plural = "09-LGRP Taxa"
+        ordering = ['rank__ordinal', 'name']
 
 
 class IdentificationQualifier(projects.models.IdentificationQualifier):
