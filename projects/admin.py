@@ -91,6 +91,7 @@ default_biology_admin_fieldsets = (
 
 
 class PaleoCoreOccurrenceAdmin(admin.ModelAdmin):
+    save_as = True
     formfield_overrides = {
         models.CharField: {'widget': TextInput(attrs={'size': '25'})},
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
