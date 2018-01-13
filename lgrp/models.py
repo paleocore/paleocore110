@@ -410,6 +410,7 @@ class Person(projects.models.Person):
     class Meta:
         verbose_name = "05-LGRP Person"
         verbose_name_plural = "05-LGRP People"
+        ordering = ['name']
 
 
 class CollectionCode(projects.models.PaleoCoreCollectionCodeBaseClass):
