@@ -162,7 +162,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
     list_display = lgrp_default_list_display  # use list() to clone rather than modify in place
     list_select_related = lgrp_default_list_select_related + ('archaeology', 'biology', 'geology')
-    list_display_links = ['coll_code', 'barcode']
+    list_display_links = ['coll_code', 'barcode', 'basis_of_record']
     list_filter = lgrp_default_list_filter
     fieldsets = lgrp_occurrence_fieldsets
     readonly_fields = lgrp_readonly_fields
