@@ -36,10 +36,10 @@ class ChangeXYForm(forms.ModelForm):
         model = Occurrence
         fields = ["barcode", "item_scientific_name", "item_description"]
     DB_id = forms.IntegerField( max_value=100000)
-    old_easting = forms.DecimalField(max_digits=12)
-    old_northing = forms.DecimalField(max_digits=12)
-    new_easting = forms.DecimalField(max_digits=12)
-    new_northing = forms.DecimalField(max_digits=12)
+    old_easting = forms.DecimalField(max_digits=20)
+    old_northing = forms.DecimalField(max_digits=20)
+    new_easting = forms.DecimalField(max_digits=20)
+    new_northing = forms.DecimalField(max_digits=20)
 
 
 class Occurrence2Biology(forms.ModelForm):

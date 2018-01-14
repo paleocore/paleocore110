@@ -318,6 +318,57 @@ class ImportKMZ(generic.FormView):
         return super(ImportKMZ, self).form_valid(form)
 
 
+class ChangeCoordinates(generic.FormView):
+    template_name = 'admin/lgrp/occurrence/changeXY.html'
+    form_class= ChangeXYForm
+    current_id = None
+
+    def get_success_url(self):
+        if self.current_id:
+            surl = '../{}/change'.format(self.current_id)
+        else:
+            surl = '../'
+        return surl
+
+    def get(self, request, *args, **kwargs):
+        if 'ids' in request.GET:
+            selected = request.GET['ids'].split(',')
+            if len(selected) > 1:
+                messages.error(request, "You can't change the coordinates of multiple points at once.")
+                if request.META['HTTP_REFERER']:
+                    return redirect(request.META['HTTP_REFERER'])
+                else:
+                    return redirect('../')
+            else:
+              return super(ChangeCoordinates, self).get(self, request, args=args, kwargs=kwargs)
+
+    def get_initial(self):
+        initial = {}
+        if self.request.GET:
+            selected = self.request.GET['ids'].split(',')
+            selected_object = Occurrence.objects.get(pk=int(selected[0]))
+            initial['DB_id'] = selected_object.id
+            initial['barcode'] = selected_object.barcode
+            initial['old_easting'] = selected_object.easting
+            initial['old_northing'] = selected_object.northing
+            initial['item_scientific_name'] = selected_object.item_scientific_name
+            initial['item_description'] = selected_object.item_description
+        return initial
+
+    def form_valid(self, form):
+        if form.is_valid():
+            obs = Occurrence.objects.get(pk=form.cleaned_data['DB_id'])
+            self.current_id = obs.id
+            if form.cleaned_data['new_easting'] and form.cleaned_data['new_northing']:
+                utm_pnt = Point(float(form.cleaned_data['new_easting']), float(form.cleaned_data['new_northing']), srid=32637)
+                gcs_pnt = utm_pnt.transform(4326, clone=True)
+            obs.geom = gcs_pnt
+            obs.save()
+            messages.add_message(self.request, messages.INFO,
+                                 'Successfully Updated Coordinates For {}.'.format(obs.catalog_number()))
+        return super(ChangeCoordinates, self).form_valid(form)
+
+
 def change_coordinates_view(request):
     if request.method == "POST":
         form = ChangeXYForm(request.POST)
@@ -329,13 +380,13 @@ def change_coordinates_view(request):
             obs.geom = gcs_pnt
             obs.save()
             messages.add_message(request, messages.INFO,
-                                 'Successfully Updated Coordinates For %s.' % obs.catalog_number)
-            return redirect("/admin/lgrp/occurrence")
+                                 'Successfully Updated Coordinates For %s.' % obs.catalog_number())
+            return redirect("../", RequestContext(request))
     else:
         selected = list(request.GET.get("ids", "").split(","))
         if len(selected) > 1:
             messages.error(request, "You can't change the coordinates of multiple points at once.")
-            return redirect("/admin/lgrp/occurrence")
+            return redirect("../")
         selected_object = Occurrence.objects.get(pk=int(selected[0]))
         initial_data = {"DB_id": selected_object.id,
                         "barcode": selected_object.barcode,
@@ -345,7 +396,7 @@ def change_coordinates_view(request):
                         "item_description": selected_object.item_description
                         }
         the_form = ChangeXYForm(initial=initial_data)
-        return render_to_response('projects/changeXY.html', {"theForm": the_form}, RequestContext(request))
+        return render_to_response('admin/lgrp/occurrence/changeXY.html', {"theForm": the_form}, RequestContext(request))
 
 
 def occurrence2biology_view(request):

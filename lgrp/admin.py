@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.decorators import permission_required
 from django.conf.urls import url
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.core.urlresolvers import reverse
+
 from .models import *
 import lgrp.views
 import unicodecsv
@@ -169,12 +171,27 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     search_fields = lgrp_search_fields
     inlines = (ImagesInline, FilesInline)
     change_list_template = 'admin/lgrp/occurrence/change_list.html'
+    list_per_page = 500
+    actions = ['change_xy']
+
+    def change_xy(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        redirect_url = reverse("admin:change_xy")
+        return HttpResponseRedirect(redirect_url + "?ids=%s" % (",".join(selected)))
+    change_xy.short_description = "Manually change coordinates for a point"
 
     # Add to the admin urls
     def get_urls(self):
         return [url(r'^import_kmz/$',
                     permission_required('lgrp.add_occurrence', login_url='login/')(lgrp.views.ImportKMZ.as_view()),
                     name="import_kmz"),
+                url(r'^change_xy/$',
+                    permission_required('lgrp.change_occurrence', login_url='login/')(
+                        lgrp.views.ChangeCoordinates.as_view()),
+                    name="change_xy"),
+                # url(r'^change_xy/$',
+                #     permission_required('lgrp.change_occurrence', login_url='login/')(lgrp.views.change_coordinates_view),
+                #     name="change_xy"),
                ] + super(OccurrenceAdmin, self).get_urls()
 
 
