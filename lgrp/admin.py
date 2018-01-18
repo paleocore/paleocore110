@@ -29,8 +29,8 @@ lgrp_default_list_display = ('coll_code',
                              'item_type',
                              'collecting_method',
                              'collector_person',
-                             'item_scientific_name',
-                             'item_description',
+                             # 'item_scientific_name',
+                             # 'item_description',
                              'year_collected',
                              'in_situ',
                              'thumbnail')
@@ -89,7 +89,7 @@ lgrp_occurrence_fieldsets = (
     ('Find Details', {
         'fields': [('date_recorded', 'year_collected',),
                    ('barcode', 'catalog_number', 'old_cat_number', 'field_number',),
-                   ('item_type', 'item_scientific_name', 'item_description', 'item_count',),
+                   ('item_type', 'scientific_name', 'description', 'item_count',),
                    ('collector_person', 'finder_person', 'collecting_method'),
                    # ('locality_number', 'item_number', 'item_part', ),
                    ('disposition', 'preparation_status'),
@@ -157,6 +157,17 @@ biology_fieldsets = (
     lgrp_occurrence_fieldsets[5],  # Problems
 )
 
+lgrp_biology_list_display = ('coll_code',
+                             'barcode',
+                             'basis_of_record',
+                             'item_type',
+                             'collecting_method',
+                             'collector_person',
+                             'taxon',
+                             'element',
+                             'year_collected',
+                             'in_situ',
+                             'thumbnail')
 
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
@@ -200,9 +211,8 @@ class ArchaeologyAdmin(OccurrenceAdmin):
 
 
 class BiologyAdmin(OccurrenceAdmin):
-    list_display = list(lgrp_default_list_display)
-    list_select_related = lgrp_default_list_select_related
-    list_display.insert(lgrp_default_list_display.index('item_scientific_name'), 'taxon')
+    list_display = list(lgrp_biology_list_display)
+    list_select_related = lgrp_default_list_select_related + ('taxon',)
     fieldsets = biology_fieldsets
     search_fields = lgrp_search_fields + ('taxon__name',)
     actions = ['create_data_csv']
