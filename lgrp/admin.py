@@ -85,41 +85,42 @@ lgrp_occurrence_fieldsets = (
         'fields': [('id', 'date_created', 'date_last_modified',),
                    ('basis_of_record',),
                    ('remarks',)]
-    }),         # lgrp_occurrence_fieldsets[0]
+    }),  # lgrp_occurrence_fieldsets[0]
     ('Find Details', {
         'fields': [('date_recorded', 'year_collected',),
                    ('barcode', 'catalog_number', 'old_cat_number', 'field_number',),
-                   ('item_type', 'scientific_name', 'description', 'item_count',),
+                   # ('item_type', 'item_scientific_name', 'item_description', 'item_count',),
+                   ('item_type', 'item_count',),
                    ('collector_person', 'finder_person', 'collecting_method'),
                    # ('locality_number', 'item_number', 'item_part', ),
                    ('disposition', 'preparation_status'),
                    ('collection_remarks',),
                    ('verbatim_kml_data',),
                    ]
-    }),           # lgrp_occurrence_fieldsets[1]
+    }),  # lgrp_occurrence_fieldsets[1]
     ('Photos', {
         'fields': [('photo', 'image')],
         # 'classes': ['collapse'],
-    }),                 # lgrp_occurrence_fieldsets[2]
+    }),  # lgrp_occurrence_fieldsets[2]
     ('Geological Context', {
         'fields': [('unit_found', 'unit_likely', 'unit_simplified'),
                    ('analytical_unit_1', 'analytical_unit_2', 'analytical_unit_3'),
                    ('stratigraphic_formation', 'stratigraphic_member',),
                    ('in_situ', 'ranked'),
                    ('geology_remarks',)]
-    }),     # lgrp_occurrence_fieldsets[3]
+    }),  # lgrp_occurrence_fieldsets[3]
     ('Location', {
         'fields': [('coll_code',),
                    ('georeference_remarks',),
                    ('longitude', 'latitude'),
                    ('easting', 'northing',),
                    ('geom',)]
-    }),               # lgrp_occurrence_fieldsets[4]
+    }),  # lgrp_occurrence_fieldsets[4]
     ('Problems', {
         'fields': [('problem', 'problem_comment'),
                    ],
         'classes': ['collapse']
-    }),               # lgrp_occurrence_fieldsets[5]
+    }),  # lgrp_occurrence_fieldsets[5]
 )
 
 biology_additional_fieldsets = (
