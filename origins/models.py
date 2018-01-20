@@ -104,11 +104,14 @@ class Site(models.Model):
             unicode_string = unicode_string+' '+self.verbatim_collection_name
         return unicode_string
 
+    class Meta:
+        ordering = ['name']
+
 
 class Context(projects.models.PaleoCoreContextBaseClass):
     """
     Inherits the following fields
-    name, geom, geological_formation, geological_member, geological_bed, older_interval, younger_interval,
+    name, geological_formation, geological_member, geological_bed, older_interval, younger_interval,
     max_age, min_age, best_age
     """
 
@@ -149,6 +152,9 @@ class Context(projects.models.PaleoCoreContextBaseClass):
 
     def longitude(self):
         return self.gcs_coordinates('lon')
+
+    class Meta:
+        ordering = ['name']
 
 
 class Fossil(models.Model):
