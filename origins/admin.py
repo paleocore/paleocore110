@@ -23,11 +23,14 @@ class ContextInline(admin.TabularInline):
 
 
 class SiteAdmin(BingGeoAdmin):
+    save_as = True
     list_display = ['id', 'name', 'country', 'verbatim_collection_name', 'verbatim_early_interval',
-                    'verbatim_late_interval', 'verbatim_max_ma', 'verbatim_min_ma', 'verbatim_reference_no']
+                    'verbatim_late_interval', 'verbatim_max_ma', 'verbatim_min_ma', 'verbatim_reference_no',
+                    'origins']
+    list_editable = ['origins']
     readonly_fields = ['get_latitude', 'get_longitude']
     search_fields = list_display
-    list_filter = ['origins']
+    list_filter = ['origins', 'country']
     list_per_page = 500
     # inlines = [ContextInline]
 
@@ -63,11 +66,12 @@ class SiteAdmin(BingGeoAdmin):
 
 
 class ContextAdmin(BingGeoAdmin):
+    save_as = True
     list_display = ['id', 'name', 'site_link', 'geological_formation', 'geological_member',
                     'older_interval', 'younger_interval', 'max_age', 'min_age', 'best_age']
     search_fields = ['id', 'name', 'geological_formation', 'geological_member',
                      'older_interval', 'younger_interval', 'max_age', 'min_age', 'best_age']
-    list_filter = ['origins']
+    list_filter = ['origins', 'site__name']
     list_per_page = 500
     readonly_fields = ['latitude', 'longitude']
     fieldsets = [
@@ -81,6 +85,7 @@ class ContextAdmin(BingGeoAdmin):
             'fields': [('older_interval', 'younger_interval',),
                        ('max_age', 'min_age', 'best_age')],
         }),
+        ('Location', {'fields': [('site',), ]}),
         ('Verbatim', {
             'fields': ['verbatim_collection_no', 'verbatim_record_type', 'verbatim_formation',
                        'verbatim_lng', 'verbatim_lat', 'verbatim_collection_name', 'verbatim_collection_subset',
@@ -88,7 +93,6 @@ class ContextAdmin(BingGeoAdmin):
                        'verbatim_late_interval', 'verbatim_max_ma', 'verbatim_min_ma', 'verbatim_reference_no'],
             'classes': ['collapse'],
         }),
-        ('Location', {'fields': [('longitude', 'latitude',), ('geom',)]})
     ]
 
     def site_link(self, obj):
@@ -106,18 +110,18 @@ class ContextAdmin(BingGeoAdmin):
             self.current_obj = obj
         return super(ContextAdmin, self).get_form(request, obj, **kwargs)
 
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Simplify choice list for context to only those context objects occurring at the site.
-        :param db_field:
-        :param request:
-        :param kwargs:
-        :return:
-        """
-
-        if db_field.name == "site":
-            kwargs["queryset"] = Site.objects.filter(geom__distance_lte=(self.current_obj.geom, Distance(m=10000)))
-        return super(ContextAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+    #     """
+    #     Simplify choice list for context to only those context objects occurring at the site.
+    #     :param db_field:
+    #     :param request:
+    #     :param kwargs:
+    #     :return:
+    #     """
+    #
+    #     if db_field.name == "site":
+    #         kwargs["queryset"] = Site.objects.filter(geom__distance_lte=(self.current_obj.geom, Distance(m=10000)))
+    #     return super(ContextAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 class FossilElementInline(admin.TabularInline):
@@ -281,10 +285,12 @@ class FossilAdmin(admin.ModelAdmin):
             if self.current_obj:
                 if self.current_obj.context and self.current_obj.context.site:
                     kwargs["queryset"] = Context.objects.filter(site=self.current_obj.context.site)
-            else:
-                kwargs["queryset"] = Context.objects.all()
-                # If ever I add geom for fossil specimens, then query below useful to find closest context objects
-                # nearby = Context.objects.filter(geom__distance_lte=(self.geom, D(m=10000)))[:5]
+                elif self.current_obj.country:
+                    kwargs["queryset"] = Context.objects.filter(site__country=self.current_obj.country).filter(origins=True)
+                else:
+                    kwargs["queryset"] = Context.objects.filter(origins=True)
+                    # If ever I add geom for fossil specimens, then query below useful to find closest context objects
+                    # nearby = Context.objects.filter(geom__distance_lte=(self.geom, D(m=10000)))[:5]
         return super(FossilAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
