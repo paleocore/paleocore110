@@ -18,19 +18,19 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     readonly_fields = default_read_only_fields+('photo',)  # defaults plus photo
-    default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_record', 'item_type',
+    default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
                             'collecting_method', 'collector', 'item_scientific_name', 'item_description',
                             'year_collected',
                             'in_situ', 'problem', 'disposition', 'easting', 'northing')
     list_display = default_list_display+('thumbnail',)  # defaults plus thumbnail
     list_filter = ['basis_of_record', 'item_type', 'field_season',
-                   'field_number', 'collector', 'problem', 'disposition']
+                   'date_recorded', 'collector', 'problem', 'disposition']
     actions = ["create_data_csv", "change_xy", "change_occurrence2biology"]
 
     fieldsets = [
         ('Curatorial', {
             'fields': [('barcode', 'catalog_number', 'id'),
-                       ('field_number', 'year_collected', 'field_season', 'date_last_modified'),
+                       ('date_recorded', 'year_collected', 'field_season', 'date_last_modified'),
                        ('collection_code', 'item_number', 'item_part')]
         }),
         ('Occurrence Details', {
@@ -154,7 +154,7 @@ class BiologyAdmin(OccurrenceAdmin):
     biology_fieldsets.insert(3, element_fieldsets)
     fieldsets = biology_fieldsets
 
-default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_record', 'item_type',
+default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
                         'collecting_method', 'collector', 'item_scientific_name', 'item_description', 'year_collected',
                         'in_situ', 'problem', 'disposition', 'easting', 'northing')
 
