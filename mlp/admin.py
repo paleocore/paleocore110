@@ -7,17 +7,15 @@ import unicodecsv
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.gis import admin
 # from django.contrib.gis.admin import OSMGeoAdmin
-
-
-class BiologyInline(admin.TabularInline):
-    model = Biology
-    extra = 0
-    readonly_fields = ("id",)
-    fieldsets = projects.admin.default_biology_inline_fieldsets
+from django.contrib.auth.decorators import permission_required
+from django.conf.urls import url
+import mlp.views
 
 
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
-    actions = ["create_data_csv", "change_xy", "change_occurrence2biology"]
+    """
+    OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
+    """
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     readonly_fields = default_read_only_fields+('photo',)  # defaults plus photo
     default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_record', 'item_type',
@@ -27,6 +25,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     list_display = default_list_display+('thumbnail',)  # defaults plus thumbnail
     list_filter = ['basis_of_record', 'item_type', 'field_season',
                    'field_number', 'collector', 'problem', 'disposition']
+    actions = ["create_data_csv", "change_xy", "change_occurrence2biology"]
 
     fieldsets = [
         ('Curatorial', {
@@ -67,6 +66,19 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
         redirect_url = reverse("projects:mlp:mlp_change_xy")
         return HttpResponseRedirect(redirect_url + "?ids=%s" % (",".join(selected)))
     change_xy.short_description = "Manually change coordinates for a point"
+
+    def get_urls(self):
+        return [url(r'^import_kmz/$',
+                    permission_required('lgrp.add_occurrence', login_url='login/')(mlp.views.ImportKMZ.as_view()),
+                    name="import_kmz"),
+                # url(r'^change_xy/$',
+                #     permission_required('lgrp.change_occurrence', login_url='login/')(
+                #         mlp.views.ChangeCoordinates.as_view()),
+                #     name="change_xy"),
+                # url(r'^change_xy/$',
+                #     permission_required('lgrp.change_occurrence', login_url='login/')(lgrp.views.change_coordinates_view),
+                #     name="change_xy"),
+               ] + super(OccurrenceAdmin, self).get_urls()
 
     def change_occurrence2biology(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
