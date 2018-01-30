@@ -318,10 +318,24 @@ class Biology(Occurrence):
                                                  on_delete=models.SET_NULL,
                                                  related_name='mlp_biology_occurrences')
 
+    def __str__(self):
+        return str(self.taxon.__str__())
+
+    def match_taxon(self):
+        """
+        find taxon objects from item_scientific_name
+        Return: (True/False, match_count, match_list)
+        """
+        match_list = Taxon.objects.filter(name=self.item_scientific_name)
+        if len(match_list) == 1:  # one match
+            result_tuple = (True, 1, match_list)
+        else:
+            result_tuple = (False, len(match_list), match_list)
+        return result_tuple
+
     class Meta:
         verbose_name = "MLP Biology"
         verbose_name_plural = "MLP Biology"
         #db_table='mlp_biology'
 
-    def __unicode__(self):
-        return str(self.taxon.__unicode__())
+
