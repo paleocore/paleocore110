@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.views import generic
 import os
-from .models import Occurrence, Biology
+from .models import *
 from mlp.forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology
 from fastkml import kml
 from fastkml import Placemark, Folder, Document
@@ -15,7 +15,8 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib import messages
-
+from dateutil.parser import parse
+from django.core.files.base import ContentFile
 
 class DownloadKMLView(generic.FormView):
     template_name = 'projects/download_kml.html'
@@ -387,15 +388,15 @@ class ImportKMZ(generic.FormView):
                     scientific_name_string = attributes_dict.get("Scientific Name")
                     lgrp_occ.item_scientific_name = scientific_name_string
                     if lgrp_occ.item_scientific_name:
-                        match, match_count, match_list = match_taxon(lgrp_occ)
+                        match, match_count, match_list = lgrp_occ.match_taxon(lgrp_occ)
                         if match and match_count == 1:
                             lgrp_occ.taxon = match_list[0]
 
-                    lgrp_occ.item_description = attributes_dict.get("Description")
-                    if lgrp_occ.item_description:
-                        match, match_count, match_list = match_element(lgrp_occ)
-                        if match and match_count ==1:
-                            lgrp_occ.element = lgrp_occ.item_description.lower()
+                    # lgrp_occ.item_description = attributes_dict.get("Description")
+                    # if lgrp_occ.item_description:
+                    #     match, match_count, match_list = match_element(lgrp_occ)
+                    #     if match and match_count ==1:
+                    #         lgrp_occ.element = lgrp_occ.item_description.lower()
 
                     #######################
                     # NON-REQUIRED FIELDS #
@@ -409,12 +410,12 @@ class ImportKMZ(generic.FormView):
                     finder_string = attributes_dict.get("Finder")
                     lgrp_occ.finder = finder_string
                     # import person object, validated against look up data in Person table
-                    lgrp_occ.finder_person, created = Person.objects.get_or_create(name=finder_string)
+                    # lgrp_occ.finder_person, created = Person.objects.get_or_create(name=finder_string)
 
                     collector_string = attributes_dict.get("Collector")
                     lgrp_occ.collector = collector_string
                     # import person object, validated against look up data in Person table
-                    lgrp_occ.collector_person, created = Person.objects.get_or_create(name=collector_string)
+                    # lgrp_occ.collector_person, created = Person.objects.get_or_create(name=collector_string)
 
                     lgrp_occ.individual_count = attributes_dict.get("Count")
 
@@ -437,8 +438,8 @@ class ImportKMZ(generic.FormView):
                     lgrp_occ.analytical_unit_3 = attributes_dict.get("Unit 3")
 
                     # import statigraphy object, validate against look up data in Stratigraphy table
-                    lgrp_occ.unit_found, created = StratigraphicUnit.objects.get_or_create(name=unit_found_string)
-                    lgrp_occ.unit_likly, created = StratigraphicUnit.objects.get_or_create(name=unit_likely_string)
+                    # lgrp_occ.unit_found, created = StratigraphicUnit.objects.get_or_create(name=unit_found_string)
+                    # lgrp_occ.unit_likly, created = StratigraphicUnit.objects.get_or_create(name=unit_likely_string)
 
                     # Save Occurrence before saving media. Need id to rename media files
                     lgrp_occ.last_import = True
