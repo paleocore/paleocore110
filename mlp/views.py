@@ -2,7 +2,7 @@ from django.conf import settings
 from django.views import generic
 import os
 from .models import *
-from mlp.forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology
+from mlp.forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology, DeleteAllForm
 from fastkml import kml
 from fastkml import Placemark, Folder, Document
 from lxml import etree
@@ -279,7 +279,7 @@ class Confirmation(generic.ListView):
 
 
 class ImportKMZ(generic.FormView):
-    template_name = 'admin/lgrp/occurrence/import_kmz.html'
+    template_name = 'admin/mlp/occurrence/import_kmz.html'
     form_class = UploadKMLForm
     context_object_name = 'upload'
     success_url = '../?last_import__exact=1'
@@ -387,7 +387,8 @@ class ImportKMZ(generic.FormView):
 
                     scientific_name_string = attributes_dict.get("Scientific Name")
                     lgrp_occ.item_scientific_name = scientific_name_string
-                    if lgrp_occ.item_scientific_name:
+                    # Next step only applies to Biology objects
+                    if lgrp_occ.item_scientific_name and lgrp_occ.__class__ is Biology:
                         match, match_count, match_list = lgrp_occ.match_taxon(lgrp_occ)
                         if match and match_count == 1:
                             lgrp_occ.taxon = match_list[0]
@@ -510,6 +511,17 @@ class ImportKMZ(generic.FormView):
                 import_placemarks(placemark_list)
 
         return super(ImportKMZ, self).form_valid(form)
+
+
+class DeleteAll(generic.FormView):
+    template_name = 'admin/mlp/occurrence/delete_confirmation.html'
+    success_url = '../'
+    form_class = DeleteAllForm
+
+    def form_valid(self, form):
+        for o in Occurrence.objects.all():
+            o.delete()
+        return super(DeleteAll, self).form_valid(form)
 
 # class UploadShapefileView(generic.FormView):
 #     template_name = 'projects/upload_shapefile.html'
