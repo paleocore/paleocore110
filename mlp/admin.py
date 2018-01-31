@@ -1,32 +1,50 @@
 from django.contrib import admin
-import projects.admin  # import default PaleoCore admin classes
-from .models import Occurrence, Biology
-from django.http import HttpResponse, HttpResponseRedirect
-from django.core.urlresolvers import reverse
-import unicodecsv
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.gis import admin
-# from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.auth.decorators import permission_required
 from django.conf.urls import url
-import mlp.views
+from django.http import HttpResponse, HttpResponseRedirect
+from django.core.urlresolvers import reverse
 
+from .models import *
+import mlp.views
+import unicodecsv
+
+from django.core.exceptions import ObjectDoesNotExist
+
+
+mlp_default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
+                            'collecting_method', 'collector', 'item_scientific_name', 'item_description',
+                            'year_collected',
+                            'in_situ', 'problem', 'disposition', 'easting', 'northing')
+
+mlp_default_readonly_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
+
+mlp_search_fields = ('id',
+                     'basis_of_record',
+                     'item_type',
+                     'barcode',
+                     'collection_code',
+                     'item_scientific_name',
+                     'item_description',
+                     'stratigraphic_marker_found',
+                     'stratigraphic_marker_likely',
+                     'analytical_unit',
+                     'finder',
+                     'collector',)
 
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
     OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
     """
-    default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
-    readonly_fields = default_read_only_fields+('photo',)  # defaults plus photo
-    default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
-                            'collecting_method', 'collector', 'item_scientific_name', 'item_description',
-                            'year_collected',
-                            'in_situ', 'problem', 'disposition', 'easting', 'northing')
-    list_display = default_list_display+('thumbnail',)  # defaults plus thumbnail
-    list_filter = ['basis_of_record', 'item_type', 'field_season',
-                   'date_recorded', 'collector', 'problem', 'disposition']
-    actions = ["create_data_csv", "change_xy", "change_occurrence2biology"]
+    # default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
 
+    # default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
+    #                         'collecting_method', 'collector', 'item_scientific_name', 'item_description',
+    #                         'year_collected',
+    #                         'in_situ', 'problem', 'disposition', 'easting', 'northing')
+    list_display = mlp_default_list_display+('thumbnail',)  # defaults plus thumbnail
+    list_select_related = ['archaeology', 'biology', 'geology']
+    list_filter = ['basis_of_record', 'item_type', 'field_season',
+                   'date_recorded', 'collector', 'problem', 'disposition', 'last_import']
     fieldsets = [
         ('Curatorial', {
             'fields': [('barcode', 'catalog_number', 'id'),
@@ -59,7 +77,10 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
             #'classes': ['collapse'],
         })
     ]
-
+    readonly_fields = mlp_default_readonly_fields + ('photo',)  # defaults plus photo
+    search_fields = mlp_search_fields
+    list_editable = ['disposition']
+    actions = ["create_data_csv", "change_xy", "change_occurrence2biology", "create_simple_data_csv"]
     # admin action to manually enter coordinates
     def change_xy(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -69,8 +90,11 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
 
     def get_urls(self):
         return [url(r'^import_kmz/$',
-                    permission_required('lgrp.add_occurrence', login_url='login/')(mlp.views.ImportKMZ.as_view()),
+                    permission_required('mlp.add_occurrence', login_url='login/')(mlp.views.ImportKMZ.as_view()),
                     name="import_kmz"),
+                url(r'^delete_all/$',
+                    permission_required('mlp.delete_occurrence', login_url='login/')(mlp.views.DeleteAll.as_view()),
+                    name="delete_all"),
                 # url(r'^change_xy/$',
                 #     permission_required('lgrp.change_occurrence', login_url='login/')(
                 #         mlp.views.ChangeCoordinates.as_view()),
@@ -85,6 +109,23 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
         redirect_url = reverse("projects:mlp:mlp_occurrence2biology")
         return HttpResponseRedirect(redirect_url + "?ids=%s" % (",".join(selected)))
     change_occurrence2biology.short_description = "Change Occurrence to Biology"
+
+
+    def create_simple_data_csv(self, request, queryset):
+        fields_to_export = ['catalog_number', 'item_scientific_name', 'item_description', 'year_collected']
+        response = HttpResponse(content_type='text/csv')  # declare the response type
+        response['Content-Disposition'] = 'attachment; filename="MLP_data.csv"'  # declare the file name
+        writer = unicodecsv.writer(response)  # open a .csv writer
+        o = Occurrence()  # create an empty instance of an occurrence object
+
+        writer.writerow(fields_to_export)  # write column headers
+        for f in fields_to_export:
+            try:
+                writer.writerow([o.__dict__.get(k) for k in fields_to_export])
+            except:
+                writer.writerow(o.id)
+        return response
+    create_simple_data_csv.short_description = "Export simple report to csv"
 
     # admin action to download data in csv format
     def create_data_csv(self, request, queryset):
@@ -146,6 +187,10 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     create_data_csv.short_description = "Download Selected to .csv"
 
 
+class ArchaeologyAdmin(OccurrenceAdmin):
+    list_select_related = ['occurrence_ptr']  # required here b/c inherited values won't work
+
+
 class BiologyAdmin(OccurrenceAdmin):
     biology_fieldsets = list(OccurrenceAdmin.fieldsets)  # creates a separate copy of the fieldset list
     taxonomy_fieldsets = ('Identification', {'fields': [('taxon', 'identification_qualifier', 'identified_by')]})
@@ -153,15 +198,19 @@ class BiologyAdmin(OccurrenceAdmin):
     biology_fieldsets.insert(2, taxonomy_fieldsets)
     biology_fieldsets.insert(3, element_fieldsets)
     fieldsets = biology_fieldsets
+    list_select_related = ['occurrence_ptr', 'taxon']  # required here b/c inherited values won't work
 
-default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
-                        'collecting_method', 'collector', 'item_scientific_name', 'item_description', 'year_collected',
-                        'in_situ', 'problem', 'disposition', 'easting', 'northing')
 
+class GeologyAdmin(OccurrenceAdmin):
+    list_select_related = ['occurrence_ptr']  # required here b/c inherited values won't work
 
 
 ############################
 #  Register Admin Classes  #
 ############################
 admin.site.register(Occurrence, OccurrenceAdmin)
+admin.site.register(Archaeology, ArchaeologyAdmin)
 admin.site.register(Biology, BiologyAdmin)
+admin.site.register(Geology, GeologyAdmin)
+admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
+
