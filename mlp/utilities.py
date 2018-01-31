@@ -17,6 +17,21 @@ from datetime import datetime
 image_folder_path = "/Users/reedd/Documents/projects/PaleoCore/projects/Omo Mursi/Final_Import/omo_mursi_data/omo_mursi_data/"
 
 
+def duplicate_barcodes():
+    all_occurrences = Occurrence.objects.filter(basis_of_record='FossilSpecimen')
+    barcode_list = []
+    duplicate_list = []
+    for item in all_occurrences:
+        try:
+            barcode_list.append(item.barcode)
+        except:
+            print("Error")
+    for item, count in list(collections.Counter(barcode_list).items()):
+                if count > 1:
+                    duplicate_list.append(item)
+    return duplicate_list
+
+
 def find_mlp_duplicate_biological_barcodes():
     all_mlp_collected_bio_occurrences = Occurrence.objects.filter(item_type__exact="Faunal").filter(basis_of_record__exact="FossilSpecimen")
     barcode_list = []
