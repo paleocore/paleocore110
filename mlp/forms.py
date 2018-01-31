@@ -7,6 +7,8 @@ class UploadKMLForm(forms.Form):
         label='Upload a kml/kmz file, *.kml or *.kmz ',
     )
 
+class DeleteAllForm(forms.Form):
+    pass
 
 class DownloadKMLForm(forms.Form):
     FILE_TYPE_CHOICES = (('1', 'KML',), ('2', 'KMZ',))
