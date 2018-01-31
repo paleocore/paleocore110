@@ -21,6 +21,7 @@ COLLECTOR_CHOICES = (("Zeresenay Alemseged", "Zeresenay Alemseged"),
                      ("Weldeyared Hailu", "Waldeyared Hailu"),
                      ("Shannon McPherron", "Shannon McPherron"),
                      ("Denne Reed", "Denne Reed"),
+                     ("Peter Stamos", "Peter Stamos"),
                      ("Jonathan Wynn", "Jonathan Wynn"))
 
 HRP_COLLECTOR_CHOICES = (("C.J. Campisano", "C.J. Campisano"),
