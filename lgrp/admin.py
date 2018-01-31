@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from .models import *
 import lgrp.views
 import unicodecsv
-import projects.admin
+
 
 
 class ImagesInline(admin.TabularInline):
