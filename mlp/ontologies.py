@@ -11,9 +11,11 @@ COLLECTING_METHOD_VOCABULARY = (("Surface Standard", "Surface Standard"),
                                 ("Wet Screen 1mm", "Wet Screen 1mm"))
 
 COLLECTOR_CHOICES = (("Zeresenay Alemseged", "Zeresenay Alemseged"),
+                     ("Yared Assefa", "Yared Assefa"),
                      ("Andrew Barr", "Andrew Barr"),
                      ("Rene Bobe", "Rene Bobe"),
                      ("Denis Geraads", "Denis Geraads"),
+                     ("Tomas Getachew", "Tomas Getachew"),
                      ("Weldeyared Hailu", "Waldeyared Hailu"),
                      ("Shannon McPherron", "Shannon McPherron"),
                      ("Denne Reed", "Denne Reed"),
