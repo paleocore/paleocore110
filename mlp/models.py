@@ -271,7 +271,7 @@ class Taxon(projects.models.Taxon):
 
     class Meta:
         verbose_name = "05-MLP Taxon"
-        verbose_name_plural = "MLP Taxa"
+        verbose_name_plural = "05-MLP Taxa"
         ordering = ['rank__ordinal', 'name']
 
 
