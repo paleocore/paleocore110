@@ -5,12 +5,12 @@ from mlp.models import Taxon, IdentificationQualifier
 from django.core.files import File
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 import collections
-from update_taxonomy import update_tuple_list
+#from update_taxonomy import update_tuple_list
 import os, re
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
 import calendar
-from update_taxonomy import id_test_list, occurrence_test_list, cat_number_list
+#from update_taxonomy import id_test_list, occurrence_test_list, cat_number_list
 from datetime import datetime
 
 
@@ -57,18 +57,18 @@ def find_mlp_missing_coordinates():
     return missing_coordinates_id_list
 
 
-def update_mlp_bio(updatelist=update_tuple_list):
-    for o in updatelist:  # iterate through record tuples in list
-        cat, tax, des = o  # unpack tuple values
-        #print cat+" "+tax+" "+des  # do something with them
-
-        try:
-            occurrence = Occurrence.objects.get(catalog_number=cat)  # fetch the object with the catalog number
-            occurrence.item_scientific_name = tax  # update item scientific name
-            occurrence.item_description = des  # update item_description
-            occurrence.save()  # save updates
-        except ObjectDoesNotExist:  # handle if object is not found or is duplicate returning more than 1 match
-            print("Does Not Exist or Duplicate:"+cat)
+# def update_mlp_bio(updatelist=update_tuple_list):
+#     for o in updatelist:  # iterate through record tuples in list
+#         cat, tax, des = o  # unpack tuple values
+#         #print cat+" "+tax+" "+des  # do something with them
+#
+#         try:
+#             occurrence = Occurrence.objects.get(catalog_number=cat)  # fetch the object with the catalog number
+#             occurrence.item_scientific_name = tax  # update item scientific name
+#             occurrence.item_description = des  # update item_description
+#             occurrence.save()  # save updates
+#         except ObjectDoesNotExist:  # handle if object is not found or is duplicate returning more than 1 match
+#             print("Does Not Exist or Duplicate:"+cat)
 
 
 def split_scientific_name(scientific_name):
@@ -124,17 +124,17 @@ def get_taxon_from_scientific_name(scientific_name):
     return taxon
 
 
-def test_get_taxon_from_scientific_name(test_list=id_test_list):
-    count=0
-    for i in test_list:
-        try:
-            taxon = get_taxon_from_scientific_name(i)
-            #print '{}, {} = {}'.format(count, i, taxon)
-        except ObjectDoesNotExist:
-            print('{}, {} = {}'.format(count, i, "Does Not Exist"))
-        except MultipleObjectsReturned:
-            '{}, {} = {}'.format(count, i, 'Multiple Objects Returned')
-        count+=1
+# def test_get_taxon_from_scientific_name(test_list=id_test_list):
+#     count=0
+#     for i in test_list:
+#         try:
+#             taxon = get_taxon_from_scientific_name(i)
+#             #print '{}, {} = {}'.format(count, i, taxon)
+#         except ObjectDoesNotExist:
+#             print('{}, {} = {}'.format(count, i, "Does Not Exist"))
+#         except MultipleObjectsReturned:
+#             '{}, {} = {}'.format(count, i, 'Multiple Objects Returned')
+#         count+=1
 
 
 def mlp_missing_biology_occurrences():
