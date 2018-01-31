@@ -4,29 +4,6 @@ from mlp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COL
     COLLECTOR_CHOICES, SIDE_VOCABULARY
 import projects.models
 
-
-class TaxonRank(projects.models.TaxonRank):
-    class Meta:
-        verbose_name = "MLP Taxon Rank"
-
-
-class Taxon(projects.models.Taxon):
-    parent = models.ForeignKey('self', null=True, blank=True)
-    rank = models.ForeignKey('TaxonRank')
-
-    class Meta:
-        verbose_name = "MLP Taxon"
-        verbose_name_plural = "MLP Taxa"
-        ordering = ['rank__ordinal', 'name']
-
-
-class IdentificationQualifier(projects.models.IdentificationQualifier):
-
-    class Meta:
-        verbose_name = "MLP ID Qualifier"
-
-
-
 FIELD_SEASON_CHOICES = (('Jan 2014', 'Jan 2014'),
                         ('Nov 2014', 'Nov 2014'),
                         ('Nov 2015', 'Nov 2015'),
@@ -242,10 +219,10 @@ class Biology(Occurrence):
     lrm1 = models.BooleanField(default=False)
     lrm2 = models.BooleanField(default=False)
     lrm3 = models.BooleanField(default=False)
-    taxon = models.ForeignKey(Taxon,
+    taxon = models.ForeignKey('Taxon',
                               default=0, on_delete=models.SET_DEFAULT,  # prevent deletion when taxa deleted
                               related_name='mlp_biology_occurrences')
-    identification_qualifier = models.ForeignKey(IdentificationQualifier, null=True, blank=True,
+    identification_qualifier = models.ForeignKey('IdentificationQualifier', null=True, blank=True,
                                                  on_delete=models.SET_NULL,
                                                  related_name='mlp_biology_occurrences')
 
@@ -281,6 +258,27 @@ class Geology(Occurrence):
         verbose_name = "04-MLP Geology"
         verbose_name_plural = "04-MLP Geology"
 
+
+class TaxonRank(projects.models.TaxonRank):
+    class Meta:
+        verbose_name = "06-MLP Taxon Rank"
+        verbose_name_plural = "06-MLP Taxon Ranks"
+
+
+class Taxon(projects.models.Taxon):
+    parent = models.ForeignKey('self', null=True, blank=True)
+    rank = models.ForeignKey('TaxonRank')
+
+    class Meta:
+        verbose_name = "05-MLP Taxon"
+        verbose_name_plural = "MLP Taxa"
+        ordering = ['rank__ordinal', 'name']
+
+
+class IdentificationQualifier(projects.models.IdentificationQualifier):
+
+    class Meta:
+        verbose_name = "07-MLP ID Qualifier"
 
 
 
