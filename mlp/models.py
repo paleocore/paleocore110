@@ -75,16 +75,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     image = models.FileField(max_length=255, blank=True, upload_to="uploads/images/mlp", null=True)
     weathering = models.SmallIntegerField(blank=True, null=True)
     surface_modification = models.CharField(max_length=255, blank=True, null=True)
-    # problem = models.BooleanField(default=False)
-    # problem_comment = models.TextField(max_length=255, blank=True, null=True)
-    # geom = models.PointField(srid=4326, blank=True, null=True)  # NOT NULL
-    # objects = models.GeoManager()
-
-    class Meta:
-        managed = True
-        #db_table = 'mlp_occurrence'
-        verbose_name = 'MLP Occurrence'
-        verbose_name_plural = 'MLP Occurrences'
 
     def __str__(self):
         """
@@ -144,16 +134,16 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     thumbnail.allow_tags = True
     thumbnail.mark_safe = True
 
-    # class Meta:
-    #     managed = True
-    #     verbose_name = "MLP thumbnail"
-    #     verbose_name_plural = "MLP thumbnails"
-
     @staticmethod
     def fields_to_display():
         fields = ("id", "barcode")
         return fields
 
+    class Meta:
+        managed = True
+        #db_table = 'mlp_occurrence'
+        verbose_name = '01-MLP Occurrence'
+        verbose_name_plural = '01-MLP Occurrences'
 
 class Archaeology(Occurrence):
     find_type = models.CharField(null=True, blank=True, max_length=255)
@@ -161,8 +151,8 @@ class Archaeology(Occurrence):
     width_mm = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
 
     class Meta:
-        verbose_name = "02-LGRP Archaeology"
-        verbose_name_plural = "02-LGRP Archaeology"
+        verbose_name = "02-MLP Archaeology"
+        verbose_name_plural = "02-MLP Archaeology"
 
 
 class Biology(Occurrence):
@@ -275,8 +265,8 @@ class Biology(Occurrence):
         return result_tuple
 
     class Meta:
-        verbose_name = "MLP Biology"
-        verbose_name_plural = "MLP Biology"
+        verbose_name = "03-MLP Biology"
+        verbose_name_plural = "03-MLP Biology"
         #db_table='mlp_biology'
 
 
@@ -288,8 +278,8 @@ class Geology(Occurrence):
     texture = models.CharField(null=True, blank=True, max_length=255)
 
     class Meta:
-        verbose_name = "04-LGRP Geology"
-        verbose_name_plural = "04-LGRP Geology"
+        verbose_name = "04-MLP Geology"
+        verbose_name_plural = "04-MLP Geology"
 
 
 
