@@ -17,6 +17,7 @@ COLLECTOR_CHOICES = (("Zeresenay Alemseged", "Zeresenay Alemseged"),
                      ("Weldeyared Hailu", "Waldeyared Hailu"),
                      ("Shannon McPherron", "Shannon McPherron"),
                      ("Denne Reed", "Denne Reed"),
+                     ("Peter Stamos", "Peter Stamos"),
                      ("Jonathan Wynn", "Jonathan Wynn"))
 
 SIDE_VOCABULARY = (("Left", "Left"),
