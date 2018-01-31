@@ -9,7 +9,6 @@ import lgrp.views
 import unicodecsv
 
 
-
 class ImagesInline(admin.TabularInline):
     model = Image
     readonly_fields = ['id', 'thumbnail']
