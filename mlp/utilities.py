@@ -32,6 +32,23 @@ def duplicate_barcodes():
     return duplicate_list
 
 
+def report_duplicates():
+    dups = duplicate_barcodes()
+    for d in dups:
+        if d:
+            occs = Occurrence.objects.filter(barcode=d)
+            for o in occs:
+                print_string = "id:{} barcode:{} item_type:{} basis:{} collector:{}".format(
+                    o.id, o.barcode, o.item_type, o.basis_of_record, o.collector
+                )
+                print(print_string)
+
+
+def missing_barcodes():
+    occurrences = Occurrence.objects.filter(basis_of_record='FossilSpecimen')
+    missing_list = []
+
+
 def find_mlp_duplicate_biological_barcodes():
     all_mlp_collected_bio_occurrences = Occurrence.objects.filter(item_type__exact="Faunal").filter(basis_of_record__exact="FossilSpecimen")
     barcode_list = []
