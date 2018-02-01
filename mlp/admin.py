@@ -112,14 +112,13 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
 
 
     def create_simple_data_csv(self, request, queryset):
-        fields_to_export = ['catalog_number', 'item_scientific_name', 'item_description', 'year_collected']
+        fields_to_export = ['id', 'item_type', 'catalog_number', 'item_scientific_name', 'item_description', 'year_collected']
         response = HttpResponse(content_type='text/csv')  # declare the response type
         response['Content-Disposition'] = 'attachment; filename="MLP_data.csv"'  # declare the file name
         writer = unicodecsv.writer(response)  # open a .csv writer
-        o = Occurrence()  # create an empty instance of an occurrence object
 
         writer.writerow(fields_to_export)  # write column headers
-        for f in fields_to_export:
+        for o in queryset.order_by('item_type', 'barcode'):
             try:
                 writer.writerow([o.__dict__.get(k) for k in fields_to_export])
             except:
