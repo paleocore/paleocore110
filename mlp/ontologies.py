@@ -8,7 +8,8 @@ COLLECTING_METHOD_VOCABULARY = (("Surface Standard", "Surface Standard"),
                                 ("Exploratory Survey", "Exploratory Survey"),
                                 ("Dry Screen 5mm", "Dry Screen 5mm"),
                                 ("Dry Screen 2mm", "Dry Screen 2mm"),
-                                ("Wet Screen 1mm", "Wet Screen 1mm"))
+                                ("Wet Screen 1mm", "Wet Screen 1mm"),
+                                ("Excavation", "Excavation"))
 
 COLLECTOR_CHOICES = (("Zeresenay Alemseged", "Zeresenay Alemseged"),
                      ("Yared Assefa", "Yared Assefa"),
