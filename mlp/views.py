@@ -523,6 +523,22 @@ class DeleteAll(generic.FormView):
             o.delete()
         return super(DeleteAll, self).form_valid(form)
 
+
+class Summary(generic.ListView):
+    template_name = 'admin/mlp/occurrence/summary.html'
+    model = Occurrence
+    context_object_name = 'occurrences'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['mlp_occurrence_count'] = Occurrence.objects.all().count()
+        context['mlp_archaeology_count'] = Archaeology.objects.all().count()
+        context['mlp_biology_count'] = Biology.objects.all().count()
+        context['mlp_geology_count'] = Geology.objects.all().count()
+        return context
+
+
+
 # class UploadShapefileView(generic.FormView):
 #     template_name = 'projects/upload_shapefile.html'
 #     form_class = UploadForm
