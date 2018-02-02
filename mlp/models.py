@@ -111,6 +111,29 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     thumbnail.allow_tags = True
     thumbnail.mark_safe = True
 
+    def get_subtype(self):
+        """
+        Determine if an Occurrence instance has a subtype instance and if so what it is.
+        :return: Returns a list of the matching subtype class or classes. Should never be more than one.
+        """
+        result = []
+        try:
+            Archaeology.objects.get(pk=self.id)
+            result.append(Archaeology)
+        except Archaeology.DoesNotExist:
+            pass
+        try:
+            Biology.objects.get(pk=self.id)
+            result.append(Biology)
+        except Biology.DoesNotExist:
+            pass
+        try:
+            Geology.objects.get(pk=self.id)
+            result.append(Geology)
+        except Geology.DoesNotExist:
+            pass
+        return result
+
     @staticmethod
     def fields_to_display():
         fields = ("id", "barcode")
