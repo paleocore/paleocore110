@@ -95,6 +95,9 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
                 url(r'^delete_all/$',
                     permission_required('mlp.delete_occurrence', login_url='login/')(mlp.views.DeleteAll.as_view()),
                     name="delete_all"),
+                url(r'^summary/$',
+                    permission_required('mlp.change_occurrence', login_url='login/')(mlp.views.Summary.as_view()),
+                    name="summary"),
                 # url(r'^change_xy/$',
                 #     permission_required('lgrp.change_occurrence', login_url='login/')(
                 #         mlp.views.ChangeCoordinates.as_view()),
