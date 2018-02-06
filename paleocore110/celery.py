@@ -25,7 +25,7 @@ from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                      "paleocore110.settings.production")
+                      "paleocore110.settings")
 
 app = Celery("paleocore110")
 
