@@ -529,12 +529,58 @@ class Summary(generic.ListView):
     model = Occurrence
     context_object_name = 'occurrences'
 
+    def create_occurrence_count_table(self):
+        """
+        Creates a table of occurrence counts by subclass
+        :return:
+        """
+        html_table=""
+        total_count = Occurrence.objects.all().count()
+        arch_count = Archaeology.objects.all().count()
+        bio_count = Biology.objects.all().count()
+        geo_count = Geology.objects.all().count()
+
+        html_table = """
+        <table>
+        <tr>
+          <th>Instance</th><th>Count</th>
+        </tr>
+        <tr>
+          <td>Occurrences</td><td>{}</td>
+        </tr>
+        <tr>
+          <td>Archaeology</td><td>{}</td>
+        </tr>
+        <tr>
+          <td>Biology</td><td>{}</td>
+        </tr>
+        <tr><td>Geology</td><td>{}</td>
+        </tr>
+      </table>
+      """.format(total_count, arch_count, bio_count, geo_count)
+        return html_table
+
+    def warnings(self):
+        result={}
+        result['warning_flag'] = False
+        if Occurrence.get_duplicate_barcodes():
+            result['warning_flag'] = True
+            result['duplicate_barcodes'] = Occurrence.get_duplicate_barcodes()
+            result['duplicate_barcode_objects'] = Occurrence.get_duplicate_barcode_objects()
+        if Occurrence.get_missing_barcode_objects():
+            result['warning_flag'] = True
+            result['missing_barcodes'] = Occurrence.get_missing_barcode_objects()
+        return result
+
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['mlp_occurrence_count'] = Occurrence.objects.all().count()
         context['mlp_archaeology_count'] = Archaeology.objects.all().count()
         context['mlp_biology_count'] = Biology.objects.all().count()
         context['mlp_geology_count'] = Geology.objects.all().count()
+        context['occurrence_count_table'] = self.create_occurrence_count_table()
+        context['warnings'] = self.warnings()
         return context
 
 

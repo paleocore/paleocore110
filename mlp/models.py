@@ -1,8 +1,11 @@
 from django.contrib.gis.db import models
+from django.contrib.contenttypes.models import ContentType
+from django.apps import apps
 import os
 from mlp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
     COLLECTOR_CHOICES, SIDE_VOCABULARY
 import projects.models
+import collections
 
 FIELD_SEASON_CHOICES = (('Jan 2014', 'Jan 2014'),
                         ('Nov 2014', 'Nov 2014'),
@@ -132,6 +135,57 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
             result.append(Geology)
         except Geology.DoesNotExist:
             pass
+        return result
+
+
+    def get_subtype_generic(self):
+        """
+        Determine if an instance has a subtype, and if so what it is. Generic version
+        :return:
+        """
+        cts = ContentType.objects.filter(app_label=self._meta.app_label)
+
+    @staticmethod
+    def get_duplicate_barcodes():
+        """
+        Locate occurrence objects with duplicate barcodes
+        :return: Returns a list of barcodes that are duplicated, e.g. [
+        """
+        all_occurrences = Occurrence.objects.all()
+        barcode_list = []
+        duplicate_list = []
+        for item in all_occurrences:
+                barcode_list.append(item.barcode)
+        for barcode, count in list(collections.Counter(barcode_list).items()):
+            if count > 1 and barcode not in [None, 0]:
+                duplicate_list.append(barcode)
+        return duplicate_list
+
+    @staticmethod
+    def get_duplicate_barcode_objects():
+        """
+        Locate occurrence objects with duplicate barcodes (should never happen)
+        :return: Returns a two key dicitonary with barcode and queryset objects where each element is a queryset for duplicate barcodes,
+        e.g. {'barcode':1999, 'queryset':[<GeoQuerySet [<Occurrence: MLP-1946>, <Occurrence: MLP-1946>]>]
+        """
+        result = []
+        for b in Occurrence.get_duplicate_barcodes():
+            dup_dict = {}
+            dup_dict['barcode'] = b
+            dup_dict['queryset'] = Occurrence.objects.filter(barcode=b)
+            result.append(dup_dict)
+        return result
+
+    @staticmethod
+    def get_missing_barcode_objects():
+        """
+        Locate occurrence objects that should have barcodes but do not.
+        :return:
+        """
+        result = []
+        for o in Occurrence.objects.filter(basis_of_record='FossilSpecimen'):
+            if o.barcode in [None, 0, '']:
+                result.append(o)
         return result
 
     @staticmethod
