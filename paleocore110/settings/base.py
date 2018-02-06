@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 from sys import path
 import environ
-env = environ.Env()
+env = environ.Env(DEBUG=(bool, False),)
 
 # Absolute filesystem path to the top-level project folder:
 
@@ -26,16 +26,7 @@ DJANGO_ROOT = root.path('paleocore110')
 # name in our dotted import paths:
 path.append(DJANGO_ROOT)
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
-
-# Do not set SECRET_KEY or LDAP password or any other sensitive data here.
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DJANGO_DEBUG', True)
-
-# Application definition
+DEBUG = env('DEBUG')
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -136,25 +127,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'paleocore110.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres:///paleocore110'),
+    'default': env.db()
 }
-
-# DATABASES = {
-#     'default': {
-#          'ENGINE': 'django.contrib.gis.db.backends.postgis',
-#          'NAME': 'paleocore110',
-#          'USER': '',
-#     },
-# }
-
-# DATABASES = {
-#     'default': env.db()
-# }
 DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
