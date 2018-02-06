@@ -15,9 +15,11 @@ sys.path.append('/usr/local/paleocore110')
 sys.path.append('/usr/local/paleocore110/paleocore110')
 sys.path.append('/usr/local/paleocore110/paleocore110/settings')
 
+# wsgi.py here points to settings,
+# so settings.__init___ determines whether production.py or dev.py is used by wsgi.
 os.environ.setdefault(
     "DJANGO_SETTINGS_MODULE",
-    "paleocore110.settings.production"
+    "paleocore110.settings"
 )
 
 from django.core.wsgi import get_wsgi_application
