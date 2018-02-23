@@ -1,5 +1,5 @@
 from django.contrib import admin
-import default_project.admin  # import default PaleoCore admin classes
+# import projects.admin  # import default PaleoCore admin classes
 from .models import *  # import database models from models.py
 from django.forms import TextInput, Textarea  # import custom form widgets
 from django.http import HttpResponse
