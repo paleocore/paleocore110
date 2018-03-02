@@ -185,30 +185,11 @@ display_fields_help_text = "A list of fields to display in the public view of th
 display_filter_fields_help_text = "A list of fields to filter on in the public view of the data, can be empty list []"
 
 
-class PaleoCoreOccurrenceBaseClass(PaleoCoreBaseClass):
-    """
-    An Occurrence == Find; a general class for things discovered in the field.
-    Occurrences-Find's have three subtypes: Archaeology, Biology, Geology
-    Occurrence is a deprecated terminology, replaced by Find.
-    Model fields below are grouped by their ontological classes in Darwin Core: Occurrence, Event, etc.
-    """
-    # Record-level - inherited from PaleoCoreBaseClass
-
-    # Event
-    date_recorded = models.DateTimeField("Date Rec", blank=True, null=True, editable=True,
-                                         help_text='Date and time the item was observed or collected.')
-    year_collected = models.IntegerField("Year", blank=True, null=True,
-                                         help_text='The year, event or field campaign during which the item was found.')
-    # Find
-    barcode = models.IntegerField("Barcode", null=True, blank=True,
-                                  help_text='For collected items only.')  # dwc:recordNumber
-    field_number = models.CharField(max_length=50, null=True, blank=True)  # dwc:fieldNumber
-
+class PaleoCoreGeomBaseClass(PaleoCoreBaseClass):
     # Location
     georeference_remarks = models.TextField(max_length=500, null=True, blank=True)
     geom = models.PointField(srid=4326, null=True, blank=True)
     objects = models.GeoManager()
-
     def gcs_coordinates(self, coordinate):
         """
         Get the wgs84 gcs coordinates for a point regardless of the point's srs.  Assumes gdal can transform any srs
@@ -271,6 +252,36 @@ class PaleoCoreOccurrenceBaseClass(PaleoCoreBaseClass):
                 elif coordinate == 'both':
                     result = pt.coords
         return result
+
+    class Meta:
+        abstract = True
+
+
+class PaleoCoreOccurrenceBaseClass(PaleoCoreGeomBaseClass):
+    """
+    An Occurrence == Find; a general class for things discovered in the field.
+    Occurrences-Find's have three subtypes: Archaeology, Biology, Geology
+    Occurrence is a deprecated terminology, replaced by Find.
+    Model fields below are grouped by their ontological classes in Darwin Core: Occurrence, Event, etc.
+    """
+    # Record-level - inherited from PaleoCoreBaseClass
+
+    # Event
+    date_recorded = models.DateTimeField("Date Rec", blank=True, null=True, editable=True,
+                                         help_text='Date and time the item was observed or collected.')
+    year_collected = models.IntegerField("Year", blank=True, null=True,
+                                         help_text='The year, event or field campaign during which the item was found.')
+    # Find
+    barcode = models.IntegerField("Barcode", null=True, blank=True,
+                                  help_text='For collected items only.')  # dwc:recordNumber
+    field_number = models.CharField(max_length=50, null=True, blank=True)  # dwc:fieldNumber
+
+    class Meta:
+        abstract = True
+
+class PaleoCoreLocalityBaseClass(PaleoCoreGeomBaseClass):
+    formation = models.CharField(null=True, blank=True, max_length=50)  # Formation
+    member = models.CharField(null=True, blank=True, max_length=50)
 
     class Meta:
         abstract = True
