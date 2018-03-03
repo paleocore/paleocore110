@@ -8,7 +8,7 @@ import projects.admin
 
 # Register your models here.
 class OccurrenceAdmin(admin.ModelAdmin):
-    list_display = ('specimen_number', 'item_scientific_name', 'item_description', 'locality',
+    list_display = ('catalog_number', 'item_scientific_name', 'item_description', 'locality',
                     'date_collected', 'time_collected', 'date_time_collected', 'on_loan', 'date_last_modified')
     list_filter = ['date_collected', 'on_loan', 'date_last_modified']
 
@@ -24,13 +24,13 @@ class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
 
 
 class BiologyAdmin(admin.ModelAdmin):
-    list_display = ('specimen_number', 'item_scientific_name', 'item_description', 'locality',
+    list_display = ('catalog_number', 'item_scientific_name', 'item_description', 'locality',
                     'date_collected', 'time_collected', 'date_time_collected', 'on_loan', 'date_last_modified')
     list_filter = ['tax_order', 'family', 'genus', 'date_collected', 'on_loan', 'NALMA', 'date_last_modified',
                    'locality']
     list_per_page = 1000
     search_fields = ['tax_class', 'tax_order', 'family', 'tribe', 'genus', 'specific_epithet', 'item_scientific_name',
-                     'specimen_number', 'cm_specimen_number', 'locality__locality_number', 'locality__name']
+                     'catalog_number', 'catalog_number', 'locality__locality_number', 'locality__name']
     actions = ['create_data_csv', 'generate_specimen_labels']
 
     def create_data_csv(self, request, queryset):
@@ -113,7 +113,7 @@ class BiologyAdmin(admin.ModelAdmin):
         for b in queryset:
             specimen_data = "GDB Project\n{catalog_number}  {sci_name}\n" \
                             "{description}\nLocality {locality}\n" \
-                            "{nalma} {date_collected}\n\n".format(catalog_number=b.specimen_number,
+                            "{nalma} {date_collected}\n\n".format(catalog_number=b.catalog_number,
                                                        sci_name=b.item_scientific_name,
                                                        description=b.item_description,
                                                               locality=b.locality,

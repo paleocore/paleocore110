@@ -6,9 +6,8 @@ import projects.models
 
 
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
-    specimen_number = models.AutoField(primary_key=True)  # NOT NULL
-
-    cm_specimen_number = models.IntegerField(null=True, blank=True)  # CM SPec #
+    catalog_number = models.AutoField(primary_key=True)  # NOT NULL
+    cm_catalog_number = models.IntegerField(null=True, blank=True)  # CM SPec #
     locality = models.ForeignKey("Locality", to_field="locality_number", null=True, blank=True)
     date_time_collected = models.DateTimeField(null=True, blank=True)
     date_collected = models.DateField(null=True, blank=True, editable=True)
@@ -35,7 +34,7 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     elevation = models.DecimalField(max_digits=10, decimal_places=4, blank=True, null=True)
 
     def __str__(self):
-        return str(self.specimen_number)
+        return str(self.catalog_number)
 
     @staticmethod
     def method_fields_to_export():
