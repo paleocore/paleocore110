@@ -1,15 +1,38 @@
 from django.contrib import admin
 from django.http import HttpResponse
-from .models import Occurrence, Biology, Locality
+from .models import Occurrence, Biology, Locality, Taxon
 import unicodecsv
 import os
 import projects.admin
 
+default_admin_fieldsets = (
+    ('Curatorial', {
+        'fields': [('catalog_number'),
+                   ('cm_catalog_number'),
+                   ('date_time_collected', 'date_last_modified')]
+    }),
 
+    ('Occurrence Details', {
+        'fields': [('basis_of_record', 'item_type',),
+                   ('collecting_method',),
+                   ('item_description', 'item_scientific_name', 'image'),
+                   ('on_loan', 'loan_date', 'loan_recipient'),
+                   ('problem', 'problem_comment'),
+                   ('remarks', )],
+    }),
+    # ('Provenience', {
+    #     'fields': [
+    #                ('longitude', 'latitude'),
+    #                ('easting', 'northing'),
+    #                ('geom', )],
+    # })
+)
 # Register your models here.
 class OccurrenceAdmin(admin.ModelAdmin):
+    readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
+    fieldsets = default_admin_fieldsets
     list_display = ('catalog_number', 'item_scientific_name', 'item_description', 'locality',
-                    'date_collected', 'time_collected', 'date_time_collected', 'on_loan', 'date_last_modified')
+                    'date_collected', 'on_loan', 'date_last_modified')
     list_filter = ['date_collected', 'on_loan', 'date_last_modified']
 
     list_per_page = 1000
@@ -24,8 +47,10 @@ class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
 
 
 class BiologyAdmin(admin.ModelAdmin):
-    list_display = ('catalog_number', 'item_scientific_name', 'item_description', 'locality',
-                    'date_collected', 'time_collected', 'date_time_collected', 'on_loan', 'date_last_modified')
+    readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
+    fieldsets = default_admin_fieldsets
+    list_display = ('catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
+                    'date_collected', 'on_loan', 'date_last_modified')
     list_filter = ['tax_order', 'family', 'genus', 'date_collected', 'on_loan', 'NALMA', 'date_last_modified',
                    'locality']
     list_per_page = 1000
@@ -128,4 +153,5 @@ class BiologyAdmin(admin.ModelAdmin):
 admin.site.register(Occurrence, OccurrenceAdmin)
 admin.site.register(Biology, BiologyAdmin)
 admin.site.register(Locality, LocalityAdmin)
+admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
 

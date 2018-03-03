@@ -36,6 +36,32 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     def __str__(self):
         return str(self.catalog_number)
 
+    def longitude(self):
+        try:
+            return self.geom.x
+        except:
+            return 0
+
+    def latitude(self):
+        try:
+            return self.geom.y
+        except:
+            return 0
+
+    def easting(self):
+        try:
+            utm_point = self.geom.transform(32637, clone=True)  # get a copy of the point in utm
+            return utm_point.x
+        except:
+            return 0
+
+    def northing(self):
+        try:
+            utm_point = self.geom.transform(32637, clone=True)
+            return utm_point.y
+        except:
+            return 0
+
     @staticmethod
     def method_fields_to_export():
         """
@@ -67,7 +93,7 @@ class Biology(Occurrence):
     # Identification fields
     author_year_of_scientific_name = models.CharField(null=True, blank=True, max_length=50)
     nomenclatural_code = models.CharField(null=True, blank=True, max_length=50)
-    identification_qualifier = models.CharField(null=True, blank=True, max_length=50)
+    identification_qualifier_original = models.CharField(null=True, blank=True, max_length=50)
     identified_by = models.CharField(null=True, blank=True, max_length=100)
     date_identified = models.DateTimeField(null=True, blank=True)
     type_status = models.CharField(null=True, blank=True, max_length=50)
@@ -93,6 +119,14 @@ class Biology(Occurrence):
     hindlimb = models.CharField(null=True, blank=True, max_length=50)
     NALMA = models.CharField(null=True, blank=True, max_length=50)
     sub_age = models.CharField(null=True, blank=True, max_length=50)  # Subage
+    taxon = models.ForeignKey('Taxon',
+                              default=0, on_delete=models.SET_DEFAULT,  # prevent deletion when taxa deleted
+                              related_name='gdb_taxon_bio_occurrences')
+    identification_qualifier = models.ForeignKey('IdentificationQualifier',
+                                                 on_delete=models.SET_NULL,
+                                                 related_name='gdb_id_qualifier_bio_occurrences',
+                                                 null=True, blank=True)
+
 
     class Meta:
         verbose_name = "GDB Biology"
@@ -179,6 +213,27 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
     class Meta:
         verbose_name_plural = "GDB Localities"
 
+
+class TaxonRank(projects.models.TaxonRank):
+    class Meta:
+        verbose_name = "GDB Taxon Rank"
+        verbose_name_plural = "GDB Taxon Ranks"
+
+
+class Taxon(projects.models.Taxon):
+    parent = models.ForeignKey('self', null=True, blank=True)
+    rank = models.ForeignKey('TaxonRank')
+
+    class Meta:
+        verbose_name = "GDB Taxon"
+        verbose_name_plural = "GDB Taxa"
+        ordering = ['rank__ordinal', 'name']
+
+
+class IdentificationQualifier(projects.models.IdentificationQualifier):
+
+    class Meta:
+        verbose_name = "GDB ID Qualifier"
 
 
 
