@@ -9,7 +9,7 @@ default_admin_fieldsets = (
     ('Curatorial', {
         'fields': [('catalog_number'),
                    ('cm_catalog_number'),
-                   ('date_time_collected', 'date_last_modified')]
+                   ('date_collected', 'date_time_collected', 'date_last_modified')]
     }),
 
     ('Occurrence Details', {
@@ -20,13 +20,31 @@ default_admin_fieldsets = (
                    ('problem', 'problem_comment'),
                    ('remarks', )],
     }),
-    # ('Provenience', {
-    #     'fields': [
-    #                ('longitude', 'latitude'),
-    #                ('easting', 'northing'),
-    #                ('geom', )],
-    # })
+    ('Provenience', {
+        'fields': [
+                   ('locality','elevation'),
+                   ],
+    })
 )
+
+description_fieldsets = ('Description', {
+    'fields': [('sex', 'life_stage'),
+               ('element', 'side', 'attributes'),
+               ('lower_tooth', 'upper_tooth'),
+               ('mandible', 'maxilla'),
+               ('teeth', 'cranial', 'miscellaneous'),
+               ('vertebral', 'forelimb', 'hindlimb'),
+               ('morphobank_num', 'preparations'),
+               ('notes',)]
+})
+
+taxonomy_fieldsets = ('Identification', {
+    'fields': [('taxon', 'identification_qualifier',),
+               ('identified_by', 'date_identified'),
+               ('type_status',),
+               ('tax_order', 'family', 'genus', 'specific_epithet' ),
+               ]
+})
 # Register your models here.
 class OccurrenceAdmin(admin.ModelAdmin):
     readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
@@ -48,14 +66,20 @@ class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
 
 class BiologyAdmin(admin.ModelAdmin):
     readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
-    fieldsets = default_admin_fieldsets
+    biology_fieldsets = list(default_admin_fieldsets)
+
+    chronology_fieldsets = ('Chronology', {'fields': [('NALMA','sub_age')]})
+    biology_fieldsets.insert(2, description_fieldsets)
+    biology_fieldsets.insert(3, taxonomy_fieldsets)
+    biology_fieldsets.insert(4, chronology_fieldsets)
+    fieldsets = biology_fieldsets
     list_display = ('catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
-                    'date_collected', 'on_loan', 'date_last_modified')
+                    'date_collected', 'family', 'genus')
     list_filter = ['tax_order', 'family', 'genus', 'date_collected', 'on_loan', 'NALMA', 'date_last_modified',
                    'locality']
     list_per_page = 1000
     search_fields = ['tax_class', 'tax_order', 'family', 'tribe', 'genus', 'specific_epithet', 'item_scientific_name',
-                     'catalog_number', 'catalog_number', 'locality__locality_number', 'locality__name']
+                     'catalog_number', 'cm_catalog_number', 'locality__locality_number', 'locality__name']
     actions = ['create_data_csv', 'generate_specimen_labels']
 
     def create_data_csv(self, request, queryset):

@@ -9,6 +9,8 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     catalog_number = models.AutoField(primary_key=True)  # NOT NULL
     cm_catalog_number = models.IntegerField(null=True, blank=True)  # CM SPec #
     locality = models.ForeignKey("Locality", to_field="locality_number", null=True, blank=True)
+
+    #date_time_collected is deprecated and hidden
     date_time_collected = models.DateTimeField(null=True, blank=True)
     date_collected = models.DateField(null=True, blank=True, editable=True)
     time_collected = models.CharField(null=True, blank=True, max_length=50)
