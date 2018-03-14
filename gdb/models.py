@@ -118,7 +118,9 @@ class Biology(Occurrence):
     vertebral = models.CharField(null=True, blank=True, max_length=50)
     forelimb = models.CharField(null=True, blank=True, max_length=50)
     hindlimb = models.CharField(null=True, blank=True, max_length=50)
-    NALMA = models.CharField(null=True, blank=True, max_length=50, choices=gdb.ontologies.NALMA_CHOICES)
+    NALMA = models.CharField(null=True, blank=True, max_length=50,
+                             choices=gdb.ontologies.NALMA_CHOICES,
+                             default=gdb.ontologies.Wasatchian)
     sub_age = models.CharField(null=True, blank=True, max_length=50)  # Subage
     taxon = models.ForeignKey('Taxon',
                               default=0, on_delete=models.SET_DEFAULT,  # prevent deletion when taxa deleted
