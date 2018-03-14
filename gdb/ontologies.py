@@ -172,8 +172,14 @@ GNATHIC = (("mandible with teeth", "mandible with teeth"),
                    ("mandibular symphysis", "mandibular symphysis"),
                    ("mandibular condyle", "mandibular condyle"))
 
-NALMA_CHOICES = (("Wasatchian", "Wasatchian"),
-                ("Clarkforkian", "Clarkforkian"))
+Bridgerian = 'Bridgerian'
+Wasatchian = 'Wasatchian'
+Clarkforkian = 'Clarkforkian'
+
+NALMA_CHOICES = (
+    (Bridgerian, 'Bridgerian'),
+    (Wasatchian, 'Wasatchian'),
+    (Clarkforkian, 'Clarkforkian'))
 
 CONTINENT_CHOICES = (("Africa", "Africa"), ("Europe", "Europe"), ("Asia", "Asia"), ("North America", "North America"),
                      ("South America", "South America"), ("Australia", "Australia"), ("Antarctica", "Antarctica"))
