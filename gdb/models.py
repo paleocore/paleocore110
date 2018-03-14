@@ -1,6 +1,5 @@
 from django.contrib.gis.db import models
-from .ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
-    COLLECTOR_CHOICES, SIDE_VOCABULARY
+import gdb.ontologies
 import projects.models
 
 
@@ -16,11 +15,11 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     time_collected = models.CharField(null=True, blank=True, max_length=50)
     #date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
     basis_of_record = models.CharField("Basis of Record", max_length=50, blank=False, null=False,
-                                       choices=BASIS_OF_RECORD_VOCABULARY)  # NOT NULL
+                                       choices=gdb.ontologies.BASIS_OF_RECORD_VOCABULARY)  # NOT NULL
     item_type = models.CharField("Item Type", max_length=255, blank=True, null=True,
-                                 choices=ITEM_TYPE_VOCABULARY)
+                                 choices=gdb.ontologies.ITEM_TYPE_VOCABULARY)
     collecting_method = models.CharField("Collecting Method", max_length=50, blank=True, null=True,
-                                         choices=COLLECTING_METHOD_VOCABULARY, )
+                                         choices=gdb.ontologies.COLLECTING_METHOD_VOCABULARY, )
     related_catalog_items = models.CharField("Related Catalog Items", max_length=50, null=True, blank=True)
     item_scientific_name = models.CharField("Scientific Name", null=True, blank=True, max_length=255)  # Taxon
     item_description = models.CharField("Description", null=True, blank=True, max_length=255)
@@ -119,7 +118,7 @@ class Biology(Occurrence):
     vertebral = models.CharField(null=True, blank=True, max_length=50)
     forelimb = models.CharField(null=True, blank=True, max_length=50)
     hindlimb = models.CharField(null=True, blank=True, max_length=50)
-    NALMA = models.CharField(null=True, blank=True, max_length=50)
+    NALMA = models.CharField(null=True, blank=True, max_length=50, choices=gdb.ontologies.NALMA_CHOICES)
     sub_age = models.CharField(null=True, blank=True, max_length=50)  # Subage
     taxon = models.ForeignKey('Taxon',
                               default=0, on_delete=models.SET_DEFAULT,  # prevent deletion when taxa deleted
