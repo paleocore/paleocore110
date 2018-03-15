@@ -7,8 +7,8 @@ import projects.admin
 
 default_admin_fieldsets = (
     ('Curatorial', {
-        'fields': [('catalog_number'),
-                   ('cm_catalog_number'),
+        'fields': [('catalog_number',),
+                   ('cm_catalog_number',),
                    ('date_collected', 'date_time_collected', 'date_last_modified')]
     }),
 
@@ -173,6 +173,7 @@ class BiologyAdmin(admin.ModelAdmin):
         response['Content-Disposition'] = 'attachment; filename="Specimens.txt"'  # declare the file name
         return response
     generate_specimen_labels.short_description = 'Specimen Labels'
+
 
 admin.site.register(Occurrence, OccurrenceAdmin)
 admin.site.register(Biology, BiologyAdmin)

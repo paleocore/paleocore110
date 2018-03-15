@@ -172,14 +172,65 @@ GNATHIC = (("mandible with teeth", "mandible with teeth"),
                    ("mandibular symphysis", "mandibular symphysis"),
                    ("mandibular condyle", "mandibular condyle"))
 
-Bridgerian = 'Bridgerian'
-Wasatchian = 'Wasatchian'
-Clarkforkian = 'Clarkforkian'
+bridgerian = 'Bridgerian'
+wasatchian = 'Wasatchian'
+clarkforkian = 'Clarkforkian'
 
 NALMA_CHOICES = (
-    (Bridgerian, 'Bridgerian'),
-    (Wasatchian, 'Wasatchian'),
-    (Clarkforkian, 'Clarkforkian'))
+    (bridgerian, 'Bridgerian'),
+    (wasatchian, 'Wasatchian'),
+    (clarkforkian, 'Clarkforkian'))
+
+cf1, cf2, cf3 = ['Cf'+str(x) for x in range(1,4)]
+wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7 = ['Wa'+str(x) for x in range(0,8)]
+br0, br1a, br1b, br2, br3 = ['Br0', 'Br1a', 'Br1b', 'Br2', 'Br3']
+clarkforkian_subages = [cf1, cf2, cf3]
+wasatchian_subages = [wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7]
+bridgerian_subages = [br0, br1a, br1b, br2, br3]
+
+NALMA_SUB_AGE_CHOICES = (
+    (cf1, 'Cf1'),
+    (cf2, 'Cf2'),
+    (cf3, 'Cf3'),
+    (wa0, 'Wa0'),
+    (wa1, 'Wa1'),
+    (wa2, 'Wa2'),
+    (wa3, 'Wa3'),
+    (wa4, 'Wa4'),
+    (wa5, 'Wa5'),
+    (wa6, 'Wa6'),
+    (wa7, 'Wa7'),
+    (br0, 'Br0'),
+    (br1a, 'Br1a'),
+    (br1b, 'Br1b'),
+    (br2, 'Br2'),
+    (br3, 'Br3'),
+)
+
+CLARKFORKIAN_SUB_AGE_CHOICES = (
+    (cf1, 'Cf1'),
+    (cf2, 'Cf2'),
+    (cf3, 'Cf3'),
+)
+
+WASATCHIAN_SUB_AGE_CHOICES = (
+    (wa0, 'Wa0'),
+    (wa1, 'Wa1'),
+    (wa2, 'Wa2'),
+    (wa3, 'Wa3'),
+    (wa4, 'Wa4'),
+    (wa5, 'Wa5'),
+    (wa6, 'Wa6'),
+    (wa7, 'Wa7'),
+)
+
+BRIDGERIAN_SUB_AGE_CHOICES = (
+    (br0, 'Br0'),
+    (br1a, 'Br1a'),
+    (br1b, 'Br1b'),
+    (br2, 'Br2'),
+    (br3, 'Br3'),
+)
 
 CONTINENT_CHOICES = (("Africa", "Africa"), ("Europe", "Europe"), ("Asia", "Asia"), ("North America", "North America"),
                      ("South America", "South America"), ("Australia", "Australia"), ("Antarctica", "Antarctica"))
