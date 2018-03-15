@@ -81,6 +81,7 @@ class BiologyAdmin(admin.ModelAdmin):
     search_fields = ['tax_class', 'tax_order', 'family', 'tribe', 'genus', 'specific_epithet', 'item_scientific_name',
                      'catalog_number', 'cm_catalog_number', 'locality__locality_number', 'locality__name']
     actions = ['create_data_csv', 'generate_specimen_labels']
+    list_select_related = ['occurrence_ptr', 'taxon']
 
     def create_data_csv(self, request, queryset):
         """
