@@ -1,7 +1,22 @@
 
-BASIS_OF_RECORD_VOCABULARY = (("FossilSpecimen", "Fossil"), ("HumanObservation", "Observation"))
-HRP_BASIS_OF_RECORD_VOCABULARY = (("Collection", "Collection"), ("Observation", "Observation"))
-ITEM_TYPE_VOCABULARY = (("Artifactual", "Artifactual"), ("Faunal", "Faunal"), ("Floral", "Floral"), ("Geological", "Geological"))
+# Basis of Record Vocabulary
+fossil = 'FossilSpecimen'
+observation = 'HumanObservation'
+BASIS_OF_RECORD_VOCABULARY = ((fossil, "Fossil"), (observation, "Observation"))
+
+# Item Type Vocabulary
+artifactual = 'Artifactual'
+faunal = 'Faunal'
+floral = 'Floral'
+geological = 'Geological'
+cast = 'Cast'
+ITEM_TYPE_VOCABULARY = ((artifactual, 'Artifactual'),
+                        (faunal, 'Faunal'),
+                        (floral, 'Floral'),
+                        (geological, 'Geological'),
+                        (cast, 'Cast'))
+
+
 COLLECTING_METHOD_VOCABULARY = (("Surface Standard", "Surface Standard"),
                                 ("Surface Intensive", "Surface Intensive"),
                                 ("Surface Complete", "Surface Complete"),
@@ -34,8 +49,6 @@ HRP_COLLECTOR_CHOICES = (("C.J. Campisano", "C.J. Campisano"),
                          ("HRP Team", "HRP Team")
                          )
 
-
-HRP_COLLECTION_CODES = (("A.L.", "A.L."),)
 
 SIDE_VOCABULARY = (("Left", "Left"),
                    ("Right", "Right"),
@@ -172,6 +185,7 @@ GNATHIC = (("mandible with teeth", "mandible with teeth"),
                    ("mandibular symphysis", "mandibular symphysis"),
                    ("mandibular condyle", "mandibular condyle"))
 
+# NALMA Vocabulary
 bridgerian = 'Bridgerian'
 wasatchian = 'Wasatchian'
 clarkforkian = 'Clarkforkian'
@@ -181,13 +195,13 @@ NALMA_CHOICES = (
     (wasatchian, 'Wasatchian'),
     (clarkforkian, 'Clarkforkian'))
 
+# sub_age Vocabulary
 cf1, cf2, cf3 = ['Cf'+str(x) for x in range(1,4)]
 wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7 = ['Wa'+str(x) for x in range(0,8)]
 br0, br1a, br1b, br2, br3 = ['Br0', 'Br1a', 'Br1b', 'Br2', 'Br3']
 clarkforkian_subages = [cf1, cf2, cf3]
 wasatchian_subages = [wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7]
 bridgerian_subages = [br0, br1a, br1b, br2, br3]
-
 NALMA_SUB_AGE_CHOICES = (
     (cf1, 'Cf1'),
     (cf2, 'Cf2'),
@@ -206,13 +220,11 @@ NALMA_SUB_AGE_CHOICES = (
     (br2, 'Br2'),
     (br3, 'Br3'),
 )
-
 CLARKFORKIAN_SUB_AGE_CHOICES = (
     (cf1, 'Cf1'),
     (cf2, 'Cf2'),
     (cf3, 'Cf3'),
 )
-
 WASATCHIAN_SUB_AGE_CHOICES = (
     (wa0, 'Wa0'),
     (wa1, 'Wa1'),
@@ -223,7 +235,6 @@ WASATCHIAN_SUB_AGE_CHOICES = (
     (wa6, 'Wa6'),
     (wa7, 'Wa7'),
 )
-
 BRIDGERIAN_SUB_AGE_CHOICES = (
     (br0, 'Br0'),
     (br1a, 'Br1a'),
