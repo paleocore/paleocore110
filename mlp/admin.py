@@ -115,15 +115,20 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
 
 
     def create_simple_data_csv(self, request, queryset):
-        fields_to_export = ['id', 'item_type', 'catalog_number', 'item_scientific_name', 'item_description', 'year_collected']
+        #fields_to_export = ['id', 'item_type', 'catalog_number', 'item_scientific_name', 'item_description', 'year_collected']
+        fields_to_export = ['id', 'date_created', 'date_last_modified', 'problem', 'problem_comment', 'remarks', 'georeference_remarks', 'date_recorded', 'year_collected', 'barcode', 'field_number', 'basis_of_record', 'item_type', 'collection_code', 'item_number', 'item_part', 'catalog_number', 'item_scientific_name', 'item_description', 'collecting_method	collector', 'finder', 'disposition', 'field_season', 'individual_count', 'in_situ', 'ranked', 'image', 'weathering', 'surface_modification', 'geom']
         response = HttpResponse(content_type='text/csv')  # declare the response type
         response['Content-Disposition'] = 'attachment; filename="MLP_data.csv"'  # declare the file name
         writer = unicodecsv.writer(response)  # open a .csv writer
 
-        writer.writerow(fields_to_export)  # write column headers
+        writer.writerow(fields_to_export+['longitude', 'latitude'])  # write column headers
         for o in queryset.order_by('item_type', 'barcode'):
             try:
-                writer.writerow([o.__dict__.get(k) for k in fields_to_export])
+                row_list = [o.__dict__.get(k) for k in fields_to_export]
+                row_list.append(o.point_x())
+                row_list.append(o.point_y())
+                #row_list.append(o.taxon)
+                writer.writerow(row_list)
             except:
                 writer.writerow(o.id)
         return response
