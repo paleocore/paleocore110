@@ -14,8 +14,9 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     date_collected = models.DateField(null=True, blank=True, editable=True)
     time_collected = models.CharField(null=True, blank=True, max_length=50)
     #date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
-    basis_of_record = models.CharField("Basis of Record", max_length=50, blank=False, null=False,
-                                       choices=gdb.ontologies.BASIS_OF_RECORD_VOCABULARY)  # NOT NULL
+    basis_of_record = models.CharField("Basis of Record", max_length=50, blank=False, null=False, # NOT NULL
+                                       choices=gdb.ontologies.BASIS_OF_RECORD_VOCABULARY,
+                                       default=gdb.ontologies.fossil)
     item_type = models.CharField("Item Type", max_length=255, blank=True, null=True,
                                  choices=gdb.ontologies.ITEM_TYPE_VOCABULARY)
     collecting_method = models.CharField("Collecting Method", max_length=50, blank=True, null=True,
