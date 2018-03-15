@@ -16,18 +16,79 @@ ITEM_TYPE_VOCABULARY = ((artifactual, 'Artifactual'),
                         (geological, 'Geological'),
                         (cast, 'Cast'))
 
+# Collecting Method Vocabulary
+standard = 'Surface Standard'
+intensive = "Surface Intensive"
+complete = "Surface Complete"
+exploratory = "Exploratory Survey"
+dry5 = "Dry Screen 5mm"
+dry2 = "Dry Screen 2mm"
+wet1 = "Wet Screen 1mm"
+COLLECTING_METHOD_VOCABULARY = ((standard, "Surface Standard"),
+                                (intensive, "Surface Intensive"),
+                                (complete, "Surface Complete"),
+                                (exploratory, "Exploratory Survey"),
+                                (dry5, "Dry Screen 5mm"),
+                                (dry2, "Dry Screen 2mm"),
+                                (wet1, "Wet Screen 1mm"))
 
-COLLECTING_METHOD_VOCABULARY = (("Surface Standard", "Surface Standard"),
-                                ("Surface Intensive", "Surface Intensive"),
-                                ("Surface Complete", "Surface Complete"),
-                                ("Exploratory Survey", "Exploratory Survey"),
-                                ("Dry Screen 5mm", "Dry Screen 5mm"),
-                                ("Dry Screen 2mm", "Dry Screen 2mm"),
-                                ("Wet Screen 1mm", "Wet Screen 1mm"))
+# NALMA Vocabulary
+bridgerian = 'Bridgerian'
+wasatchian = 'Wasatchian'
+clarkforkian = 'Clarkforkian'
 
-HRP_COLLECTING_METHOD_VOCABULARY = (("Survey", "Survey"),
-                                ("dryscreen5mm", "dryscreen5mm"),
-                                ("wetscreen1mm", "wetscreen1mm"))
+NALMA_CHOICES = (
+    (bridgerian, 'Bridgerian'),
+    (wasatchian, 'Wasatchian'),
+    (clarkforkian, 'Clarkforkian'))
+
+# sub_age Vocabulary
+cf1, cf2, cf3 = ['Cf'+str(x) for x in range(1,4)]
+wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7 = ['Wa'+str(x) for x in range(0,8)]
+br0, br1a, br1b, br2, br3 = ['Br0', 'Br1a', 'Br1b', 'Br2', 'Br3']
+clarkforkian_subages = [cf1, cf2, cf3]
+wasatchian_subages = [wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7]
+bridgerian_subages = [br0, br1a, br1b, br2, br3]
+NALMA_SUB_AGE_CHOICES = (
+    (cf1, 'Cf1'),
+    (cf2, 'Cf2'),
+    (cf3, 'Cf3'),
+    (wa0, 'Wa0'),
+    (wa1, 'Wa1'),
+    (wa2, 'Wa2'),
+    (wa3, 'Wa3'),
+    (wa4, 'Wa4'),
+    (wa5, 'Wa5'),
+    (wa6, 'Wa6'),
+    (wa7, 'Wa7'),
+    (br0, 'Br0'),
+    (br1a, 'Br1a'),
+    (br1b, 'Br1b'),
+    (br2, 'Br2'),
+    (br3, 'Br3'),
+)
+CLARKFORKIAN_SUB_AGE_CHOICES = (
+    (cf1, 'Cf1'),
+    (cf2, 'Cf2'),
+    (cf3, 'Cf3'),
+)
+WASATCHIAN_SUB_AGE_CHOICES = (
+    (wa0, 'Wa0'),
+    (wa1, 'Wa1'),
+    (wa2, 'Wa2'),
+    (wa3, 'Wa3'),
+    (wa4, 'Wa4'),
+    (wa5, 'Wa5'),
+    (wa6, 'Wa6'),
+    (wa7, 'Wa7'),
+)
+BRIDGERIAN_SUB_AGE_CHOICES = (
+    (br0, 'Br0'),
+    (br1a, 'Br1a'),
+    (br1b, 'Br1b'),
+    (br2, 'Br2'),
+    (br3, 'Br3'),
+)
 
 COLLECTOR_CHOICES = (("Zeresenay Alemseged", "Zeresenay Alemseged"),
                      ("Andrew Barr", "Andrew Barr"),
@@ -37,17 +98,6 @@ COLLECTOR_CHOICES = (("Zeresenay Alemseged", "Zeresenay Alemseged"),
                      ("Shannon McPherron", "Shannon McPherron"),
                      ("Denne Reed", "Denne Reed"),
                      ("Jonathan Wynn", "Jonathan Wynn"))
-
-HRP_COLLECTOR_CHOICES = (("C.J. Campisano", "C.J. Campisano"),
-                         ("W.H. Kimbel", "W.H. Kimbel"),
-                         ("T.K. Nalley", "T.K. Nalley"),
-                         ("D.N. Reed", "D.N. Reed"),
-                         ("Kaye Reed", "Kaye Reed"),
-                         ("B.J. Schoville", "B.J. Schoville"),
-                         ("A.E. Shapiro", "A.E. Shapiro"),
-                         ("HFS Student", "HFS Student"),
-                         ("HRP Team", "HRP Team")
-                         )
 
 
 SIDE_VOCABULARY = (("Left", "Left"),
@@ -185,63 +235,7 @@ GNATHIC = (("mandible with teeth", "mandible with teeth"),
                    ("mandibular symphysis", "mandibular symphysis"),
                    ("mandibular condyle", "mandibular condyle"))
 
-# NALMA Vocabulary
-bridgerian = 'Bridgerian'
-wasatchian = 'Wasatchian'
-clarkforkian = 'Clarkforkian'
 
-NALMA_CHOICES = (
-    (bridgerian, 'Bridgerian'),
-    (wasatchian, 'Wasatchian'),
-    (clarkforkian, 'Clarkforkian'))
-
-# sub_age Vocabulary
-cf1, cf2, cf3 = ['Cf'+str(x) for x in range(1,4)]
-wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7 = ['Wa'+str(x) for x in range(0,8)]
-br0, br1a, br1b, br2, br3 = ['Br0', 'Br1a', 'Br1b', 'Br2', 'Br3']
-clarkforkian_subages = [cf1, cf2, cf3]
-wasatchian_subages = [wa0, wa1, wa2, wa3, wa4, wa5, wa6, wa7]
-bridgerian_subages = [br0, br1a, br1b, br2, br3]
-NALMA_SUB_AGE_CHOICES = (
-    (cf1, 'Cf1'),
-    (cf2, 'Cf2'),
-    (cf3, 'Cf3'),
-    (wa0, 'Wa0'),
-    (wa1, 'Wa1'),
-    (wa2, 'Wa2'),
-    (wa3, 'Wa3'),
-    (wa4, 'Wa4'),
-    (wa5, 'Wa5'),
-    (wa6, 'Wa6'),
-    (wa7, 'Wa7'),
-    (br0, 'Br0'),
-    (br1a, 'Br1a'),
-    (br1b, 'Br1b'),
-    (br2, 'Br2'),
-    (br3, 'Br3'),
-)
-CLARKFORKIAN_SUB_AGE_CHOICES = (
-    (cf1, 'Cf1'),
-    (cf2, 'Cf2'),
-    (cf3, 'Cf3'),
-)
-WASATCHIAN_SUB_AGE_CHOICES = (
-    (wa0, 'Wa0'),
-    (wa1, 'Wa1'),
-    (wa2, 'Wa2'),
-    (wa3, 'Wa3'),
-    (wa4, 'Wa4'),
-    (wa5, 'Wa5'),
-    (wa6, 'Wa6'),
-    (wa7, 'Wa7'),
-)
-BRIDGERIAN_SUB_AGE_CHOICES = (
-    (br0, 'Br0'),
-    (br1a, 'Br1a'),
-    (br1b, 'Br1b'),
-    (br2, 'Br2'),
-    (br3, 'Br3'),
-)
 
 CONTINENT_CHOICES = (("Africa", "Africa"), ("Europe", "Europe"), ("Asia", "Asia"), ("North America", "North America"),
                      ("South America", "South America"), ("Australia", "Australia"), ("Antarctica", "Antarctica"))
