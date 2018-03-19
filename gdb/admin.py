@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.http import HttpResponse
-from .models import Occurrence, Biology, Locality, Taxon
+from .models import Occurrence, Biology, Locality, Taxon, TaxonRank
 import unicodecsv
 import os
 import projects.admin
@@ -180,4 +180,5 @@ admin.site.register(Occurrence, OccurrenceAdmin)
 admin.site.register(Biology, BiologyAdmin)
 admin.site.register(Locality, LocalityAdmin)
 admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
+admin.site.register(TaxonRank, projects.admin.TaxonRankAdmin)
 
