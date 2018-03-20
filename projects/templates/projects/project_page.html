@@ -61,7 +61,10 @@
             {% include "projects/includes/project_body.html" with body=self.body only %}
             <br>
             {% include "utils/includes/related_links.html" with related_links=self.related_links.all only %}
+          <a class="button warning small" href="{% url 'admin:app_list' page.slug %}">Admin &raquo;</a>
         </div>
+
     </div>
+
 </article>
 {% endblock %}
