@@ -25,6 +25,11 @@
                                 {% if project.intro %}
                                     {{ project.intro|richtext|truncatewords:25 }}
                                 {% endif %}
+                                {% if project.is_public %}
+                                    Public data
+                                    {% else %}
+                                    Private data
+                                {% endif %}
                                 {% if project.record_count %}
                                     {{ project.record_count }} records
                                 {% endif %}
@@ -33,7 +38,7 @@
 
                     <div class="small-2 column">
                         <a class="button small" href="{%  pageurl project %}">Details &raquo;</a>
-                        <a class="button warning small" href="/django-admin/{{ project.slug }}">Admin &raquo;</a>
+                        <a class="button warning small" href="{% url 'admin:app_list' project.slug %}">Admin &raquo;</a>
                     </div>
                 </div>
             </div>
