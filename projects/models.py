@@ -137,6 +137,22 @@ class Taxon(PaleoCoreBaseClass):
         else:
             return self.parent.full_lineage()+[self]
 
+    def biology_usages(self):
+        """
+        Method to get a count of the number of Biology objects pointing to the taxon instance. This method usese
+        the content type system to find the containing app and model.
+        :return: Returns and integer count of the number of biology instances in the app that point to the taxon.
+        """
+        result = None
+        app = self._meta.app_label
+        try:
+            content_type = ContentType.objects.get(app_label=app, model='biology') # assumes the model is named Biology
+            this_biology = content_type.model_class()
+            result = this_biology.objects.filter(taxon=self).count()
+        except ContentType.DoesNotExist:
+            pass  # If no matching content type then we'll pass here and return None
+        return result
+
     def __str__(self):
         if self.rank.name == 'Species' and self.parent:
             return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
