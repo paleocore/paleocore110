@@ -1,6 +1,6 @@
 __author__ = 'reedd'
 
-from .models import Occurrence, Biology
+from .models import Occurrence, Archaeology, Biology
 from mlp.models import Taxon, IdentificationQualifier
 from django.core.files import File
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
@@ -119,11 +119,21 @@ def get_identification_qualifier_from_scientific_name(scientific_name):
 
 
 def get_identification_qualifier_from_string(id_qual_string):
-    try:
-        return IdentificationQualifier.objects.get(name=id_qual_string)
-    except ObjectDoesNotExist:
+    """
+    Function to get the id qualifier based on a string value.  Returning None as default is the wrong option here. If
+    no match is found need to raise an error.
+    :param id_qual_string:
+    :return:
+    """
+    if id_qual_string in ['', ' ', None]:
         return None
-
+    elif id_qual_string in ['cf.', 'cf', 'c.f.']:
+        return IdentificationQualifier.objects.get(name='cf.')  # some fault tolerance for punctuation
+    elif id_qual_string in ['aff.', 'aff', 'a.f.f.']:
+        return IdentificationQualifier.objects.get(name='aff.')
+    else:
+        return IdentificationQualifier.objects.get(name=id_qual_string)  # last change to match novel idq
+    # If no match is found ObjectDoesNotExist error is raised.
 
 def get_taxon_from_scientific_name(scientific_name):
     """
@@ -186,14 +196,14 @@ def mlp_missing_biology_occurrences():
 
 def occurrence2biology(oi):
     """
-    Function to convert Occurrence instances to Biology instances. The new Biology instances are given a default
+    Procedure to convert an Occurrence instance to a Biology instance. The new Biology instance is given a default
     taxon = Life, and identification qualifier = None.
     :param oi: occurrence instance
     :return: returns nothing.
     """
 
     if oi.item_type in ['Faunal', 'Floral']:  # convert only faunal or floral items to Biology
-        # Intiate variables
+        # Initiate variables
         # taxon = get_taxon_from_scientific_name(oi.item_scientific_name)
         taxon = Taxon.objects.get(name__exact='Life')
         id_qual = IdentificationQualifier.objects.get(name__exact='None')
@@ -212,6 +222,27 @@ def occurrence2biology(oi):
 
         oi.delete()
         new_biology.save()
+
+def occurrence2archaeology(oi):
+    """
+    Procedure to convert an Occurrence instance to an Archaeology instance.
+    :param oi: occurrence instance
+    :return: returns nothing
+    """
+    if oi.item_type in ['Artifactual']:  # convert only artifactual items to archaeology
+        # Create a new archaeology object
+        new_archaeology = Archaeology(barcode=oi.barcode,
+                                 item_type=oi.item_type,
+                                 basis_of_record=oi.basis_of_record,
+                                 collecting_method=oi.collecting_method,
+                                 field_number=oi.field_number,
+                                 geom=oi.geom
+                                 )
+        for key in list(oi.__dict__.keys()):
+            new_archaeology.__dict__[key]=oi.__dict__[key]
+
+        new_archaeology.save()
+        #oi.delete()
 
 
 def update_occurrence2biology():
@@ -252,10 +283,11 @@ def import_dg_updates(file_path='/Users/reedd/Documents/projects/PaleoCore/proje
     data = dbfile.readlines()
     dbfile.close()
     data_list = []
-    header_list = data[0][:-1].split('|')  # list of column headers
+    header_list = data[0][:-1].split('\t')  # list of column headers
     # populate data list
     for row in data[1:]:  # skip header row
-        data_list.append(row[:-1].split('|'))  # remove newlines and split by delimiter
+        data_list.append(row[:-1].split('\t'))  # remove newlines and split by delimiter
+        #data_list.append(row.split('\t'))  # remove newlines and split by delimiter
     print('Importing data from {}'.format(file_path))
     return header_list, data_list
 
@@ -608,3 +640,41 @@ def create_biology(row):
                        )
     else:
         print("Occurrence {} already exists.".format(barcode))
+
+
+def update_biology_identifications(header, data):
+    """
+    Procedure to update the item_scientific_name, item_description and taxon of data read from
+    a text/csv file.
+    :param header:
+    :param data:
+    :return:
+    """
+    for row in data:
+        rowdict = dict(zip(header, row))  # combine header and row data into dictionary for easy reference
+        id = int(rowdict['id'])
+        bio = Biology.objects.get(pk=id) # fetch the object from the DB
+        bio.item_scientific_name = rowdict['item_scientific_name']  # update item_scientific_name
+        bio.item_description = rowdict['item_description'] # update item_description
+        print(id)
+        try:
+            bio.taxon = get_taxon_from_scientific_name(rowdict['taxon']) # find matching taxon and update
+        except ObjectDoesNotExist:
+            print('no taxon match for id {}').format(id)
+        except MultipleObjectsReturned:
+            print('multiple taxa match for id {}').format(id)
+        try:
+            idq = get_identification_qualifier_from_string(rowdict['qualifier'])
+            bio.identification_qualifier = idq
+        except KeyError:
+            pass
+        try:
+            bio.identification_remarks = rowdict['identification_remarks']
+        except KeyError:
+            pass
+        except IndexError:
+            pass
+        print('{} {} {} {} {} {}'.format(bio.id, bio.item_description, bio.item_scientific_name, bio.taxon, bio.identification_qualifier, bio.identification_remarks))
+        bio.save()  # save item
+
+
