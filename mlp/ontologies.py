@@ -11,17 +11,28 @@ COLLECTING_METHOD_VOCABULARY = (("Surface Standard", "Surface Standard"),
                                 ("Wet Screen 1mm", "Wet Screen 1mm"),
                                 ("Excavation", "Excavation"))
 
-COLLECTOR_CHOICES = (("Zeresenay Alemseged", "Zeresenay Alemseged"),
-                     ("Yared Assefa", "Yared Assefa"),
-                     ("Andrew Barr", "Andrew Barr"),
-                     ("Rene Bobe", "Rene Bobe"),
-                     ("Denis Geraads", "Denis Geraads"),
-                     ("Tomas Getachew", "Tomas Getachew"),
-                     ("Weldeyared Hailu", "Waldeyared Hailu"),
-                     ("Shannon McPherron", "Shannon McPherron"),
-                     ("Denne Reed", "Denne Reed"),
-                     ("Peter Stamos", "Peter Stamos"),
-                     ("Jonathan Wynn", "Jonathan Wynn"))
+zeresenay_alemseged = 'Zeresenay Alemseged'
+denis_geraads = 'Denis Geraads'
+yared_asseffa = 'Yared Asseffa'
+andrew_barr = 'Andrew Barr'
+rene_bobe = "Rene Bobe"
+tomas_getachew = "Tomas Getachew"
+weldeyared_hailu = "Waldeyared Hailu"
+shannon_mcpherron = "Shannon McPherron"
+denne_reed = "Denne Reed"
+peter_stamos = "Peter Stamos"
+jonathan_wynn = "Jonathan Wynn"
+COLLECTOR_CHOICES = ((zeresenay_alemseged, "Zeresenay Alemseged"),
+                     (yared_asseffa, "Yared Assefa"),
+                     (andrew_barr, "Andrew Barr"),
+                     (rene_bobe, "Rene Bobe"),
+                     (denis_geraads, "Denis Geraads"),
+                     (tomas_getachew, "Tomas Getachew"),
+                     (weldeyared_hailu, "Waldeyared Hailu"),
+                     (shannon_mcpherron, "Shannon McPherron"),
+                     (denne_reed, "Denne Reed"),
+                     (peter_stamos, "Peter Stamos"),
+                     (jonathan_wynn, "Jonathan Wynn"))
 
 SIDE_VOCABULARY = (("Left", "Left"),
                    ("Right", "Right"),
