@@ -1,17 +1,15 @@
 __author__ = 'reedd'
 
-from .models import Occurrence, Archaeology, Biology
-from mlp.models import Taxon, IdentificationQualifier
-from django.core.files import File
+from .models import Occurrence, Archaeology, Biology, Taxon, IdentificationQualifier
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 import collections
-#from update_taxonomy import update_tuple_list
-import os, re
+
+import re
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance
 import calendar
-#from update_taxonomy import id_test_list, occurrence_test_list, cat_number_list
 from datetime import datetime
+import mlp.ontologies
 
 
 image_folder_path = "/Users/reedd/Documents/projects/PaleoCore/projects/Omo Mursi/Final_Import/omo_mursi_data/omo_mursi_data/"
@@ -675,6 +673,7 @@ def update_biology_identifications(header, data):
         except IndexError:
             pass
         print('{} {} {} {} {} {}'.format(bio.id, bio.item_description, bio.item_scientific_name, bio.taxon, bio.identification_qualifier, bio.identification_remarks))
+        bio.identified_by = mlp.ontologies.denis_geraads
         bio.save()  # save item
 
 
