@@ -673,7 +673,7 @@ def update_biology_identifications(header, data, dry_run=False):
             pass
         except IndexError:
             pass
-        print('{} {} {} {} {} {}'.format(bio.id, bio.item_description, bio.item_scientific_name, bio.taxon, bio.identification_qualifier, bio.identification_remarks))
+        print('{} {} {} {} {} {} {}'.format(bio.id, bio.item_description, bio.item_scientific_name, bio.taxon, bio.identification_qualifier, bio.identification_remarks, bio.identified_by))
         bio.identified_by = mlp.ontologies.denis_geraads
         if not dry_run:
             bio.save()  # save item
