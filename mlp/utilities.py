@@ -640,12 +640,13 @@ def create_biology(row):
         print("Occurrence {} already exists.".format(barcode))
 
 
-def update_biology_identifications(header, data):
+def update_biology_identifications(header, data, dry_run=False):
     """
     Procedure to update the item_scientific_name, item_description and taxon of data read from
     a text/csv file.
-    :param header:
-    :param data:
+    :param header: data file column header row
+    :param data: data rows as a list of lists
+    :param dry_run: True for dry_run, False for save
     :return:
     """
     for row in data:
@@ -674,6 +675,7 @@ def update_biology_identifications(header, data):
             pass
         print('{} {} {} {} {} {}'.format(bio.id, bio.item_description, bio.item_scientific_name, bio.taxon, bio.identification_qualifier, bio.identification_remarks))
         bio.identified_by = mlp.ontologies.denis_geraads
-        bio.save()  # save item
+        if not dry_run:
+            bio.save()  # save item
 
 
