@@ -24,13 +24,15 @@ exploratory = "Exploratory Survey"
 dry5 = "Dry Screen 5mm"
 dry2 = "Dry Screen 2mm"
 wet1 = "Wet Screen 1mm"
-COLLECTING_METHOD_VOCABULARY = ((standard, "Surface Standard"),
-                                (intensive, "Surface Intensive"),
-                                (complete, "Surface Complete"),
-                                (exploratory, "Exploratory Survey"),
-                                (dry5, "Dry Screen 5mm"),
-                                (dry2, "Dry Screen 2mm"),
-                                (wet1, "Wet Screen 1mm"))
+COLLECTING_METHOD_VOCABULARY = (
+    (standard, "Prospecting"),
+    (intensive, "Surface Crawl"),
+    #(complete, "Surface Complete"),
+    #(exploratory, "Exploratory Survey"),
+    #(dry5, "Dry Screen 5mm"),
+    (dry2, "Dry Screen 2mm"),
+    #(wet1, "Wet Screen 1mm")
+                                )
 
 # NALMA Vocabulary
 bridgerian = 'Bridgerian'
