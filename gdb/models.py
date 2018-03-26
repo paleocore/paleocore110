@@ -18,7 +18,8 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
                                        choices=gdb.ontologies.BASIS_OF_RECORD_VOCABULARY,
                                        default=gdb.ontologies.fossil)
     item_type = models.CharField("Item Type", max_length=255, blank=True, null=True,
-                                 choices=gdb.ontologies.ITEM_TYPE_VOCABULARY)
+                                 choices=gdb.ontologies.ITEM_TYPE_VOCABULARY,
+                                 default=gdb.ontologies.faunal)
     collecting_method = models.CharField("Collecting Method", max_length=50, blank=True, null=True,
                                          choices=gdb.ontologies.COLLECTING_METHOD_VOCABULARY, )
     related_catalog_items = models.CharField("Related Catalog Items", max_length=50, null=True, blank=True)
