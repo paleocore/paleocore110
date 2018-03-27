@@ -37,8 +37,11 @@
                         </div>
 
                     <div class="small-2 column">
-                        <a class="button small" href="{%  pageurl project %}">Details &raquo;</a>
-                        <a class="button warning small" href="{% url 'admin:app_list' project.slug %}">Admin &raquo;</a>
+                        {% url 'admin:app_list' project.slug as admin_url %}
+                        {% if admin_url %}
+                          <a class="button small" href="{%  pageurl project %}">Details &raquo;</a>
+                          <a class="button warning small" href="{{ admin_url }}">Admin &raquo;</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
