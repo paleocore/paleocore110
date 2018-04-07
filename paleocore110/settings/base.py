@@ -76,6 +76,7 @@ INSTALLED_APPS = (
     'mapwidgets',
 
     'projects',
+    'cc',
     'gdb',
     'lgrp',
     'mlp',
