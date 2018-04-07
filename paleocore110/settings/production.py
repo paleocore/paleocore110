@@ -1,11 +1,9 @@
 from .base import *  # flake8: noqa
 
 
-#DEBUG = True
 #env.bool('DJANGO_DEBUG', default=False)
-#DEBUG = env('DEBUG')
-#TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
-
+DEBUG = env('DEBUG')
+TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
 # Compress static files offline
@@ -23,8 +21,8 @@ COMPRESS_CSS_FILTERS = [
 ALLOWED_HOSTS = env('DJANGO_ALLOWED_HOSTS')
 
 INSTALLED_APPS += (
-    "wagtail.contrib.wagtailfrontendcache",
-   # 'gunicorn',
+    'wagtail.contrib.wagtailfrontendcache',
+    'gunicorn',
 )
 
 # to prevent this from blocking web server threads
