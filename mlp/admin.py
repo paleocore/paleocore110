@@ -14,7 +14,7 @@ from django.core.exceptions import ObjectDoesNotExist
 mlp_default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
                             'collecting_method', 'collector', 'item_scientific_name', 'item_description',
                             'year_collected',
-                            'in_situ', 'problem', 'disposition', 'easting', 'northing')
+                            'in_situ', 'problem', 'easting', 'northing')
 
 mlp_default_readonly_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
 
@@ -79,7 +79,6 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     ]
     readonly_fields = mlp_default_readonly_fields + ('photo',)  # defaults plus photo
     search_fields = mlp_search_fields
-    list_editable = ['disposition']
     actions = ["create_data_csv", "change_xy", "change_occurrence2biology", "create_simple_data_csv"]
     # admin action to manually enter coordinates
     def change_xy(self, request, queryset):
