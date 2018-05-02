@@ -62,7 +62,8 @@ class LoginUser(generic.TemplateView):
         elif user is not None and not user.userinstitution.email_confirmed:
             return render(request, 'inactive.html')
         else:
-            return render(request, 'login.html', {'form': AuthenticationForm(), 'error': 'username or password incorrect'})
+            return render(request, 'login.html', {'form': AuthenticationForm(), 'error': 'username or password '
+                                                                                         'incorrect'})
 
 class EditUser(generic.TemplateView):
     def get(self, request):
@@ -72,7 +73,11 @@ class EditUser(generic.TemplateView):
         last_name = user.last_name
         email = user.email
         institution = user.userinstitution.institution
-        form = UserEditForm({"first_name": first_name, "last_name": last_name, "email": email, "institution": institution, "username": username})
+        form = UserEditForm({"first_name": first_name,
+                             "last_name": last_name,
+                             "email": email,
+                             "institution": institution,
+                             "username": username})
         return render(request, 'edit.html', {'form': form})
 
     def post(self, request):
@@ -82,7 +87,8 @@ class EditUser(generic.TemplateView):
                 user = edit_form.save(commit=False)
                 user.userinstitution.institution = edit_form.cleaned_data['institution']
                 user.save()
-                return render(request, 'edit.html', {'form': edit_form, 'message': "Your profile has been updated succesfully!"})
+                return render(request, 'edit.html', {'form': edit_form, 'message': "Your profile has been updated "
+                                                                                   "successfully!"})
             except Exception as e:
                 edit_form.add_error(None, str(e))
                 return render(request, 'edit.html', {'form': edit_form})
@@ -107,7 +113,7 @@ class PasswordChange(PasswordChangeView):
     form_class = PasswordForm
 
 def password_change_done(request):
-    return render(request, 'password_change_done.html', {'message': 'Your password has been succesfully changed!'})
+    return render(request, 'password_change_done.html', {'message': 'Your password has been successfully changed!'})
 
 def logout_user(request):
     logout(request)
