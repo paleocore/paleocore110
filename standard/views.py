@@ -22,8 +22,8 @@ class PaleocoreTermsIndexView(generic.ListView):
     def get_queryset(self):
         """Return a list of terms for Paleocore"""
         # get just the non-class paleocore terms, which get added to the context as terms
-        paleocore_terms = Term.objects.filter(projects__short_name__exact="PaleoCore").order_by('category', 'name')
-        paleocore_terms = paleocore_terms.exclude(category__name__exact='Class')
+        paleocore_terms = Term.objects.filter(projects__name='pc').order_by('category', 'name')
+        paleocore_terms = paleocore_terms.exclude(is_class=True)
         return paleocore_terms
 
     def get_context_data(self, **kwargs):
@@ -33,30 +33,41 @@ class PaleocoreTermsIndexView(generic.ListView):
         context = super(PaleocoreTermsIndexView, self).get_context_data(**kwargs)
 
         # get a queryset of just paleocore classes
-        paleocore_classes = Term.objects.filter(projects__short_name__exact="PaleoCore").order_by('category', 'name')
-        paleocore_classes = paleocore_classes.filter(category__name__exact='Class')
+        paleocore_classes = Term.objects.filter(projects__name='pc').order_by('category', 'name')
+        paleocore_classes = paleocore_classes.filter(is_class=True)
 
         # add them to the context, which now contains elements for terms and classes
         context['classes'] = paleocore_classes
         return context
 
-    def get_fiber_page_url(self):
-        return reverse('standard:paleocore_terms_index')
 
-
-class TermsIndexView(FiberPageMixin, generic.ListView):
+class TermsIndexView(generic.ListView):
     template_name = 'standard/terms.html'
     context_object_name = 'terms'
 
     def get_queryset(self):
         # build a query set of terms for a given project. The project_name is passed from standard/urls.py
-        self.project = get_object_or_404(Project, name=self.kwargs["project_name"])
+        project = get_object_or_404(Project, name=self.kwargs['project_name'])
 
         """Return a list of terms for the current project"""
-        return self.project.terms()
+        return project.get_terms().exclude(is_class=True).order_by('category', 'name')
 
-    def get_fiber_page_url(self):
-        return reverse('data:terms_index', args=[self.project])
+    def get_context_data(self, **kwargs):
+        # supplement the context by adding a list of class terms
+
+        # get the original context
+        context = super(TermsIndexView, self).get_context_data(**kwargs)
+
+        # get a queryset of just paleocore classes
+        project = get_object_or_404(Project, name=self.kwargs['project_name'])
+        project_classes = project.get_terms().filter(is_class=True).order_by('category', 'name')
+        # paleocore_classes = Term.objects.filter(projects__name='pc').order_by('category', 'name')
+        # paleocore_classes = paleocore_classes.filter(is_class=True)
+
+        # add them to the context, which now contains elements for terms and classes
+        context['classes'] = project_classes
+        return context
+
 
 
 def standard(request):
