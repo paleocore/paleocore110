@@ -1,6 +1,9 @@
 {% extends "base.html" %}
-{% block main_content %}
+{% load static %}
+{% block content %}
 
+<div id="content" class="row">
+  <div class="body"></div>
     <h3>Class Index </h3>
     <p>
     {% for class in classes %}
@@ -13,33 +16,55 @@
     <h3>Terms Index</h3>
     {% regroup terms by category as terms_list %}
     {% for category in terms_list %}
-        {% if category.grouper.name == 'Occurrence' %} <p><strong><a href="#{{ category.grouper }}">{{ category.grouper }}</a> | <a href="#MaterialSample">Material Sample</a> | <a href="#FossilSpecimen">Fossil Specimen</a></strong><br/>
-            {% elif category.grouper.name == 'Event' %} <p><strong><a href="#{{ category.grouper }}">{{ category.grouper }}</a> | <a href="#HumanObservation">Human Observation</a></strong><br/>
-            {% elif category.grouper.name == 'Record' %} <p><strong>{{ category.grouper }} | <a href="#Dataset">Dataset</a></strong><br/>
-            {% else %} <p><strong><a href="#{{ category.grouper }}">{{ category.grouper }}</a></strong><br/>
+        {% if category.grouper.name == 'Occurrence' %}
+        <p>
+          <strong>
+            <a href="#{{ category.grouper }}">{{ category.grouper }}</a> |
+            <a href="#MaterialSample">MaterialSample</a> |
+            <a href="#FossilSpecimen">FossilSpecimen</a>
+          </strong>
+          <br/>
+
+        {% elif category.grouper.name == 'Event' %}
+        <p>
+          <strong>
+            <a href="#{{ category.grouper }}">{{ category.grouper }}</a> |
+            <a href="#HumanObservation">HumanObservation</a>
+          </strong>
+          <br/>
+
+        {% elif category.grouper.name == 'Record' %}
+        <p>
+          <strong>{{ category.grouper }} |
+            <a href="#Dataset">Dataset</a>
+          </strong>
+          <br/>
+
+        {% else %}
+        <p>
+          <strong>
+            <a href="#{{ category.grouper }}">{{ category.grouper }}</a>
+          </strong>
+          <br/>
+
         {% endif %}
 
-
-            {% for term in category.list %}
-                <a href='#{{ term.name }}'>{{ term.name }}</a> {% if not forloop.last %} | {% endif %}
-            {% endfor %}
-        </p>
+    {% for term in category.list %}
+      <a href='#{{ term.name }}'>{{ term.name }}</a>
+      {% if not forloop.last %} | {% endif %}
+      {% endfor %}
+      </p>
 
     {% endfor %}
 
     <hr>
 
     <h3>Class Descriptions</h3>
-
+        {% for class in classes %}
         <table class="term">
-            <thead>
-                <tr>
-                    <th class="label"></th>
-                    <th class="data"></th>
-                </tr>
-            </thead>
+
             <tbody>
-            {% for class in classes %}
+
 
                 <tr><td colspan="2" class="term-label" id="{{ class.name }}"><strong>Term Name: {{ class.name }}</strong></td></tr>
 
@@ -56,24 +81,20 @@
                     <tr>
                         <td>Comment</td><td>{{ class.example }}</td>
                     </tr>
-            {% endfor %}
+
             </tbody>
         </table>
+        {% endfor %}
 
 
     <hr>
 
     <h3>Term Descriptions</h3>
-
+        {% for term in terms %}
         <table class="term">
-            <thead>
-                <tr>
-                    <th class="label"></th>
-                    <th class="data"></th>
-                </tr>
-            </thead>
+
             <tbody>
-            {% for term in terms %}
+
                 <tr><td colspan="2" class="term-label" id="{{ term.name }}"><strong>Term Name: {{ term.name }}</strong></td></tr>
                 <tr>
                     <td>Source</td>
@@ -87,10 +108,10 @@
             </tr>
             <tr>
                 <td>Comment</td><td>{{ term.example }}</td></tr>
-            {% endfor %}
+
             </tbody>
         </table>
-
+        {% endfor %}
 
 
 
@@ -112,3 +133,4 @@
     {% endfor %}
     {% endcomment %}
 {% endblock %}
+</div>
