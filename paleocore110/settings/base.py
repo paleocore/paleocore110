@@ -85,6 +85,7 @@ INSTALLED_APPS = (
     'hrp',
     'omo_mursi',
     'origins',
+    'standard',
 )
 
 MIDDLEWARE_CLASSES = (

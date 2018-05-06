@@ -17,6 +17,7 @@ from wagtail_feeds.feeds import BasicFeed, ExtendedFeed
 
 from account import urls as account_urls
 from mlp import urls as mlp_urls
+from mlp import urls as standard_urls
 
 admin.autodiscover()
 admin.site.site_header = 'Paleo Core Administration'
@@ -38,7 +39,8 @@ urlpatterns = [
 
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's serving mechanism
-    url(r'', include(mlp_urls)),
+    url(r'standard/', include('standard.urls', namespace='standard')),
+    #url(r'', include(mlp_urls)),
     url(r'^projects/', include('projects.urls', namespace='projects')),
 
     # wagtail includes.
@@ -53,12 +55,12 @@ if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)
-    urlpatterns += [
-        url(r'^favicon\.ico$',
-            RedirectView.as_view(
-                url=settings.STATIC_URL + 'favicon.ico', permanent=True)
-            ),
-    ]
+    # urlpatterns += [
+    #     url(r'^favicon\.ico$',
+    #         RedirectView.as_view(
+    #             url=settings.STATIC_URL + 'favicon.ico', permanent=True)
+    #         ),
+    # ]
 
     if 'debug_toolbar' in settings.INSTALLED_APPS:
         import debug_toolbar

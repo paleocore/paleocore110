@@ -190,16 +190,6 @@ class Person(PaleoCoreBaseClass):
         verbose_name_plural = "People"
 
 
-# exclude any installed apps that have 'django' in the name
-app_CHOICES = [(name, name) for name in INSTALLED_APPS if name.find("django") == -1]
-
-abstract_help_text = "A  description of the project, its importance, etc."
-attribution_help_text = "A description of the people / institutions responsible for collecting the data."
-occurrence_table_name_help_text = "The name of the main occurrence table in the models.py file of the associated app"
-display_summary_info_help_text = "Should project summary data be published? Only uncheck this in extreme circumstances"
-display_fields_help_text = "A list of fields to display in the public view of the data, first entry should be 'id'"
-display_filter_fields_help_text = "A list of fields to filter on in the public view of the data, can be empty list []"
-
 
 class PaleoCoreGeomBaseClass(PaleoCoreBaseClass):
     # Location
@@ -337,6 +327,7 @@ class PaleoCoreStratigraphicUnitBaseClass(PaleoCoreBaseClass):
 
     class Meta:
         abstract = True
+
 
 # Wagtail models
 # class ProjectsIndexPage(Page):
