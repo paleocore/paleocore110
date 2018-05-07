@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 from drp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
     COLLECTOR_CHOICES
-
+import projects.models
 
 class TaxonRank(models.Model):
     name = models.CharField(null=False, blank=False, max_length=50, unique=True)

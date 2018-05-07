@@ -98,8 +98,8 @@ class PaleoCoreLocalityAdmin(DGGeoAdmin):
     list_filter = ("collection_code",)
     search_fields = ("paleolocality_number",)
 
-
-class OccurrenceAdmin(DGGeoAdmin):
+class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
+#class OccurrenceAdmin(DGGeoAdmin):
     actions = ['create_data_csv', 'change_xy', 'get_nearest_locality']
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     readonly_fields = default_read_only_fields + ('photo',)
@@ -147,7 +147,7 @@ class OccurrenceAdmin(DGGeoAdmin):
                                                                                 closest_locality_key))
 
 
-class BiologyAdmin(DGGeoAdmin):
+class BiologyAdmin(OccurrenceAdmin):
     model = Biology
 
 
