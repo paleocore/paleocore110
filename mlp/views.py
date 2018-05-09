@@ -3,8 +3,7 @@ from django.views import generic
 import os
 from .models import *
 from mlp.forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology, DeleteAllForm
-from fastkml import kml
-from fastkml import Placemark, Folder, Document
+from fastkml import kml, Placemark, Folder, Document
 from lxml import etree
 from datetime import datetime
 from django.contrib.gis.geos import GEOSGeometry
