@@ -34,10 +34,10 @@ class SmallFindsInline(admin.StackedInline):
                  'fields': [('coarse_stone_weight','coarse_fauna_weight','fine_stone_weight','fine_fauna_weight')] } ) ]
 
 
-class Context_admin(admin.ModelAdmin):
+class ContextAdmin(admin.ModelAdmin):
     fieldsets = [
               (None, {
-                 'fields': [('unit','id_no','level','code'),('points')] } ) ]
+                 'fields': [('unit','id_no','level','code'),('points',)] } ) ]
     list_display = ('cat_no','unit','id_no','level','code',)
     list_display_links = ('cat_no','unit','id_no',)
     search_fields = ['=cat_no','unit','id_no','level','code']
@@ -46,7 +46,7 @@ class Context_admin(admin.ModelAdmin):
     ordering = ('unit','id',)
 
 
-class Lithics_admin(admin.ModelAdmin):
+class LithicsAdmin(admin.ModelAdmin):
     fieldsets = [
         ('Field Information', {
             'fields': [('cat_no','level','code')] } ),
@@ -67,7 +67,7 @@ class Lithics_admin(admin.ModelAdmin):
     ordering = ('unit','id',)
 
 
-class Small_finds_admin(admin.ModelAdmin):
+class SmallFindsAdmin(admin.ModelAdmin):
     fieldsets = [
             ('Field Information', {
                 'fields': [('cat_no','level','code')] } ),
@@ -80,7 +80,7 @@ class Small_finds_admin(admin.ModelAdmin):
     ordering = ('unit','id',)
 
 
-class Photos_admin(admin.ModelAdmin):
+class PhotosAdmin(admin.ModelAdmin):
     readonly_fields = ('thumb01',)
     # fieldsets = [
     #           ('Photos', {
@@ -92,15 +92,15 @@ class Photos_admin(admin.ModelAdmin):
     ordering = ('unit','id')
 
 
-class Units_admin(admin.ModelAdmin):
+class UnitsAdmin(admin.ModelAdmin):
     list_filter = ['unit',]
     search_fields = ['=unit']
     ordering = ("unit",)
 
-class Lithics_with_Photos_admin(admin.ModelAdmin):
+class LithicsWithPhotosAdmin(admin.ModelAdmin):
     fieldsets = [
               (None, {
-                 'fields': [('unit','id_no','level','code'),('points')] } ) ]
+                 'fields': [('unit','id_no','level','code'),('points',)] } ) ]
     list_display = ('cat_no','unit','id_no','level','code',)
     list_display_links = ('cat_no','unit','id_no',)
     search_fields = ['=cat_no','unit','id_no','level','code']
@@ -110,9 +110,9 @@ class Lithics_with_Photos_admin(admin.ModelAdmin):
     def get_queryset(self, request):
         return Photo.objects.all()
 
-admin.site.register(Context, Context_admin)
-admin.site.register(Small_Find,Small_finds_admin)
-admin.site.register(Photo,Photos_admin)
-admin.site.register(Lithic,Lithics_admin)
-admin.site.register(Excavation_unit,Units_admin)
-admin.site.register(Lithics_with_Photos,Lithics_with_Photos_admin)
+admin.site.register(Context, ContextAdmin)
+admin.site.register(Small_Find,SmallFindsAdmin)
+admin.site.register(Photo,PhotosAdmin)
+admin.site.register(Lithic,LithicsAdmin)
+admin.site.register(Excavation_unit,UnitsAdmin)
+admin.site.register(Lithics_with_Photos,LithicsWithPhotosAdmin)
