@@ -27,7 +27,7 @@ class PhotosInline(admin.StackedInline):
 
 
 class SmallFindsInline(admin.StackedInline):
-    model = Small_Find
+    model = SmallFind
     extra = 0
     fieldsets = [
               (None, {
@@ -97,6 +97,7 @@ class UnitsAdmin(admin.ModelAdmin):
     search_fields = ['=unit']
     ordering = ("unit",)
 
+
 class LithicsWithPhotosAdmin(admin.ModelAdmin):
     fieldsets = [
               (None, {
@@ -107,12 +108,13 @@ class LithicsWithPhotosAdmin(admin.ModelAdmin):
     list_filter = ['unit','level','code']
     inlines = [PhotosInline, LithicsInline]
     ordering = ('unit','id',)
+
     def get_queryset(self, request):
         return Photo.objects.all()
 
 admin.site.register(Context, ContextAdmin)
-admin.site.register(Small_Find,SmallFindsAdmin)
+admin.site.register(SmallFind,SmallFindsAdmin)
 admin.site.register(Photo,PhotosAdmin)
 admin.site.register(Lithic,LithicsAdmin)
-admin.site.register(Excavation_unit,UnitsAdmin)
-admin.site.register(Lithics_with_Photos,LithicsWithPhotosAdmin)
+admin.site.register(ExcavationUnit,UnitsAdmin)
+admin.site.register(LithicsWithPhotos,LithicsWithPhotosAdmin)

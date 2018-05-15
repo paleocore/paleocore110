@@ -3,14 +3,17 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-class Excavation_unit(models.Model):
+class ExcavationUnit(models.Model):
     unit = models.CharField(max_length=6,blank=False)
     extent = models.GeometryField(dim=3,blank=True,null=True,srid=-1)
     objects = models.GeoManager()
+
     class Meta:
         managed = True
         verbose_name_plural = "Excavation units"
         verbose_name = "Excavation Unit"
+        db_table = "cc_excavation_unit"
+
     def __str__(self):
         return self.unit
 
@@ -26,10 +29,12 @@ class Context(models.Model):
     exc_time = models.TimeField('Time',blank=True,null=True)
     points = models.GeometryField(dim=3,blank=True, null=True,srid=-1)
     objects = models.GeoManager()
+
     class Meta:
         managed = True
         verbose_name_plural = "cc Context (Catalog)"
         verbose_name = "cc Context"
+
     def __str__(self):
         return self.cat_no
 
@@ -72,21 +77,24 @@ class Lithic(Context):
     flake_direction = models.CharField(max_length=20,blank=True,null=True)
     scar_length = models.DecimalField(decimal_places=2,max_digits=10,blank=True,null=True)
     scar_width = models.DecimalField(decimal_places=2,max_digits=10,blank=True,null=True)
+
     class Meta:
         managed = True
         verbose_name = "cc Lithic"
         verbose_name_plural = "cc Lithics"
 
 
-class Small_Find(Context):
+class SmallFind(Context):
     coarse_stone_weight = models.IntegerField(blank=True,null=True)
     coarse_fauna_weight = models.IntegerField(blank=True,null=True)
     fine_stone_weight = models.IntegerField(blank=True,null=True)
     fine_fauna_weight = models.IntegerField(blank=True,null=True)
+
     class Meta:
         managed = True
         verbose_name_plural = "cc Small finds (buckets)"
         verbose_name = "cc Small find (bucket)"
+        db_table = "cc_small_find"
 
 
 class Photo(Context):
@@ -96,13 +104,17 @@ class Photo(Context):
     thumb01.short_description = 'Image'
     thumb01.allow_tags = True
     thumb01.mark_safe = True
+
     class Meta:
         managed = True
         verbose_name = "cc Image"
         verbose_name_plural = "cc Images"
 
 
-class Lithics_with_Photos(Context):
+class LithicsWithPhotos(Context):
+    """
+    Proxy model of Context. No associated db table.
+    """
     class Meta:
         proxy = True
         managed = True
