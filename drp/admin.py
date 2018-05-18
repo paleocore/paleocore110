@@ -7,6 +7,7 @@ import unicodecsv
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.gis import admin
 from django.contrib.gis.admin import OSMGeoAdmin
+import projects
 
 
 ###############
