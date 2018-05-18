@@ -4,18 +4,21 @@ from datetime import datetime
 import os
 from drp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
     COLLECTOR_CHOICES
-import projects.models
+# TODO update models to inherit from project base classes
+# import projects.models
 
 class TaxonRank(models.Model):
     name = models.CharField(null=False, blank=False, max_length=50, unique=True)
     plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
     ordinal = models.IntegerField(null=False, blank=False, unique=True)
 
-    def __unicode__(self):
-        return str(self.name)
-
     class Meta:
         verbose_name = "Taxon Rank"
+
+    def __str__(self):
+        return str(self.name)
+
+
 
 
 class Taxon(models.Model):
@@ -55,7 +58,7 @@ class Taxon(models.Model):
         else:
             return self.parent.full_lineage()+[self]
 
-    def __unicode__(self):
+    def __str__(self):
         if self.rank.name == 'Species' and self.parent:
             return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
         else:
@@ -71,7 +74,7 @@ class IdentificationQualifier(models.Model):
     name = models.CharField(null=False, blank=True, max_length=15, unique=True)
     qualified = models.BooleanField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -96,7 +99,7 @@ class Locality(models.Model):
     geom = models.PolygonField(srid=4326)
     objects = models.GeoManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.collection_code) + " " + str(self.paleolocality_number)
 
     class Meta:
@@ -191,7 +194,7 @@ class Occurrence(models.Model):
         except:
             return 0
 
-    def __unicode__(self):
+    def __str__(self):
         nice_name = str(self.collection_code) + "-" + str(self.paleolocality_number) + "-" + str(self.item_number) + \
                     str(self.item_part) + " [" + str(self.item_scientific_name) + " " + str(self.item_description) + "]"
         return nice_name.replace("None", "").replace("--", "")
@@ -341,8 +344,8 @@ class Biology(Occurrence):
         verbose_name = "DRP Biology"
         verbose_name_plural = "DRP Biology"
 
-    def __unicode__(self):
-        return str(self.taxon.__unicode__())
+    def __str__(self):
+        return str(self.taxon.__str__())
 
 
 class Hydrology(models.Model):
@@ -353,7 +356,7 @@ class Hydrology(models.Model):
     geom = models.LineStringField(srid=4326)
     objects = models.GeoManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name)
 
     class Meta:
