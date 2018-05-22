@@ -5,9 +5,9 @@ import os
 from drp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
     COLLECTOR_CHOICES
 # TODO update models to inherit from project base classes
-# import projects.models
+import projects.models
 
-class TaxonRank(models.Model):
+class TaxonRank(projects.models.TaxonRank):
     name = models.CharField(null=False, blank=False, max_length=50, unique=True)
     plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
     ordinal = models.IntegerField(null=False, blank=False, unique=True)
@@ -21,7 +21,7 @@ class TaxonRank(models.Model):
 
 
 
-class Taxon(models.Model):
+class Taxon(projects.models.Taxon):
     name = models.CharField(null=False, blank=False, max_length=255, unique=False)
     parent = models.ForeignKey('self', null=True, blank=True)
     rank = models.ForeignKey(TaxonRank)
@@ -70,7 +70,7 @@ class Taxon(models.Model):
         ordering = ['rank__ordinal', 'name']
 
 
-class IdentificationQualifier(models.Model):
+class IdentificationQualifier(projects.models.IdentificationQualifier):
     name = models.CharField(null=False, blank=True, max_length=15, unique=True)
     qualified = models.BooleanField()
 
@@ -99,14 +99,13 @@ class Locality(models.Model):
     geom = models.PolygonField(srid=4326)
     objects = models.GeoManager()
 
-    def __str__(self):
-        return str(self.collection_code) + " " + str(self.paleolocality_number)
-
     class Meta:
         verbose_name = "DRP Locality"
         verbose_name_plural = "DRP Localities"
         ordering = ("collection_code", "paleolocality_number", "paleo_sublocality")
 
+    def __str__(self):
+        return str(self.collection_code) + " " + str(self.paleolocality_number)
 
 # This is the DRP data model. It is only partly PaleoCore compliant.
 class Occurrence(models.Model):

@@ -7,7 +7,7 @@ import unicodecsv
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.gis import admin
 from django.contrib.gis.admin import OSMGeoAdmin
-import projects
+import projects.admin
 
 
 ###############
@@ -157,10 +157,10 @@ class BiologyAdmin(OccurrenceAdmin):
 ###################
 
 
-class TaxonomyAdmin(admin.ModelAdmin):
-    list_display = ("id", "rank", "taxon")
-    search_fields = ("taxon",)
-    list_filter = ("rank",)
+# class TaxonAdmin(projects.admin.):
+#     list_display = ("id", "rank", "taxon")
+#     search_fields = ("taxon",)
+#     list_filter = ("rank",)
 
 
 ##########################
@@ -171,3 +171,4 @@ admin.site.register(Biology, BiologyAdmin)
 admin.site.register(Hydrology, HydrologyAdmin)
 admin.site.register(Locality, PaleoCoreLocalityAdmin)
 admin.site.register(Occurrence, OccurrenceAdmin)
+admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
