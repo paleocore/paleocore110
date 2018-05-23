@@ -56,6 +56,7 @@ LGRP_IDENTIFIER_CHOICES = (
     ('D. Geraads', 'D. Geraads'),
     ('D.C. Johanson', 'D.C. Johanson'),
     ('E. Delson', 'E. Delson'),
+    ('B. Villmoare', 'B. Villmoare'),
     ('E.S. Vrba', 'E.S. Vrba'),
     ('F.C. Howell', 'F.C. Howell'),
     ('G. Petter', 'G. Petter'),
@@ -63,7 +64,9 @@ LGRP_IDENTIFIER_CHOICES = (
     ('G.G. Eck', 'G.G. Eck'),
     ('H.B. Krentza', 'H.B. Krentza'),
     ('H.B. Wesselman', 'H.B. Wesselman'),
-    ('H.B.S. Cooke', 'H.B.S. Cooke'), ('Institute Staff', 'Institute Staff'), ('J.C. Rage', 'J.C. Rage'),
+    ('H.B.S. Cooke', 'H.B.S. Cooke'),
+    ('Institute Staff', 'Institute Staff'),
+    ('J.C. Rage', 'J.C. Rage'),
     ('K.E. Reed', 'K.E. Reed'), ('L.A. Werdelin', 'L.A. Werdelin'), ('L.J. Flynn', 'L.J. Flynn'),
     ('M. Sabatier', 'M. Sabatier'), ('M.E. Lewis', 'M.E. Lewis'), ('N. Fessaha', 'N. Fessaha'),
     ('P. Brodkorb', 'P. Brodkorb'), ('R. Bobe-Quinteros', 'R. Bobe-Quinteros'), ('R. Geze', 'R. Geze'),
@@ -71,7 +74,7 @@ LGRP_IDENTIFIER_CHOICES = (
     ('T.K. Nalley', 'T.K. Nalley'), ('V. Eisenmann', 'V. Eisenmann'), ('W.H. Kimbel', 'W.H. Kimbel'),
     ('Z. Alemseged', 'Z. Alemseged'), ('S. Oestmo', 'S. Oestmo'), ('J. Rowan', 'J. Rowan'),
     ('C.J. Campisano', 'C.J. Campisano'), ('J. Robinson', 'J. Robinson'), ('I. Smail', 'I. Smail'),
-    ('I. Lazagabaster', 'I. Lazagabaster')
+    ('I. Lazagabaster', 'I. Lazagabaster'), ('A. Rector', 'A. Rector')
 )
 
 

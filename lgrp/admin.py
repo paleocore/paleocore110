@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from .models import *
 import lgrp.views
 import unicodecsv
+import projects.admin
 
 
 class ImagesInline(admin.TabularInline):
@@ -28,8 +29,8 @@ lgrp_default_list_display = ('coll_code',
                              'item_type',
                              'collecting_method',
                              'collector_person',
-                             # 'item_scientific_name',
-                             # 'item_description',
+                             #'item_scientific_name',
+                             #'item_description',
                              'year_collected',
                              'in_situ',
                              'thumbnail')
@@ -212,7 +213,7 @@ class ArchaeologyAdmin(OccurrenceAdmin):
 
 class BiologyAdmin(OccurrenceAdmin):
     list_display = list(lgrp_biology_list_display)
-    list_select_related = lgrp_default_list_select_related + ('taxon',)
+    list_select_related = lgrp_default_list_select_related
     fieldsets = biology_fieldsets
     search_fields = lgrp_search_fields + ('taxon__name',)
     actions = ['create_data_csv']
