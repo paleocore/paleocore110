@@ -3,8 +3,10 @@ import gdb.ontologies
 import projects.models
 
 
-
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
+    """
+    Occurrence <- PaleoCoreOccurrenceBaseClass <- PaleoCoreGeomBaseClass <- PaleoCoreBaseClass
+    """
     catalog_number = models.AutoField(primary_key=True)  # NOT NULL
     cm_catalog_number = models.IntegerField(null=True, blank=True)  # CM SPec #
     locality = models.ForeignKey("Locality", to_field="locality_number", null=True, blank=True)
@@ -39,31 +41,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     def __str__(self):
         return str(self.catalog_number)
 
-    def longitude(self):
-        try:
-            return self.geom.x
-        except:
-            return 0
-
-    def latitude(self):
-        try:
-            return self.geom.y
-        except:
-            return 0
-
-    def easting(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)  # get a copy of the point in utm
-            return utm_point.x
-        except:
-            return 0
-
-    def northing(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)
-            return utm_point.y
-        except:
-            return 0
 
     @staticmethod
     def method_fields_to_export():
@@ -140,6 +117,9 @@ class Biology(Occurrence):
 
 
 class Locality(projects.models.PaleoCoreLocalityBaseClass):
+    """
+    Locality <- PaleoCoreLocalityBaseClass <- PaleoCoreGeomBaseClass <- PaleoCoreBaseClass
+    """
     locality_number = models.IntegerField(primary_key=True)  # NOT NULL
     locality_field_number = models.CharField(null=True, blank=True, max_length=50)
     #name = models.CharField(null=True, blank=True, max_length=50)  # Locality Name
@@ -189,32 +169,6 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
                 if lon_string[3]=="W":
                     lon_dd *= -1
             return "POINT ("+str(lon_dd)+" "+str(lat_dd)+")"
-
-    def point_x(self):
-        try:
-            return self.geom.x
-        except:
-            return 0
-
-    def point_y(self):
-        try:
-            return self.geom.y
-        except:
-            return 0
-
-    def easting(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)  # get a copy of the point in utm
-            return utm_point.x
-        except:
-            return 0
-
-    def northing(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)
-            return utm_point.y
-        except:
-            return 0
 
     class Meta:
         verbose_name_plural = "GDB Localities"
