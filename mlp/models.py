@@ -71,32 +71,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
         else:
             return "item "+str(self.id)
 
-    def point_x(self):
-        try:
-            return self.geom.x
-        except:
-            return 0
-
-    def point_y(self):
-        try:
-            return self.geom.y
-        except:
-            return 0
-
-    def easting(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)  # get a copy of the point in utm
-            return utm_point.x
-        except:
-            return 0
-
-    def northing(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)
-            return utm_point.y
-        except:
-            return 0
-
     def photo(self):
         try:
             return '<a href="%s"><img src="%s" style="width:600px" /></a>' \
