@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.apps import apps
 from django.utils import timezone
-
+from django.contrib.gis.geos import Point
 
 # Python imports
 import math
@@ -231,7 +231,7 @@ class PaleoCoreGeomBaseClass(PaleoCoreBaseClass):
             if pt.srid != 4326:
                 pt = pt.transform(4326, clone=True)
             utm_zone = math.floor((((pt.x + 180) / 6) % 60) + 1)
-            epsg = 32600 + utm_zone
+            epsg = 32600 + utm_zone  # epsg identifiers follow a pattern by zone
             if pt.y < 0:
                 epsg = epsg + 100
             return epsg
@@ -258,6 +258,58 @@ class PaleoCoreGeomBaseClass(PaleoCoreBaseClass):
                 elif coordinate == 'both':
                     result = pt.coords
         return result
+
+    def point_x(self):
+        """
+        Return the x coordinate for the point in its native coordinate system
+        :return:
+        """
+        if self.geom and type(self.geom) == Point:
+            return self.geom.x
+        else:
+            return None
+
+    def point_y(self):
+        """
+        Return the y coordinate for the point in its native coordinate system
+        :return:
+        """
+        if self.geom and type(self.geom) == Point:
+            return self.geom.y
+        else:
+            return None
+
+    def longitude(self):
+        """
+        Return the longitude for the point in the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
+        :return:
+        """
+        return self.gcs_coordinates(coordinate='lon')
+
+    def latitude(self):
+        """
+        Return the latitude for the point in the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
+        :return:
+        """
+        return self.gcs_coordinates(coordinate='lat')
+
+    def easting(self):
+        """
+        Return the easting for the point in UTM meters using the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.utm_coordinates
+        :return:
+        """
+        return self.utm_coordinates(coordinate='easting')
+
+    def northing(self):
+        """
+        Return the easting for the point in UTM meters using the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.utm_coordinates
+        :return:
+        """
+        return self.utm_coordinates(coordinate='northing')
 
     class Meta:
         abstract = True
