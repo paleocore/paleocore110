@@ -1,19 +1,18 @@
-# This is an auto-generated Django model module created by ogrinspect.
+import os
 from django.contrib.gis.db import models
 from datetime import datetime
-import os
-from drp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
-    COLLECTOR_CHOICES
-# TODO update models to inherit from project base classes
+
 import projects.models
 
+from drp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
+    COLLECTOR_CHOICES
+
+
 class TaxonRank(projects.models.TaxonRank):
-    name = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    ordinal = models.IntegerField(null=False, blank=False, unique=True)
 
     class Meta:
         verbose_name = "Taxon Rank"
+        verbose_name_plural = "Taxon Ranks"
 
     def __str__(self):
         return str(self.name)
@@ -84,7 +83,7 @@ item_typeCHOICES = (("Artifactual", "Artifactual"),
                     ("Geological", "Geological"))
 
 
-class Locality(models.Model):
+class Locality(projects.models.PaleoCoreLocalityBaseClass):
     paleolocality_number = models.IntegerField(null=True, blank=True)
     collection_code = models.CharField(null=True, blank=True, choices=(("DIK", "DIK"), ("ASB", "ASB")), max_length=10)
     paleo_sublocality = models.CharField(null=True, blank=True, max_length=50)
@@ -108,8 +107,8 @@ class Locality(models.Model):
         return str(self.collection_code) + " " + str(self.paleolocality_number)
 
 # This is the DRP data model. It is only partly PaleoCore compliant.
-class Occurrence(models.Model):
-    barcode = models.IntegerField("Barcode", null=True, blank=True)
+class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
+    # barcode = models.IntegerField("Barcode", null=True, blank=True)
     date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
     basis_of_record = models.CharField("Basis of Record", max_length=50, blank=True, null=False,
                                        choices=BASIS_OF_RECORD_VOCABULARY)  # NOT NULL
@@ -130,8 +129,9 @@ class Occurrence(models.Model):
     collector = models.CharField(max_length=50, blank=True, null=True, choices=COLLECTOR_CHOICES)
     finder = models.CharField(null=True, blank=True, max_length=50)
     disposition = models.CharField(max_length=255, blank=True, null=True)
-    field_number = models.DateTimeField(blank=True, null=True, editable=True)  # NOT NULL
-    year_collected = models.IntegerField(blank=True, null=True)
+    # field_number = models.DateTimeField(blank=True, null=True, editable=True)  # NOT NULL
+    field_number_orig = models.DateTimeField(blank=True, null=True, editable=True)  # NOT NULL
+    # year_collected = models.IntegerField(blank=True, null=True)
     individual_count = models.IntegerField(blank=True, null=True, default=1)
     preparation_status = models.CharField(max_length=50, blank=True, null=True)
     stratigraphic_marker_upper = models.CharField(max_length=255, blank=True, null=True)

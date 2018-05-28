@@ -33,7 +33,7 @@ class FilesInline(admin.TabularInline):
 occurrence_fieldsets = (
     ('Curatorial', {
         'fields': [('barcode', 'catalog_number', 'id'),
-                   ('field_number', 'year_collected', 'date_last_modified'),
+                   ('field_number_orig', 'year_collected', 'date_last_modified'),
                    ("collection_code", "paleolocality_number", "item_number", "item_part")]
     }),
 
@@ -104,14 +104,14 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     actions = ['create_data_csv', 'change_xy', 'get_nearest_locality']
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     readonly_fields = default_read_only_fields + ('photo',)
-    default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_record', 'item_type',
+    default_list_display = ('barcode', 'field_number', 'field_number_orig', 'catalog_number', 'basis_of_record', 'item_type',
                             'collecting_method', 'collector', 'item_scientific_name', 'item_description',
                             'year_collected',
                             'in_situ', 'problem', 'disposition', 'easting', 'northing')
     list_display = default_list_display + ('thumbnail',)
     fieldsets = occurrence_fieldsets
     default_list_filter = ['basis_of_record', 'item_type',
-                           'field_number', 'collector', 'problem', 'disposition']
+                           'field_number_orig', 'collector', 'problem', 'disposition']
     list_filter = default_list_filter + ['collection_code']
 
     # admin action to get nearest locality
