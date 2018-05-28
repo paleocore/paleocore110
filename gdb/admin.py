@@ -42,22 +42,30 @@ taxonomy_fieldsets = ('Identification', {
     'fields': [('taxon', 'identification_qualifier',),
                ('identified_by', 'date_identified'),
                ('type_status',),
-               ('tax_order', 'family', 'genus', 'specific_epithet' ),
                ]
+})
+
+old_taxonomy_fieldsets = ('Old Taxonomic Descriptions', {
+    'fields': [('tax_order', 'family',),
+               ('genus', 'specific_epithet',),
+               ],
+    'classes':['collapse']
 })
 # Register your models here.
 class OccurrenceAdmin(admin.ModelAdmin):
-    readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
+    # readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
+    readonly_fields = ['catalog_number']
     fieldsets = default_admin_fieldsets
-    list_display = ('catalog_number', 'item_scientific_name', 'item_description', 'locality',
-                    'date_collected', 'on_loan', 'date_last_modified')
+    list_display = ['catalog_number', 'item_scientific_name', 'item_description', 'locality',
+                    'date_collected', 'on_loan', 'date_last_modified']
+    list_select_related = ['locality']  #  improves performance, causes server to conduct 4 queries instead of 1004
     list_filter = ['date_collected', 'on_loan', 'date_last_modified']
 
     list_per_page = 1000
 
 
 class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
-    list_display = ('locality_number', 'locality_field_number', 'name', 'date_discovered',
+    list_display = ('locality_number', 'locality_field_number', 'cm_locality_number', 'name', 'date_discovered',
                     'point_x', 'point_y')
     readonly_fields = ('locality_number', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     list_filter = ['date_discovered', 'formation', 'NALMA', 'region', 'county']
@@ -65,23 +73,23 @@ class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
 
 
 class BiologyAdmin(admin.ModelAdmin):
-    readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
+    readonly_fields = ['catalog_number']
     biology_fieldsets = list(default_admin_fieldsets)
-
+    #
     chronology_fieldsets = ('Chronology', {'fields': [('NALMA','sub_age')]})
-    biology_fieldsets.insert(2, description_fieldsets)
-    biology_fieldsets.insert(3, taxonomy_fieldsets)
+    # # biology_fieldsets.insert(2, description_fieldsets)
+    biology_fieldsets.insert(2, taxonomy_fieldsets)
+    biology_fieldsets.insert(3, old_taxonomy_fieldsets)
     biology_fieldsets.insert(4, chronology_fieldsets)
     fieldsets = biology_fieldsets
-    list_display = ('catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
-                    'date_collected', 'family', 'genus')
-    list_filter = ['tax_order', 'family', 'genus', 'date_collected', 'on_loan', 'NALMA', 'date_last_modified',
-                   'locality']
+    list_display = ['catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
+                    'date_collected',]
     list_per_page = 1000
+    list_filter = ['taxon', 'NALMA', 'locality']
     search_fields = ['tax_class', 'tax_order', 'family', 'tribe', 'genus', 'specific_epithet', 'item_scientific_name',
                      'catalog_number', 'cm_catalog_number', 'locality__locality_number', 'locality__name']
     actions = ['create_data_csv', 'generate_specimen_labels']
-    list_select_related = ['occurrence_ptr', 'taxon']
+    list_select_related = ['locality','taxon', 'occurrence_ptr']
 
     def create_data_csv(self, request, queryset):
         """
@@ -162,9 +170,11 @@ class BiologyAdmin(admin.ModelAdmin):
         content = ""
         for b in queryset:
             specimen_data = "GDB Project\n{catalog_number}  {sci_name}\n" \
+                            "CM #: {cm_catalog_number}\n"\
                             "{description}\nLocality {locality}\n" \
                             "{nalma} {date_collected}\n\n".format(catalog_number=b.catalog_number,
                                                        sci_name=b.item_scientific_name,
+                                                        cm_catalog_number=b.cm_catalog_number,
                                                        description=b.item_description,
                                                               locality=b.locality,
                                                               nalma=b.NALMA,
