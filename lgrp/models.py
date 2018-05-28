@@ -138,58 +138,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
         """
         return ['longitude', 'latitude', 'easting', 'northing', 'catalog_number', 'photo']
 
-    def point_x(self):
-        """
-        Return the x coordinate for the point in its native coordinate system
-        :return:
-        """
-        if self.geom and type(self.geom) == Point:
-            return self.geom.x
-        else:
-            return None
-
-    def point_y(self):
-        """
-        Return the y coordinate for the point in its native coordinate system
-        :return:
-        """
-        if self.geom and type(self.geom) == Point:
-            return self.geom.y
-        else:
-            return None
-
-    def longitude(self):
-        """
-        Return the longitude for the point in the WGS84 datum
-        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
-        :return:
-        """
-        return self.gcs_coordinates(coordinate='lon')
-
-    def latitude(self):
-        """
-        Return the latitude for the point in the WGS84 datum
-        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
-        :return:
-        """
-        return self.gcs_coordinates(coordinate='lat')
-
-    def easting(self):
-        """
-        Return the easting for the point in UTM meters using the WGS84 datum
-        see PaleoCoreOccurrenceBaseClass.utm_coordinates
-        :return:
-        """
-        return self.utm_coordinates(coordinate='easting')
-
-    def northing(self):
-        """
-        Return the easting for the point in UTM meters using the WGS84 datum
-        see PaleoCoreOccurrenceBaseClass.utm_coordinates
-        :return:
-        """
-        return self.utm_coordinates(coordinate='northing')
-
     def catalog_number(self):
         """
         Generate a pretty string formatted catalog number from constituent fields
