@@ -1,10 +1,4 @@
-from django.contrib import admin
-# import projects.admin  # import default PaleoCore admin classes
-from .models import *  # import database models from models.py
-from django.forms import TextInput, Textarea  # import custom form widgets
-from django.http import HttpResponse
-import unicodecsv
-from django.core.exceptions import ObjectDoesNotExist
+from .models import *
 from django.contrib.gis import admin
 from django.contrib.gis.admin import OSMGeoAdmin
 import projects.admin
@@ -33,7 +27,7 @@ class FilesInline(admin.TabularInline):
 occurrence_fieldsets = (
     ('Curatorial', {
         'fields': [('barcode', 'catalog_number', 'id'),
-                   ('field_number_orig', 'year_collected', 'date_last_modified'),
+                   ('date_recorded', 'year_collected', 'date_last_modified'),
                    ("collection_code", "paleolocality_number", "item_number", "item_part")]
     }),
 
@@ -100,18 +94,16 @@ class PaleoCoreLocalityAdmin(DGGeoAdmin):
     search_fields = ("paleolocality_number",)
 
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
-#class OccurrenceAdmin(DGGeoAdmin):
     actions = ['create_data_csv', 'change_xy', 'get_nearest_locality']
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     readonly_fields = default_read_only_fields + ('photo',)
-    default_list_display = ('barcode', 'field_number', 'field_number_orig', 'catalog_number', 'basis_of_record', 'item_type',
+    default_list_display = ('barcode', 'date_recorded', 'catalog_number', 'basis_of_record', 'item_type',
                             'collecting_method', 'collector', 'item_scientific_name', 'item_description',
                             'year_collected',
                             'in_situ', 'problem', 'disposition', 'easting', 'northing')
     list_display = default_list_display + ('thumbnail',)
     fieldsets = occurrence_fieldsets
-    default_list_filter = ['basis_of_record', 'item_type',
-                           'field_number_orig', 'collector', 'problem', 'disposition']
+    default_list_filter = ['basis_of_record', 'item_type', 'collector', 'problem', 'disposition']
     list_filter = default_list_filter + ['collection_code']
 
     # admin action to get nearest locality
@@ -150,17 +142,6 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
 
 class BiologyAdmin(OccurrenceAdmin):
     model = Biology
-
-
-###################
-# Taxonomy Admin  #
-###################
-
-
-# class TaxonAdmin(projects.admin.):
-#     list_display = ("id", "rank", "taxon")
-#     search_fields = ("taxon",)
-#     list_filter = ("rank",)
 
 
 ##########################

@@ -108,7 +108,6 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
 
 # This is the DRP data model. It is only partly PaleoCore compliant.
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
-    # barcode = models.IntegerField("Barcode", null=True, blank=True)
     date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
     basis_of_record = models.CharField("Basis of Record", max_length=50, blank=True, null=False,
                                        choices=BASIS_OF_RECORD_VOCABULARY)  # NOT NULL
@@ -129,9 +128,7 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     collector = models.CharField(max_length=50, blank=True, null=True, choices=COLLECTOR_CHOICES)
     finder = models.CharField(null=True, blank=True, max_length=50)
     disposition = models.CharField(max_length=255, blank=True, null=True)
-    # field_number = models.DateTimeField(blank=True, null=True, editable=True)  # NOT NULL
-    field_number_orig = models.DateTimeField(blank=True, null=True, editable=True)  # NOT NULL
-    # year_collected = models.IntegerField(blank=True, null=True)
+    field_number_orig = models.DateTimeField(blank=True, null=True, editable=True)
     individual_count = models.IntegerField(blank=True, null=True, default=1)
     preparation_status = models.CharField(max_length=50, blank=True, null=True)
     stratigraphic_marker_upper = models.CharField(max_length=255, blank=True, null=True)
@@ -168,35 +165,15 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     stratigraphic_height_in_meters = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
     locality = models.ForeignKey(Locality, null=True, blank=True)
 
-    @staticmethod
-    def fields_to_display():
-        fields = ("id", "barcode")
-        return fields
-
-    def point_x(self):
-        return self.geom.x
-
-    def point_y(self):
-        return self.geom.y
-
-    def easting(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)  # get a copy of the point in utm
-            return utm_point.x
-        except:
-            return 0
-
-    def northing(self):
-        try:
-            utm_point = self.geom.transform(32637, clone=True)
-            return utm_point.y
-        except:
-            return 0
-
     def __str__(self):
         nice_name = str(self.collection_code) + "-" + str(self.paleolocality_number) + "-" + str(self.item_number) + \
                     str(self.item_part) + " [" + str(self.item_scientific_name) + " " + str(self.item_description) + "]"
         return nice_name.replace("None", "").replace("--", "")
+
+    @staticmethod
+    def fields_to_display():
+        fields = ("id", "barcode")
+        return fields
 
     def save(self, *args, **kwargs):  # custom save method for occurrence
         the_catalog_number = str(self.collection_code) + "-" + str(self.paleolocality_number) + \
