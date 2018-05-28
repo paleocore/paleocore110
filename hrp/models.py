@@ -1,78 +1,31 @@
+import os
 from django.contrib.gis.db import models
+
 from hrp.ontologies import ITEM_TYPE_VOCABULARY, HRP_COLLECTOR_CHOICES, \
     HRP_COLLECTING_METHOD_VOCABULARY, HRP_BASIS_OF_RECORD_VOCABULARY, HRP_COLLECTION_CODES
-import os
+
 from django.contrib.gis.geos import Point
+import projects.models
 
-
-class TaxonRank(models.Model):
-    name = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    plural = models.CharField(null=False, blank=False, max_length=50, unique=True)
-    ordinal = models.IntegerField(null=False, blank=False, unique=True)
-
-    def __unicode__(self):
-        return str(self.name)
-
+class TaxonRank(projects.models.TaxonRank):
     class Meta:
-        verbose_name = "Taxon Rank"
+        verbose_name = "HRP Taxon Rank"
+        verbose_name_plural = "HRP Taxon Ranks"
 
 
-class Taxon(models.Model):
-    name = models.CharField(null=False, blank=False, max_length=255, unique=False)
+class Taxon(projects.models.Taxon):
     parent = models.ForeignKey('self', null=True, blank=True)
     rank = models.ForeignKey(TaxonRank)
 
-    def parent_rank(self):
-        return self.parent.rank.name
-
-    def rank_ordinal(self):
-        return self.rank.ordinal
-
-    def parent_name(self):
-        if self.parent is None:
-            return "NA"
-        else:
-            return self.parent.name
-
-    def full_name(self):
-        if self.parent is None:
-            return self.name
-        elif self.parent.parent is None:
-            return self.name
-        else:
-            return self.parent.full_name() + ", " + self.name
-
-    def full_lineage(self):
-        """
-        Get a list of taxon object representing the full lineage hierarchy
-        :return: list of taxon objects ordered highest rank to lowest
-        """
-        if self.parent is None:
-            return [self]
-        if self.parent.parent is None:
-            return [self]
-        else:
-            return self.parent.full_lineage()+[self]
-
-    def __unicode__(self):
-        if self.rank.name == 'Species' and self.parent:
-            return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
-        else:
-            return "[" + self.rank.name + "] " + str(self.name)
-
     class Meta:
-        verbose_name = "Taxon"
-        verbose_name_plural = "taxa"
-        ordering = ['rank__ordinal', 'name']
+        verbose_name = "HRP Taxon"
+        verbose_name_plural = "HRP Taxa"
 
 
-class IdentificationQualifier(models.Model):
-    name = models.CharField(null=False, blank=True, max_length=15, unique=True)
-    qualified = models.BooleanField()
-
-    def __unicode__(self):
-        return self.name
-
+class IdentificationQualifier(projects.models.IdentificationQualifier):
+    class Meta:
+        verbose_name = "HRP ID Qualifier"
+        verbose_name_plural = "HRP ID Qualifiers"
 
 # Locality Class
 class Locality(models.Model):
@@ -90,7 +43,7 @@ class Locality(models.Model):
     date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
     objects = models.GeoManager()
 
-    def __unicode__(self):
+    def __str__(self):
         nice_name = str(self.collection_code) + " " + str(self.locality_number) + str(self.sublocality)
         return nice_name.replace("None", "").replace("--", "")
 
@@ -314,7 +267,7 @@ class Occurrence(models.Model):
         else:
             return None
 
-    def __unicode__(self):
+    def __str__(self):
         nice_name = str(self.catalog_number()) + ' ' + '[' + str(self.item_scientific_name) + ' ' \
                     + str(self.item_description) + "]"
         return nice_name.replace("None", "").replace("--", "")
@@ -475,8 +428,8 @@ class Biology(Occurrence):
         verbose_name = "HRP Biology"
         verbose_name_plural = "HRP Biology"
 
-    def __unicode__(self):
-        return str(self.taxon.__unicode__())
+    def __str__(self):
+        return str(self.taxon.__str__())
 
 
 class Archaeology(Occurrence):
@@ -510,7 +463,7 @@ class Hydrology(models.Model):
     geom = models.LineStringField(srid=4326)
     objects = models.GeoManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.name)
 
     class Meta:
