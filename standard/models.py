@@ -203,6 +203,7 @@ class Term(models.Model):
     uri = models.CharField(null=True, blank=True, max_length=255)
     projects = models.ManyToManyField('Project', through='ProjectTerm', blank=True)  # deprecated to namespace
     namespace_text = models.CharField(null=True, blank=True, max_length=255, choices=standard.ontologies.NAMESPACE)
+    namespace = models.ForeignKey(to='Namespace', null=True, blank=True)
     is_class = models.BooleanField(default=False)
     is_vocabulary = models.BooleanField(default=False)
     term_ordering = models.IntegerField(null=True, blank=True)
