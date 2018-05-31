@@ -132,6 +132,17 @@ class ProjectTerm(models.Model):
         unique_together = ('project', 'term',)
 
 
+class TermMapping(models.Model):
+    term1 = models.ForeignKey('Term')
+    term2 = models.ForeignKey('Term', related_name='term2_term')
+    relationship = models.ForeignKey('TermRelationship')
+
+
+class TermRelationship(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+
+
 class TermCategory(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField()
@@ -201,7 +212,8 @@ class Term(models.Model):
     controlled_vocabulary = models.CharField(null=True, blank=True, max_length=75)
     controlled_vocabulary_url = models.CharField(null=True, blank=True, max_length=155)
     uri = models.CharField(null=True, blank=True, max_length=255)
-    projects = models.ManyToManyField('Project', through='ProjectTerm', blank=True)  # deprecated to namespace
+    projects = models.ManyToManyField('Project', through='ProjectTerm', blank=True)  # REQUIRED
+    mapping = models.ManyToManyField('Term', through='TermMapping')
     namespace_text = models.CharField(null=True, blank=True, max_length=255, choices=standard.ontologies.NAMESPACE)
     namespace = models.ForeignKey(to='Namespace', null=True, blank=True)
     is_class = models.BooleanField(default=False)
@@ -223,7 +235,7 @@ class Term(models.Model):
         try:
             native_project_term = self.projectterm_set.get(native=True)
             return native_project_term.project.full_name
-        except Term.DoesNotExist:
+        except ProjectTerm.DoesNotExist:
             return None
     native_project.admin_order_field = 'projects__full_name'
 
@@ -256,6 +268,8 @@ class Namespace(models.Model):
 
     def __str__(self):
         return self.name
+
+
 
 
 # class Comment(models.Model):
