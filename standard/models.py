@@ -252,6 +252,9 @@ class Namespace(models.Model):
     name = models.CharField(max_length=50)  # REQUIRED
     uri = models.URLField()
 
+    def __str__(self):
+        return self.name
+
 
 # class Comment(models.Model):
 #     term = models.ForeignKey(Term)
