@@ -41,7 +41,7 @@ class Project(models.Model):
                                       help_text=display_fields_help_text)
     display_filter_fields = models.TextField(max_length=2000, default="[]", null=True, blank=True,
                                              help_text=display_filter_fields_help_text)
-    users = models.ManyToManyField(User, blank=True)
+    # users = models.ManyToManyField(User, blank=True)
     terms = models.ManyToManyField('Term', through='ProjectTerm', blank=True)
     default_app_model = models.ForeignKey(ContentType, blank=True, null=True)
     geom = models.PointField(srid=4326, blank=True, null=True)
@@ -69,7 +69,7 @@ class Project(models.Model):
         [term.get_mapping(self.paleocore_appname) for term in project_terms]
         :return: returns a queryset of term objects
         """
-        return Term.objects.filter(projects=self)  # get a queryset of all terms for a projct
+        return Term.objects.filter(projects=self)  # get a queryset of all terms for a project
         # [term.get_mapping(self.paleocore_appname) for term in project_terms]
 
     def get_term_names(self):
@@ -99,11 +99,6 @@ class Project(models.Model):
             except ProjectTerm.DoesNotExist:
                 result_dict[term.get_mapping(self.name)] = None
         return result_dict
-
-
-
-
-
 
 
 # FYI: this is a case of this:
@@ -139,8 +134,8 @@ class ProjectTerm(models.Model):
 
 class TermCategory(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    description = models.TextField()
     uri = models.CharField(null=True, blank=True, max_length=255)
-    description = models.CharField(max_length=4000)
     is_occurrence = models.BooleanField()
     parent = models.ForeignKey('self', null=True, blank=True)
     tree_visibility = models.BooleanField(default=True)
@@ -157,7 +152,7 @@ class TermCategory(models.Model):
 
 class TermStatus(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    description = models.CharField(max_length=4000)
+    description = models.TextField()
 
     def __str__(self):
         return self.name
@@ -171,7 +166,7 @@ class TermStatus(models.Model):
 
 class TermDataType(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    description = models.CharField(max_length=4000)
+    description = models.TextField()
 
     def __str__(self):
         return self.name
@@ -184,11 +179,19 @@ class TermDataType(models.Model):
 
 
 class Term(models.Model):
-    name = models.CharField(max_length=50)
+    """
+    Terms used for various databases, standards and vocabularies
+    is_class denotes if the term is a class label, the default is False, most terms are attributes
+    is_vocabulary denotes if the term is part of a controlled vocabulary
+    projects references all the projects (and vocabularies) that use the term. The ProjectsTerm.native attribute is
+    used to indicate which project is the source of the term.
+    """
+    name = models.CharField(max_length=255)
     definition = models.TextField(null=True, blank=True)
-    data_type = models.ForeignKey(TermDataType, null=True, blank=True)  # deprecated to type
+    data_type = models.ForeignKey(TermDataType, null=True, blank=True)
 #    type = models.CharField(null=True, blank=False, max_length=20, choices=standard.ontologies.TERM_TYPES)
-    category = models.ForeignKey(TermCategory, null=True)
+    category = models.ForeignKey(TermCategory, null=True, blank=True)
+    verbatim_category = models.ForeignKey(TermCategory, null=True, blank=True, related_name='term_verbatim_category')
     status = models.ForeignKey(TermStatus, null=True, blank=True)  # deprecated to term_status
 #    term_status = models.CharField(null=True, blank=True, max_length=20, choices=standard.ontologies.TERM_STATUS)
     example = models.TextField(null=True, blank=True)
@@ -201,6 +204,7 @@ class Term(models.Model):
     projects = models.ManyToManyField('Project', through='ProjectTerm', blank=True)  # deprecated to namespace
     namespace = models.CharField(null=True, blank=True, max_length=255, choices=standard.ontologies.NAMESPACE)
     is_class = models.BooleanField(default=False)
+    is_vocabulary = models.BooleanField(default=False)
     term_ordering = models.IntegerField(null=True, blank=True)
 
     # deprecated fields
@@ -244,20 +248,20 @@ class Term(models.Model):
         verbose_name = "Term"
 
 
-class Comment(models.Model):
-    term = models.ForeignKey(Term)
-    subject = models.CharField(max_length=100)
-    body = models.TextField()
-    author = models.ForeignKey(User)
-    timestamp = models.DateTimeField()
-
-    def __str__(self):
-        return self.subject + "(" + self.author.__str__() + ", " + self.timestamp.__str__() + ")"
-
-    class Meta:
-        ordering = ["-timestamp"]
-        verbose_name_plural = "Comments"
-        verbose_name = "Comment"
+# class Comment(models.Model):
+#     term = models.ForeignKey(Term)
+#     subject = models.CharField(max_length=100)
+#     body = models.TextField()
+#     author = models.ForeignKey(User)
+#     timestamp = models.DateTimeField()
+#
+#     def __str__(self):
+#         return self.subject + "(" + self.author.__str__() + ", " + self.timestamp.__str__() + ")"
+#
+#     class Meta:
+#         ordering = ["-timestamp"]
+#         verbose_name_plural = "Comments"
+#         verbose_name = "Comment"
 
 
 class CompareView:

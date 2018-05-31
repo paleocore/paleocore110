@@ -31,6 +31,7 @@ omo_mursi = 'omo_mursi'
 cc = 'cc'
 fc = 'fc'
 gdb = 'gdb'
+rhoi = 'rhoi'
 NAMESPACE = (
     (cc, 'cc'),
     (dc, 'dc'),
@@ -43,4 +44,5 @@ NAMESPACE = (
     (mlp, 'mlp'),
     (omo_mursi, 'omo_murse'),
     (pc, 'pc'),
+    (rhoi, 'rhoi'),
 )

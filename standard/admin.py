@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Term, TermCategory, TermStatus, TermDataType, Comment, ProjectTerm
+from .models import *
 
 
 class ProjectTermInline(admin.TabularInline):
@@ -17,9 +17,10 @@ class TermAdmin(admin.ModelAdmin):
                     'status', 'category')
     list_filter = ['namespace', 'projects', 'category', 'is_class']
     list_editable = ['term_ordering']
+    list_select_related = ['data_type', 'category', 'status']
     read_only_fields = ['get_projects', ]
     ordering = ('name',)
-    search_fields = ['name', ]
+    search_fields = ['name', 'projectterm__mapping' ]
     inlines = (ProjectTermInline, )
     list_per_page = 200
 
@@ -77,7 +78,8 @@ class TermCategoryAdmin(admin.ModelAdmin):
 #     search_fields = ["related_term__name", "term__name"]
 #     ordering = ('term',)
 
-admin.site.register(Comment)
+# admin.site.register(Comment)
+admin.site.register(Project)
 admin.site.register(Term, TermAdmin)
 admin.site.register(TermCategory, TermCategoryAdmin)
 admin.site.register(TermStatus)
