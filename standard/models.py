@@ -137,10 +137,16 @@ class TermMapping(models.Model):
     term2 = models.ForeignKey('Term', related_name='term2_term')
     relationship = models.ForeignKey('TermRelationship')
 
+    def __str__(self):
+        return self.term1.name + '-' + self.term2.name
+
 
 class TermRelationship(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 class TermCategory(models.Model):
@@ -201,8 +207,9 @@ class Term(models.Model):
     definition = models.TextField(null=True, blank=True)
     data_type = models.ForeignKey(TermDataType, null=True, blank=True)
 #    type = models.CharField(null=True, blank=False, max_length=20, choices=standard.ontologies.TERM_TYPES)
-    category = models.ForeignKey(TermCategory, null=True, blank=True)
-    verbatim_category = models.ForeignKey(TermCategory, null=True, blank=True, related_name='term_verbatim_category')
+    category = models.ForeignKey('TermCategory', models.SET_NULL, blank=True, null=True)
+    verbatim_category = models.ForeignKey('TermCategory', models.SET_NULL, null=True, blank=True,
+                                          related_name='term_verbatim_category')
     status = models.ForeignKey(TermStatus, null=True, blank=True)  # deprecated to term_status
 #    term_status = models.CharField(null=True, blank=True, max_length=20, choices=standard.ontologies.TERM_STATUS)
     example = models.TextField(null=True, blank=True)
@@ -215,7 +222,7 @@ class Term(models.Model):
     projects = models.ManyToManyField('Project', through='ProjectTerm', blank=True)  # REQUIRED
     mapping = models.ManyToManyField('Term', through='TermMapping')
     namespace_text = models.CharField(null=True, blank=True, max_length=255, choices=standard.ontologies.NAMESPACE)
-    namespace = models.ForeignKey(to='Namespace', null=True, blank=True)
+    namespace = models.ForeignKey('Namespace', models.SET_NULL, null=True, blank=True)
     is_class = models.BooleanField(default=False)
     is_vocabulary = models.BooleanField(default=False)
     term_ordering = models.IntegerField(null=True, blank=True)
@@ -253,7 +260,10 @@ class Term(models.Model):
 
 
     def __str__(self):
-        return self.name
+        if self.namespace:
+            return self.namespace.name+":"+self.name
+        else:
+            return self.name
 
     class Meta:
         ordering = ["name"]
