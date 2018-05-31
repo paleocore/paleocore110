@@ -250,7 +250,8 @@ class Term(models.Model):
 
 class Namespace(models.Model):
     name = models.CharField(max_length=50)  # REQUIRED
-    uri = models.URLField()
+    description = models.TextField(null=True, blank=True)
+    uri = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return self.name
