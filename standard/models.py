@@ -202,7 +202,7 @@ class Term(models.Model):
     controlled_vocabulary_url = models.CharField(null=True, blank=True, max_length=155)
     uri = models.CharField(null=True, blank=True, max_length=255)
     projects = models.ManyToManyField('Project', through='ProjectTerm', blank=True)  # deprecated to namespace
-    namespace = models.CharField(null=True, blank=True, max_length=255, choices=standard.ontologies.NAMESPACE)
+    namespace_text = models.CharField(null=True, blank=True, max_length=255, choices=standard.ontologies.NAMESPACE)
     is_class = models.BooleanField(default=False)
     is_vocabulary = models.BooleanField(default=False)
     term_ordering = models.IntegerField(null=True, blank=True)
@@ -246,6 +246,11 @@ class Term(models.Model):
         ordering = ["name"]
         verbose_name_plural = "Terms"
         verbose_name = "Term"
+
+
+class Namespace(models.Model):
+    name = models.CharField(max_length=50)  # REQUIRED
+    uri = models.URLField()
 
 
 # class Comment(models.Model):

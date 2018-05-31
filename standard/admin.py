@@ -15,7 +15,7 @@ class TermAdmin(admin.ModelAdmin):
                     'get_projects',
                     'data_type',
                     'status', 'category')
-    list_filter = ['namespace', 'projects', 'category', 'is_class']
+    list_filter = ['namespace_text', 'projects', 'category', 'is_class']
     list_editable = ['term_ordering']
     list_select_related = ['data_type', 'category', 'status']
     read_only_fields = ['get_projects', ]
@@ -84,5 +84,6 @@ admin.site.register(Term, TermAdmin)
 admin.site.register(TermCategory, TermCategoryAdmin)
 admin.site.register(TermStatus)
 admin.site.register(TermDataType)
+admin.site.register(Namespace)
 # admin.site.register(TermRelationship, TermRelationshipAdmin)
 # admin.site.register(TermRelationshipType)
