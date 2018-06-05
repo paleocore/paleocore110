@@ -1,24 +1,20 @@
 from django.contrib import admin
-from models import Occurrence, Biology
+from .models import *
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 import unicodecsv
 from django.core.exceptions import ObjectDoesNotExist
-import base.admin
+import projects.admin
 
 
 class BiologyInline(admin.TabularInline):
     model = Biology
     extra = 0
     readonly_fields = ("id",)
-    fieldsets = base.admin.default_biology_inline_fieldsets
+    fieldsets = projects.admin.default_biology_inline_fieldsets
 
 
-class BiologyAdmin(base.admin.PaleoCoreBiologyAdmin):
-    models = Biology
-
-
-class OccurrenceAdmin(base.admin.PaleoCoreOccurrenceAdmin):
+class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     actions = ["create_data_csv", "change_xy"]
 
     #admin action to manually enter coordinates
@@ -87,6 +83,9 @@ class OccurrenceAdmin(base.admin.PaleoCoreOccurrenceAdmin):
 
     create_data_csv.short_description = "Download Selected to .csv"
 
+
+class BiologyAdmin(OccurrenceAdmin):
+    models = Biology
 ############################
 ## Register Admin Classes ##
 ############################
