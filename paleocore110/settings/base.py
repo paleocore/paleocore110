@@ -86,6 +86,8 @@ INSTALLED_APPS = (
     'omo_mursi',
     'origins',
     'standard',
+    'vif',
+    'wt',
 )
 
 MIDDLEWARE_CLASSES = (
