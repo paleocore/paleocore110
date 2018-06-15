@@ -4,6 +4,12 @@
 
 <div id="content" class="row">
   <div class="body"></div>
+    <h2>{{ project.full_name }}</h2>
+    <p>Namespace URI: </p>
+    <p>Namespace abbreviation: {{project.name}}</p>
+
+    <hr/>
+
     <h3>Class Index </h3>
     <p>
     {% for class in classes %}
@@ -16,7 +22,7 @@
     <h3>Terms Index</h3>
     {% regroup terms by category as terms_list %}
     {% for category in terms_list %}
-        {% if category.grouper.name == 'Occurrence' %}
+        {% if category.grouper.name == 'Find' %}
         <p>
           <strong>
             <a href="#{{ category.grouper }}">{{ category.grouper }}</a> |
