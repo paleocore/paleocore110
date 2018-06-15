@@ -2,6 +2,11 @@ from django.contrib import admin
 from .models import *
 
 
+class ProjectAdmin(admin.ModelAdmin):
+    model = Project
+    list_display = ['name', 'name', 'full_name', 'namespace_abbreviation']
+
+
 class ProjectTermInline(admin.TabularInline):
     model = ProjectTerm
     extra = 1
@@ -11,22 +16,25 @@ class ProjectTermInline(admin.TabularInline):
 
 
 class TermAdmin(admin.ModelAdmin):
-    list_display = ('id', 'term_ordering', 'name', 'uri', 'is_class', 'native_project',
-                    'get_projects',
-                    'data_type',
-                    'status', 'category')
-    list_filter = ['namespace_text', 'projects', 'category', 'is_class']
-    list_editable = ['term_ordering']
+    list_display = ('name', 'term_ordering', 'definition',
+                    'category', 'verbatim_category', 'is_class',
+#                    'get_projects',
+#                    'data_type',
+                    'status')
+    list_display_links = ['name']
+    list_filter = ['projects', 'category', 'is_class']
+    list_editable = ['term_ordering', 'category', 'verbatim_category']
     list_select_related = ['data_type', 'category', 'status']
     read_only_fields = ['get_projects', ]
-    ordering = ('name',)
+    ordering = ['term_ordering',]
     search_fields = ['name', 'projectterm__mapping' ]
     inlines = (ProjectTermInline, )
     list_per_page = 200
 
 
 class TermCategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'uri', 'description', 'parent', 'tree_visibility')
+    readonly_fields = ['term_count',]
+    list_display = ('name', 'uri', 'description', 'parent', 'term_count')
     list_filter = ['is_occurrence']
     ordering = ('name',)
 
@@ -79,11 +87,12 @@ class TermCategoryAdmin(admin.ModelAdmin):
 #     ordering = ('term',)
 
 # admin.site.register(Comment)
-admin.site.register(Project)
+admin.site.register(Project, ProjectAdmin)
 admin.site.register(Term, TermAdmin)
 admin.site.register(TermCategory, TermCategoryAdmin)
 admin.site.register(TermStatus)
 admin.site.register(TermDataType)
-admin.site.register(Namespace)
+admin.site.register(TermMapping)
+admin.site.register(TermRelationship)
 # admin.site.register(TermRelationship, TermRelationshipAdmin)
 # admin.site.register(TermRelationshipType)

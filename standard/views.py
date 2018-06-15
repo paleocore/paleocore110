@@ -33,8 +33,7 @@ class PaleocoreTermsIndexView(generic.ListView):
         context = super(PaleocoreTermsIndexView, self).get_context_data(**kwargs)
 
         # get a queryset of just paleocore classes
-        paleocore_classes = Term.objects.filter(projects__name='pc').order_by('category', 'name')
-        paleocore_classes = paleocore_classes.filter(is_class=True)
+        paleocore_classes = Term.objects.filter(projects__name='pc').filter(is_class=True).order_by('term_ordering')
 
         # add them to the context, which now contains elements for terms and classes
         context['classes'] = paleocore_classes
@@ -50,7 +49,7 @@ class TermsIndexView(generic.ListView):
         project = get_object_or_404(Project, name=self.kwargs['project_name'])
 
         """Return a list of terms for the current project"""
-        return project.get_terms().exclude(is_class=True).order_by('category', 'name')
+        return project.get_terms().exclude(is_class=True).order_by('verbatim_category', 'name')
 
     def get_context_data(self, **kwargs):
         # supplement the context by adding a list of class terms
@@ -60,12 +59,14 @@ class TermsIndexView(generic.ListView):
 
         # get a queryset of just paleocore classes
         project = get_object_or_404(Project, name=self.kwargs['project_name'])
-        project_classes = project.get_terms().filter(is_class=True).order_by('category', 'name')
+        project_classes = project.get_verbatim_categories()
+        # project_classes = project.get_terms().filter(is_class=True).order_by('category', 'name')
         # paleocore_classes = Term.objects.filter(projects__name='pc').order_by('category', 'name')
         # paleocore_classes = paleocore_classes.filter(is_class=True)
 
         # add them to the context, which now contains elements for terms and classes
         context['classes'] = project_classes
+        context['project'] = project
         return context
 
 

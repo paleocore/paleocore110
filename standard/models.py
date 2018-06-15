@@ -20,9 +20,16 @@ display_filter_fields_help_text = "A list of fields to filter on in the public v
 
 class Project(models.Model):
     name = models.CharField(max_length=20, null=True, blank=True)
-    short_name = models.CharField(max_length=50, unique=True)
+    #name = models.CharField(max_length=50, unique=True)
+    appname = models.CharField(max_length=200, choices=app_CHOICES, null=True)
     full_name = models.CharField(max_length=300, unique=True, db_index=True)
-    paleocore_appname = models.CharField(max_length=200, choices=app_CHOICES, null=True)
+
+    #namespace = models.OneToOneField('Namespace', on_delete=models.SET_NULL, null=True, blank=True)
+    namespace_abbreviation = models.TextField(max_length=255, null=True, blank=True)
+    namespace_uri = models.URLField(null=True, blank=True)
+    namespace_description = models.TextField(null=True, blank=True)
+
+
     abstract = models.TextField(max_length=4000, null=True, blank=True,
                                 help_text=abstract_help_text)
     is_standard = models.BooleanField(default=False)
@@ -48,7 +55,7 @@ class Project(models.Model):
     objects = models.GeoManager()
 
     class Meta:
-        ordering = ["short_name"]
+        ordering = ["name"]
         verbose_name_plural = "Projects"
         verbose_name = "Project"
 
@@ -59,18 +66,36 @@ class Project(models.Model):
         if self.is_standard:
             return 0
         else:
-            model = apps.get_model(self.paleocore_appname, self.occurrence_table_name)
+            model = apps.get_model(self.appname, self.occurrence_table_name)
             return model.objects.count()
 
     def get_terms(self):
         """
         Get a list of all the terms associated with the project.
         To get a list of the term names as used by the project use,
-        [term.get_mapping(self.paleocore_appname) for term in project_terms]
+        [term.get_mapping(self.appname) for term in project_terms]
         :return: returns a queryset of term objects
         """
         return Term.objects.filter(projects=self)  # get a queryset of all terms for a project
-        # [term.get_mapping(self.paleocore_appname) for term in project_terms]
+        # [term.get_mapping(self.appname) for term in project_terms]
+
+    def get_properties(self):
+        """
+        Get a list of all the property terms associated with the project.
+        :return: returns a queryset of term objects
+        """
+        # get a queryset of all terms for a project that are not classes, i.e. get all properties
+        return Term.objects.filter(projects=self).exclude(is_class=True)
+        # [term.get_mapping(self.appname) for term in project_terms]
+
+    def get_verbatim_categories(self):
+        """
+        Get a list of all verbatim class terms associated project.
+        :return:
+        """
+        # get a queryset of all terms for a project that are classes
+        return Term.objects.filter(projects=self).filter(is_class=True).order_by('term_ordering')
+
 
     def get_term_names(self):
         """
@@ -78,7 +103,7 @@ class Project(models.Model):
         :return: returns a list of term names
         """
         term_qs = self.get_terms()
-        return [term.get_mapping(self.paleocore_appname) for term in term_qs]
+        return [term.get_mapping(self.appname) for term in term_qs]
 
     def map_terms(self, proj):
         """
@@ -160,6 +185,9 @@ class TermCategory(models.Model):
     def __str__(self):
         return self.name
 
+    def term_count(self):
+        return self.term_set.count()
+
     class Meta:
         ordering = ["name"]
         verbose_name = "Term Category"
@@ -221,8 +249,6 @@ class Term(models.Model):
     uri = models.CharField(null=True, blank=True, max_length=255)
     projects = models.ManyToManyField('Project', through='ProjectTerm', blank=True)  # REQUIRED
     mapping = models.ManyToManyField('Term', through='TermMapping')
-    namespace_text = models.CharField(null=True, blank=True, max_length=255, choices=standard.ontologies.NAMESPACE)
-    namespace = models.ForeignKey('Namespace', models.SET_NULL, null=True, blank=True)
     is_class = models.BooleanField(default=False)
     is_vocabulary = models.BooleanField(default=False)
     term_ordering = models.IntegerField(null=True, blank=True)
@@ -234,7 +260,7 @@ class Term(models.Model):
         Get a comma separated list of all projects that use a term
         :return:
         """
-        return ', '.join([projects.short_name for projects in self.projects.all()])  # get all projects using a term
+        return ', '.join([projects.name for projects in self.projects.all()])  # get all projects using a term
     get_projects.short_description = "Projects"  # nicer label for admin
     get_projects.admin_order_field = 'projects__full_name'
 
@@ -253,33 +279,17 @@ class Term(models.Model):
         :return: Returns a string with the project version of the term
         """
         # Find the matching record in the ProjectTerm table, should be unique for term-project pair
-        project_term = ProjectTerm.objects.get(term=self, project=Project.objects.get(paleocore_appname=appname))
+        project_term = ProjectTerm.objects.get(term=self, project=Project.objects.get(name=appname))
         if not project_term.mapping:  # If the mapping is empty then use the term name
             project_term.mapping=project_term.term.name
         return project_term.mapping
 
 
-    def __str__(self):
-        if self.namespace:
-            return self.namespace.name+":"+self.name
-        else:
-            return self.name
 
     class Meta:
         ordering = ["name"]
         verbose_name_plural = "Terms"
         verbose_name = "Term"
-
-
-class Namespace(models.Model):
-    name = models.CharField(max_length=50)  # REQUIRED
-    description = models.TextField(null=True, blank=True)
-    uri = models.URLField(null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
-
 
 
 # class Comment(models.Model):
