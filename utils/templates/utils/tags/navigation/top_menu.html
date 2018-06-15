@@ -6,14 +6,14 @@
     <div data-sticky data-options="marginTop:0;" style="width:100%;z-index:10000;">
         <div class="title-bar" data-responsive-toggle="menu" data-hide-for="large">
             <button class="menu-icon" type="button" style="background: transparent;"data-toggle></button>
-            <div class="title-bar-title">Paleocore</div>
+            <div class="title-bar-title">Paleo Core</div>
         </div>
         <div class="top-bar" id="menu">
             <div class="top-bar-left hide-for-small-only">
                 <!-- <ul class="dropdown menu"> -->
                 <ul class="vertical medium-horizontal menu" data-responsive-menu="drilldown medium-dropdown">
                     <li class="menu-text">
-                        <a href="{% pageurl site_root %}" style="padding: 0;">Paleocore</a>
+                        <a href="{% pageurl site_root %}" style="padding: 0;">Paleo Core </a>
                     </li>
                     {% for menuitem in menuitems %}
                     <li class="{% if menuitem.show_dropdown %}has-submenu{% endif %} {% if calling_page.url == menuitem.url %} active{% endif %}">
@@ -33,6 +33,7 @@
                 <ul class="vertical medium-horizontal menu" data-responsive-menu="drilldown medium-dropdown">
 
                     <!-- User Auth -->
+                  {% comment %}
                     {% if not request.user.is_authenticated %}
                     <li>
                         <a href="/login"><strong>Login</strong></a>
@@ -53,6 +54,7 @@
                         </ul>
                     </li>
                     {% endif %}
+                  {% endcomment %}
                     <!-- <li class="has-form show-for-small-only" style="background: transparent;">
                         <form action ="{% url 'wagtailsearch_search' %}" method="get">
                             <div class="row collapse">
