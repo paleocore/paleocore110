@@ -1,6 +1,5 @@
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.models import ContentType
-from django.apps import apps
 import os
 from mlp.ontologies import BASIS_OF_RECORD_VOCABULARY, ITEM_TYPE_VOCABULARY, COLLECTING_METHOD_VOCABULARY, \
     COLLECTOR_CHOICES, SIDE_VOCABULARY
