@@ -123,11 +123,12 @@ class PaleoCoreLocalityAdmin(BingGeoAdmin):
 
 
 class TaxonomyAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'rank', 'full_name', 'biology_usages')
+    list_display = ('label', 'rank', 'full_name', 'biology_usages')
     readonly_fields = ['id', 'biology_usages']
     fields = ['id', 'name', 'parent', 'rank']
     search_fields = ['name']
     list_filter = ['rank']
+    list_select_related = ['rank', 'parent']
 
 
 class IDQAdmin(admin.ModelAdmin):

@@ -100,10 +100,47 @@ class TaxonRank(PaleoCoreBaseClass):
 
 class Taxon(PaleoCoreBaseClass):
     """
+    Taxon <- PaleoCoreBaseClass
     A biological taxon at any rank, e.g. Mammalia, Homo, Homo sapiens idaltu
-    The rank field will need to be defined in each implementation because it is a foreign key relation.
+
+    Attributes of Taxon: name - last_import are inherited from PaleoCoreBaseClass
+    name
+    date_created
+    date_last_modified
+    problem, problem_comment
+    remarks,
+    last_import
+
+    label
+
+    parent
+    rank
+
+    The attributes parent and rank are assumed to be defined in each project models.py.
+    They cannot be defined here because they are foreign keys and fks cannot be included in Abstract Classes.
     The methods included in this abstract class assume that the fields rank and parent are defined.
     """
+    # For a species, the name field contains the specific epithet and
+    # the label field contains the full scientific name.
+    # e.g. Homo sapiens
+    # name = sapiens
+    # label = Homo sapiens
+    label = models.CharField(max_length=244, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.label)
+
+    def update_label(self):
+        """
+        Update the values in the label field to match the name field.
+        If the taxon is a species then the label should be the genus name and the specific epithet
+        For all higher taxa the label == name
+        :return:
+        """
+        if self.rank.name == 'Species' and self.parent:
+            self.label = self.parent.name + ' ' +self.name
+        else:
+            self.label = self.name
 
     def parent_rank(self):
         return self.parent.rank.name
@@ -153,11 +190,12 @@ class Taxon(PaleoCoreBaseClass):
             pass  # If no matching content type then we'll pass here and return None
         return result
 
-    def __str__(self):
-        if self.rank.name == 'Species' and self.parent:
-            return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
-        else:
-            return "[" + self.rank.name + "] " + str(self.name)
+
+    # def __str__(self):
+    #     if self.rank.name == 'Species' and self.parent:
+    #         return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
+    #     else:
+    #         return "[" + self.rank.name + "] " + str(self.name)
 
     class Meta:
         abstract = True
@@ -171,7 +209,7 @@ class IdentificationQualifier(PaleoCoreBaseClass):
     A modifier to a taxonomic designation, e.g. cf., aff.
     """
     name = models.CharField(null=False, blank=True, max_length=15, unique=True)
-    qualified = models.BooleanField()
+    qualified = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
