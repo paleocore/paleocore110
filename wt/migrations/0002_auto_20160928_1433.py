@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('west_turkana', '0001_initial'),
+        ('wt', '0001_initial'),
     ]
 
     operations = [
