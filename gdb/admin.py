@@ -51,7 +51,49 @@ old_taxonomy_fieldsets = ('Old Taxonomic Descriptions', {
                ],
     'classes':['collapse']
 })
-# Register your models here.
+
+locality_fieldsets = (
+    ('Record', {
+        'fields': [('name',),
+                   ('locality_number',),
+                   ('locality_field_number',),
+                   ('cm_locality_number',),
+                   ('date_discovered',),
+                   ('survey',),
+                   ('notes',),
+                   ('date_created', 'date_last_modified')]
+    }),
+    ('Geological Context', {
+        'fields': [('formation',),
+                   ('member',),
+                   ('NALMA')],
+    }),
+    ('Location', {
+        'fields': [('survey',),
+                   ('quad_sheet',),
+                   ('region',),
+                   ('blm_district',),
+                   ('county',),
+                   ('resource_area',),
+                   ('gps_date',),
+                   ('verbatim_gps_coordinates',),
+                   ('verbatim_longitude', 'verbatim_latitude'),
+                   ('verbatim_utm',),
+                   ('verbatim_elevation',),
+                   ('georeference_remarks',),
+                   ('geom',)],
+    }),
+    ('Image', {
+        'fields': [('image',)],
+    }),
+    ('Problem', {
+        'fields': [('problem',),
+                   ('problem_comment',),
+                   ('remarks',),
+                   ],
+    }),
+)
+
 class OccurrenceAdmin(admin.ModelAdmin):
     # readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
     readonly_fields = ['catalog_number']
@@ -67,6 +109,7 @@ class OccurrenceAdmin(admin.ModelAdmin):
 class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
     list_display = ('locality_number', 'locality_field_number', 'cm_locality_number', 'name', 'date_discovered',
                     'point_x', 'point_y')
+    fieldsets = locality_fieldsets
     readonly_fields = ('locality_number', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     list_filter = ['date_discovered', 'formation', 'NALMA', 'region', 'county']
     search_fields = ('locality_number', 'locality_field_number', 'name')
