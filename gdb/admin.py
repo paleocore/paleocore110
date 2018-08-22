@@ -66,7 +66,7 @@ locality_fieldsets = (
     ('Geological Context', {
         'fields': [('formation',),
                    ('member',),
-                   ('NALMA')],
+                   ('NALMA', 'sub_age')],
     }),
     ('Location', {
         'fields': [('survey',),

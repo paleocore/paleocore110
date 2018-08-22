@@ -126,7 +126,12 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
     date_discovered = models.DateField(null=True, blank=True)
     #formation = models.CharField(null=True, blank=True, max_length=50)  # Formation
     #member = models.CharField(null=True, blank=True, max_length=50)
-    NALMA = models.CharField(null=True, blank=True, max_length=50)
+    NALMA = models.CharField(null=True, blank=True, max_length=50,
+                             choices=gdb.ontologies.NALMA_CHOICES,
+                             default=gdb.ontologies.wasatchian
+                             )
+    sub_age = models.CharField(null=True, blank=True, max_length=50,
+                               choices=gdb.ontologies.NALMA_SUB_AGE_CHOICES)
     survey = models.CharField(null=True, blank=True, max_length=50)
     quad_sheet = models.CharField(null=True, blank=True, max_length=50)
     verbatim_latitude = models.CharField(null=True, blank=True, max_length=50)  # Latitude
@@ -169,6 +174,13 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
                 if lon_string[3]=="W":
                     lon_dd *= -1
             return "POINT ("+str(lon_dd)+" "+str(lat_dd)+")"
+
+    def fossil_count(self):
+        """
+        Method to count the number of fossils at a locality
+        :return:
+        """
+        return Biology.objects.filter(locality=self).count
 
     class Meta:
         verbose_name_plural = "GDB Localities"
