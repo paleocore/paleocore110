@@ -107,8 +107,7 @@ class OccurrenceAdmin(admin.ModelAdmin):
 
 
 class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
-    list_display = ('locality_number', 'locality_field_number', 'cm_locality_number', 'name', 'date_discovered',
-                    'point_x', 'point_y')
+    list_display = ('locality_number', 'locality_field_number', 'cm_locality_number', 'name', 'date_discovered')
     fieldsets = locality_fieldsets
     readonly_fields = ('date_created', 'date_last_modified')
     list_filter = ['date_discovered', 'formation', 'NALMA', 'region', 'county']
