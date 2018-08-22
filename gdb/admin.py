@@ -20,9 +20,9 @@ default_admin_fieldsets = (
                    ('problem', 'problem_comment'),
                    ('remarks', )],
     }),
-    ('Provenience', {
+    ('Locality', {
         'fields': [
-                   ('locality','elevation'),
+                   ('locality',),('nalma',),('sub_age',),
                    ],
     })
 )
@@ -114,24 +114,34 @@ class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
     search_fields = ('locality_number', 'locality_field_number', 'name')
 
 
+class LocalityInline(admin.TabularInline):
+    model = Locality
+
+
 class BiologyAdmin(admin.ModelAdmin):
-    readonly_fields = ['catalog_number']
+    readonly_fields = ['catalog_number', 'nalma', 'sub_age']
     biology_fieldsets = list(default_admin_fieldsets)
     #
-    chronology_fieldsets = ('Chronology', {'fields': [('NALMA','sub_age')]})
+    # chronology_fieldsets = ('Chronology', {'fields': [('locality','nalma', 'sub_age')]})
     # # biology_fieldsets.insert(2, description_fieldsets)
     biology_fieldsets.insert(2, taxonomy_fieldsets)
     biology_fieldsets.insert(3, old_taxonomy_fieldsets)
-    biology_fieldsets.insert(4, chronology_fieldsets)
+    # biology_fieldsets.insert(4, chronology_fieldsets)
     fieldsets = biology_fieldsets
     list_display = ['catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
-                    'date_collected',]
+                    'date_collected', 'nalma']
     list_per_page = 1000
-    list_filter = ['taxon', 'NALMA', 'locality']
+    list_filter = ['taxon', 'locality']
     search_fields = ['tax_class', 'tax_order', 'family', 'tribe', 'genus', 'specific_epithet', 'item_scientific_name',
-                     'catalog_number', 'cm_catalog_number', 'locality__locality_number', 'locality__name']
+                     'catalog_number', 'cm_catalog_number',]
     actions = ['create_data_csv', 'generate_specimen_labels']
     list_select_related = ['locality','taxon', 'occurrence_ptr']
+
+    def nalma(self, obj):
+        return obj.locality.NALMA
+
+    def sub_age(self, obj):
+        return obj.locality.sub_age
 
     def create_data_csv(self, request, queryset):
         """
@@ -219,7 +229,7 @@ class BiologyAdmin(admin.ModelAdmin):
                                                         cm_catalog_number=b.cm_catalog_number,
                                                        description=b.item_description,
                                                               locality=b.locality,
-                                                              nalma=b.NALMA,
+                                                              nalma=b.locality.NALMA,
                                                               date_collected=b.date_collected)
             content = content + specimen_data
         response = HttpResponse(content, content_type='text/plain')  # declare the response type
