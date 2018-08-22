@@ -110,7 +110,7 @@ class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
     list_display = ('locality_number', 'locality_field_number', 'cm_locality_number', 'name', 'date_discovered',
                     'point_x', 'point_y')
     fieldsets = locality_fieldsets
-    readonly_fields = ('locality_number', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
+    readonly_fields = ('date_created', 'date_last_modified')
     list_filter = ['date_discovered', 'formation', 'NALMA', 'region', 'county']
     search_fields = ('locality_number', 'locality_field_number', 'name')
 
