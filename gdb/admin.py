@@ -98,7 +98,7 @@ class OccurrenceAdmin(admin.ModelAdmin):
     # readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
     readonly_fields = ['catalog_number']
     fieldsets = default_admin_fieldsets
-    list_display = ['catalog_number', 'item_scientific_name', 'item_description', 'locality',
+    list_display = ['catalog_number', 'cm_catalog_number','item_scientific_name', 'item_description', 'locality',
                     'date_collected', 'on_loan', 'date_last_modified']
     list_select_related = ['locality']  #  improves performance, causes server to conduct 4 queries instead of 1004
     list_filter = ['date_collected', 'on_loan', 'date_last_modified']
@@ -128,7 +128,7 @@ class BiologyAdmin(admin.ModelAdmin):
     biology_fieldsets.insert(3, old_taxonomy_fieldsets)
     # biology_fieldsets.insert(4, chronology_fieldsets)
     fieldsets = biology_fieldsets
-    list_display = ['catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
+    list_display = ['catalog_number', 'cm_catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
                     'date_collected', 'nalma']
     list_per_page = 1000
     list_filter = ['taxon', 'locality']
