@@ -228,7 +228,6 @@ class Person(PaleoCoreBaseClass):
         verbose_name_plural = "People"
 
 
-
 class PaleoCoreGeomBaseClass(PaleoCoreBaseClass):
     # Location
     georeference_remarks = models.TextField(max_length=500, null=True, blank=True)
