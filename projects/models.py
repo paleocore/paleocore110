@@ -125,7 +125,8 @@ class Taxon(PaleoCoreBaseClass):
     # e.g. Homo sapiens
     # name = sapiens
     # label = Homo sapiens
-    label = models.CharField(max_length=244, null=True, blank=True)
+    label_help_text = """For a species, the name field contains the specific epithet and the label contains the full scientific name, e.g. Homo sapiens, name = sapiens, label = Homo sapiens"""
+    label = models.CharField(max_length=244, null=True, blank=True, help_text=label_help_text)
 
     def __str__(self):
         return str(self.label)
