@@ -180,6 +180,7 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
 
     class Meta:
         verbose_name_plural = "GDB Localities"
+        ordering = ['locality_number']
 
 
 class TaxonRank(projects.models.TaxonRank):
