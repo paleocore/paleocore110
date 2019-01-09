@@ -388,7 +388,7 @@ class ImportKMZ(generic.FormView):
                     lgrp_occ.item_scientific_name = scientific_name_string
                     # Next step only applies to Biology objects
                     if lgrp_occ.item_scientific_name and lgrp_occ.__class__ is Biology:
-                        match, match_count, match_list = lgrp_occ.match_taxon(lgrp_occ)
+                        match, match_count, match_list = lgrp_occ.match_taxon()
                         if match and match_count == 1:
                             lgrp_occ.taxon = match_list[0]
 
