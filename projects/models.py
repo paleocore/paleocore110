@@ -7,6 +7,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.apps import apps
 from django.utils import timezone
 from django.contrib.gis.geos import Point
+from django_countries.fields import CountryField
 
 # Python imports
 import math
@@ -375,9 +376,17 @@ class PaleoCoreOccurrenceBaseClass(PaleoCoreGeomBaseClass):
     class Meta:
         abstract = True
 
+
 class PaleoCoreLocalityBaseClass(PaleoCoreGeomBaseClass):
     formation = models.CharField(null=True, blank=True, max_length=50)  # Formation
     member = models.CharField(null=True, blank=True, max_length=50)
+
+    class Meta:
+        abstract = True
+
+
+class PaleoCoreSiteBaseClass(PaleoCoreGeomBaseClass):
+    country = CountryField('Country', blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -473,6 +482,7 @@ class ProjectsIndexPage(Page):
         context['projects'] = projects
         return context
 
+
 ProjectsIndexPage.content_panels = [
     FieldPanel('title', classname="full title"),
     FieldPanel('intro', classname="full"),
@@ -531,6 +541,7 @@ class ProjectPage(Page):
     def project_index(self):
         # Find closest ancestor which is a project index
         return self.get_ancestors().type(ProjectsIndexPage).last()
+
 
 ProjectPage.content_panels = [
     FieldPanel('title', classname="full title"),
