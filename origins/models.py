@@ -1,7 +1,26 @@
 from django.contrib.gis.db import models
 import projects.models
 import uuid, datetime, os
+from django.apps import apps
 from django_countries.fields import CountryField
+from django.contrib.contenttypes.models import ContentType
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+# Wagtail imports
+from wagtail.wagtailcore import blocks
+from wagtail.wagtailcore.models import Page, Orderable
+from wagtail.wagtailcore.fields import RichTextField, StreamField
+from wagtail.wagtailimages.edit_handlers import ImageChooserPanel
+from wagtail.wagtailimages.blocks import ImageChooserBlock
+from wagtail.wagtailsearch import index
+from wagtail.wagtailadmin.edit_handlers import (
+    FieldPanel, InlinePanel, StreamFieldPanel
+)
+from wagtailgeowidget.edit_handlers import GeoPanel
+from modelcluster.fields import ParentalKey
+from modelcluster.tags import ClusterTaggableManager
+from taggit.models import TaggedItemBase
+from utils.models import RelatedLink, CarouselItem
 
 
 # Taxonomy models inherited from paleo core base project
@@ -69,8 +88,12 @@ class Reference(models.Model):
         return [f.name for f in field_list if f.concrete]
 
 
-class Site(models.Model):
+class Site(projects.models.PaleoCoreSiteBaseClass):
     name = models.CharField(max_length=40, null=True, blank=True)
+    alternate_names = models.TextField(null=True, blank=True)
+    min_ma = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    max_ma = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
+    formation = models.CharField(max_length=50, null=True, blank=True)
 
     # Location
     country = CountryField('Country', blank=True, null=True)
@@ -96,6 +119,40 @@ class Site(models.Model):
     verbatim_min_ma = models.DecimalField(max_digits=20, decimal_places=10, null=True, blank=True)
     verbatim_reference_no = models.IntegerField(null=True, blank=True)
 
+    # Calculated Fields
+    fossil_count = models.IntegerField(null=True, blank=True)
+
+    @staticmethod
+    def update_fossil_count():
+        for site in Site.objects.all():
+            site.fossil_count = site.fossil_usages()
+            site.save()
+
+    def fossil_usages(self):
+        return Fossil.objects.filter(site=self).count()
+
+    def context_usages(self):
+        return Context.objects.filter(site=self).count()
+    #
+    # def total_usages(self):
+    #     return self.fossil_usages() + self.context_usages()
+
+    def longitude(self):
+        """
+        Return the longitude for the point in the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
+        :return:
+        """
+        return self.gcs_coordinates(coordinate='lon')
+
+    def latitude(self):
+        """
+        Return the latitude for the point in the WGS84 datum
+        see PaleoCoreOccurrenceBaseClass.gcs_coordinates
+        :return:
+        """
+        return self.gcs_coordinates(coordinate='lat')
+
     def __str__(self):
         unicode_string = '['+str(self.id)+']'
         if self.name:
@@ -106,6 +163,10 @@ class Site(models.Model):
 
     class Meta:
         ordering = ['name']
+
+class ActiveSite(Site):
+    class Meta:
+        proxy = True
 
 
 class Context(projects.models.PaleoCoreContextBaseClass):
@@ -147,11 +208,11 @@ class Context(projects.models.PaleoCoreContextBaseClass):
             has_ref = True
         return has_ref
 
-    def latitude(self):
-        return self.gcs_coordinates('lat')
-
-    def longitude(self):
-        return self.gcs_coordinates('lon')
+    # def latitude(self):
+    #     return self.gcs_coordinates('lat')
+    #
+    # def longitude(self):
+    #     return self.gcs_coordinates('lon')
 
     class Meta:
         ordering = ['name']
@@ -170,6 +231,8 @@ class Fossil(models.Model):
     holotype = models.BooleanField(default=False)
     lifestage = models.CharField(max_length=20, null=True, blank=True)
     sex = models.CharField(max_length=10, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    remarks = models.TextField(null=True, blank=True)
 
     # Project
     project_name = models.CharField(max_length=100, null=True, blank=True)
@@ -179,9 +242,11 @@ class Fossil(models.Model):
     # Location
     place_name = models.CharField(max_length=100, null=True, blank=True)
     locality = models.CharField(max_length=40, null=True, blank=True)
+    site = models.ForeignKey(Site, null=True, blank=True)
     # country = models.CharField(max_length=10, null=True, blank=True)
     country = CountryField('Country', blank=True, null=True)
     continent = models.CharField(max_length=20, null=True, blank=True)
+    geom = models.PointField(null=True, blank=True)
 
     # Media
     image = models.ImageField(max_length=255, blank=True, upload_to="uploads/images/origins", null=True)
@@ -220,6 +285,21 @@ class Fossil(models.Model):
 
     def elements(self):
         return self.fossilelement_set.all()
+
+    def default_image(self):
+        """
+        Function to fetch a default thumbnail image for a fossil
+        :return:
+        """
+        images = self.photo_set.filter(default_image=True)
+        if images.count() >= 1:
+            return images[0].thumbnail()
+        else:
+            return None
+
+    default_image.short_description = 'Fossil Thumbnail'
+    default_image.allow_tags=True
+    default_image.mark_safe=True
 
     def aapa(self):
         """
@@ -274,10 +354,12 @@ class FossilElement(models.Model):
 class Photo(models.Model):
     image = models.ImageField('Image', upload_to='uploads/images/origins', null=True, blank=True)
     fossil = models.ForeignKey(Fossil, on_delete=models.CASCADE, null=True, blank=False)
+    description = models.TextField(null=True, blank=True)
+    default_image = models.BooleanField(default=False)
 
     def thumbnail(self):
         image_url = os.path.join(self.image.url)
-        return u'<a href="{}"><img src="{}" style="width:300px" /></a>'.format(image_url, image_url)
+        return '<a href="{}"><img src="{}" style="width:300px" /></a>'.format(image_url, image_url)
 
     thumbnail.short_description = 'Image'
     thumbnail.allow_tags = True
@@ -310,3 +392,176 @@ class WorldBorder(models.Model):
     # Returns the string representation of the model.
     def __str__(self):
         return self.name
+
+
+# Wagtail models
+# class SitesIndexPage(Page):
+#     intro = RichTextField(blank=True)
+#
+#     content_panels = Page.content_panels + [
+#         FieldPanel('intro', classname='full')
+#     ]
+
+
+class SiteIndexPageRelatedLink(Orderable, RelatedLink):
+    page = ParentalKey('origins.SiteIndexPage', related_name='related_links')
+
+
+class SiteIndexPage(Page):
+    intro = RichTextField(blank=True)
+
+    search_fields = Page.search_fields + [
+        index.SearchField('intro'),
+    ]
+
+    @property
+    def get_sites(self):
+        # Get list of live site pages that are descendants of this page
+        site_page_list = SitePage.objects.live().descendant_of(self)
+
+        # Order by most recent date first
+        site_page_list = site_page_list.order_by('title')
+
+        return site_page_list
+
+    def get_context(self, request):
+        # Get site_list
+        site_list = self.get_sites
+
+        # Filter by tag
+        tag = request.GET.get('tag')
+        if tag:
+            site_list = site_list.filter(tags__name=tag)
+
+        # Pagination
+        page = request.GET.get('page')
+        paginator = Paginator(site_list, 10)  # Show 10 site_list per page
+        try:
+            site_list = paginator.page(page)
+        except PageNotAnInteger:
+            site_list = paginator.page(1)
+        except EmptyPage:
+            site_list = paginator.page(paginator.num_pages)
+
+        # Update template context
+        context = super(SiteIndexPage, self).get_context(request)
+        context['projects'] = site_list
+        return context
+
+SiteIndexPage.content_panels = [
+    FieldPanel('title', classname="full title"),
+    FieldPanel('intro', classname="full"),
+    InlinePanel('related_links', label="Related links"),
+]
+
+SiteIndexPage.promote_panels = Page.promote_panels
+
+
+class SitePageCarouselItem(Orderable, CarouselItem):
+    page = ParentalKey('origins.SitePage', related_name='carousel_items')
+
+
+class SitePageRelatedLink(Orderable, RelatedLink):
+    page = ParentalKey('origins.SitePage', related_name='related_links')
+
+
+class SitePageTag(TaggedItemBase):
+    content_object = ParentalKey('origins.SitePage', related_name='tagged_items')
+
+
+class SitePage(Page):
+    site = models.ForeignKey('origins.Site', null=True, blank=True, on_delete=models.SET_NULL)
+    intro = RichTextField()
+    body = StreamField([
+        ('heading', blocks.CharBlock(classname="full title")),
+        ('paragraph', blocks.RichTextBlock()),
+        ('image', ImageChooserBlock()),
+    ])
+    tags = ClusterTaggableManager(through=SitePageTag, blank=True)
+    date = models.DateField("Post date")
+    feed_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    location = models.PointField(srid=4326, null=True, blank=True)
+
+    search_fields = Page.search_fields + [
+        index.SearchField('body'),
+    ]
+    is_public = models.BooleanField(default=False)
+
+    # def fossil_count(self):
+    #     result = 0
+    #     if apps.is_installed(self.slug):  # check if slug matches an installed app name
+    #         content_type = ContentType.objects.get(app_label=self.slug, model='occurrence')
+    #         model_class = content_type.model_class()
+    #         result = model_class.objects.all().count()
+    #     return result
+
+    @property
+    def get_fossils(self):
+        # Get list of fossils associated with the site on this page
+        # current_site = Site.objects.get(name=self.title)
+        fossil_list = Fossil.objects.filter(site=self.site)
+
+        # Order by most recent date first
+        fossil_list = fossil_list.order_by('catalog_number')
+
+        return fossil_list
+
+    @property
+    def get_taxa(self):
+        """
+        This function requires a bit more work because at present Fossils are not linked to taxa!
+        :return:
+        """
+        fossils = self.get_fossils
+
+
+    def get_context(self, request):
+        # Get site_list
+        fossil_list = self.get_fossils
+
+        # Filter by tag
+        tag = request.GET.get('tag')
+        if tag:
+            fossil_list = fossil_list.filter(tags__name=tag)
+
+        # Pagination
+        page = request.GET.get('page')
+        paginator = Paginator(fossil_list, 10)  # Show 10 site_list per page
+        try:
+            site_list = paginator.page(page)
+        except PageNotAnInteger:
+            site_list = paginator.page(1)
+        except EmptyPage:
+            site_list = paginator.page(paginator.num_pages)
+
+        # Update template context
+        context = super(SitePage, self).get_context(request)
+        context['fossil_list'] = fossil_list
+        return context
+
+    @property
+    def site_index(self):
+        # Find closest ancestor which is a site index
+        return self.get_ancestors().type(SiteIndexPage).last()
+
+SitePage.content_panels = [
+    FieldPanel('site'),
+    FieldPanel('title', classname="full title"),
+    FieldPanel('date'),
+    FieldPanel('intro', classname="full"),
+    StreamFieldPanel('body'),
+    InlinePanel('carousel_items', label="Carousel items"),
+    InlinePanel('related_links', label="Related links"),
+    GeoPanel('location')
+]
+
+SitePage.promote_panels = Page.promote_panels + [
+    ImageChooserPanel('feed_image'),
+    FieldPanel('tags'),
+]

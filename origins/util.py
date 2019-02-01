@@ -1,8 +1,11 @@
 import unicodecsv
-from .models import *
+from origins.models import *
 from difflib import SequenceMatcher
 from lxml import etree
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.gis.geos import Point
+from django.utils.text import slugify
+#import shapefile
 
 # pbdb_file_path = "/Users/reedd/Documents/projects/ete/pbdb/pbdb_test_no_header.csv"
 pbdb_collections_contexts_file_path = "/Users/reedd/Documents/projects/ete/pbdb/pbdb_collections_Africa_no_header.csv"
@@ -112,6 +115,40 @@ def create_sites_from_contexts():
         c.save()
 
     print('Successfully created {} new sites from {} context objects'.format(site_count, contexts.count()))
+
+
+def create_site_from_context(context):
+    """
+    Create a new Site from an existing Context
+    :param context:
+    :return:
+    """
+    new_site = Site()
+    for key in new_site.get_concrete_field_names():
+        try:
+            new_site.__dict__[key] = context.__dict__[key]
+        except KeyError:
+            pass
+    if new_site.verbatim_lat and new_site.verbatim_lng:
+        new_site.geom = Point(float(new_site.verbatim_lng), float(new_site.verbatim_lat))
+    new_site.save()
+
+
+    # context_data_dict = {f: context.__getattribute__(f) for f in context.get_concrete_field_names()}
+    # sites_data_dict = {}
+    #
+    # context_fields_not_in_site = ['site', 'reference']
+    # for f in context_fields_not_in_site:
+    #     try:
+    #         del data_dict[f]
+    #     except KeyError:
+    #         pass
+    # obj, created = Site.objects.get_or_create(name=context.name, defaults=data_dict)
+    # if not created:
+    #     print("Site {} {} already exists").format(context.id, context.name)
+    # else:
+    #     context.site = obj
+    #     context.save()
 
 
 def validate_context_references():
@@ -236,7 +273,73 @@ def get_country_from_geom(geom):
         country_code = None
     return country_code
 
+mpath = '/Users/reedd/Documents/projects/origins/makapansgat/makapansgat_hominins.txt'
+def import_makapansgat(path=mpath):
+    data_file = open(path, 'U')
+    lines = data_file.readlines()
+    header = lines[0]
+    site = Site.objects.get(pk=6251)  # get Makapansgat site
+    for line in lines[1:]:  # iterate through lines in the data file
+        data = line.split('\t')  # tab delimited
+        new_fossil = Fossil(catalog_number=data[0])  # create a new fossil
+        new_fossil.description = data[1]
+        new_fossil.verbatim_PlaceName = data[2]
+        specimen_string = 'cat_no: {}  element: {}  place: {}'.format(new_fossil.catalog_number, new_fossil.description, new_fossil.verbatim_PlaceName)
+        print(specimen_string)
+        new_fossil.save()
 
-state_abbr = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'VI', 'WA', 'WV', 'WI', 'WY']
+gs_path = '/Users/reedd/Documents/projects/origins/gw_hod/human_origins_db_all_records.txt'
+def import_gwhod(path=gs_path):
+    data_file = open(path, 'U')
+    lines = data_file.readlines()
+    data_file.close()
+    for line in lines[410:]: # skip header
+        data = line.split('\t')
+        catalog_number = data[0].strip()  # remove extra whitespace
+        taxon = data[1].strip()
+        try:
+            Fossil.objects.get(catalog_number = data[0])
+        except Fossil.DoesNotExist:
+            if taxon not in ['Homo erectus']:
+                print(line)
 
+# def export_sites2shape(filepath='/Users/reedd/Desktop/sites'):
+#     """
+#     Export a dataset to shapefile format
+#     :param geo_obj:
+#     :param export_filepath:
+#     :return:
+#     """
+#     w = shapefile.Writer(shapeType=1)
+#     osites = Site.objects.filter(origins=True)
+#     w.field('Name', 'C')
+#     w.field('Formation', 'C')
+#     w.field('Occurs', 'N')
+#     w.field('Max_ma', 'N', decimal=2)
+#     w.field('Min_ma', 'N', decimal=2)
+#
+#     for s in osites:
+#         w.point(s.geom.x, s.geom.y)
+#         w.record(s.name, s.formation, s.fossil_count, s.max_ma, s.min_ma)
+#     w.save(filepath)
 
+def create_site_page(site):
+    """
+    Utility to create new wagtail pages for each site in site table
+    :return:
+    """
+
+    template_page = Page.objects.get(title='Template')
+    site_slug=slugify(site.name)
+    update_dict=dict(
+        site=site,
+        slug=slugify(site_slug),
+        title=site.name,
+        body=None,
+        location=site.geom,
+        date=site.date_created,
+        feed_image=None,
+        intro=site.name
+    )
+
+    new_page = template_page.copy(update_attrs=update_dict)

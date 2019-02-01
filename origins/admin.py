@@ -1,10 +1,17 @@
 from django.contrib import admin
 from origins.models import *
+import origins.util
 from projects.admin import BingGeoAdmin
-from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.contrib.gis.measure import Distance
-
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.decorators import permission_required
+from django.conf.urls import url
+from django.http import HttpResponse, HttpResponseRedirect
+from django.core.urlresolvers import reverse
+import origins.views
+from django.contrib import messages
+from django.contrib.gis.geos import Point
 
 class ReferenceAdmin(admin.ModelAdmin):
     list_display = ['id', 'reference_no', 'author1last', 'reftitle']
@@ -24,19 +31,40 @@ class ContextInline(admin.TabularInline):
 
 class SiteAdmin(BingGeoAdmin):
     save_as = True
-    list_display = ['id', 'name', 'country', 'verbatim_collection_name', 'verbatim_early_interval',
-                    'verbatim_late_interval', 'verbatim_max_ma', 'verbatim_min_ma', 'verbatim_reference_no',
-                    'origins']
-    list_editable = ['origins']
-    readonly_fields = ['get_latitude', 'get_longitude']
-    search_fields = list_display
+    list_display = ['id', 'name', 'country',
+                    #'verbatim_collection_name',
+                    #'longitude', 'latitude',
+                    #'verbatim_early_interval',
+                    #'verbatim_late_interval',
+                    'max_ma',
+                    'min_ma',
+                    'fossil_count',
+                    'formation',
+                    'verbatim_collection_name',
+                    #'context_usages',
+                    #'verbatim_reference_no',
+                    #'origins'
+                    ]
+    #list_editable = ['name', 'origins']
+    readonly_fields = ['latitude', 'longitude', 'fossil_usages', 'context_usages']
+    search_fields = ['id', 'name', 'alternate_names', 'country', 'verbatim_collection_name',
+                     'verbatim_early_interval',
+                     'verbatim_late_interval',
+                     'verbatim_max_ma',
+                     'verbatim_min_ma',
+                     'verbatim_reference_no',
+                     'origins'
+                     ]
     list_filter = ['origins', 'country']
     list_per_page = 500
     # inlines = [ContextInline]
 
     fieldsets = [
         ('Occurrence Details', {
-            'fields': [('name',), ('origins',)],
+            'fields': [('name',), ('alternate_names',), ('origins',), ('remarks',)],
+        }),
+        ('Geological Context', {
+            'fields': [('min_ma', 'max_ma'), ('formation',)]
         }),
         ('Verbatim', {
             'fields': ['source', 'verbatim_collection_no', 'verbatim_record_type', 'verbatim_formation',
@@ -46,24 +74,15 @@ class SiteAdmin(BingGeoAdmin):
             'classes': ['collapse'],
         }),
         ('Location', {
-            'fields': [('country', ), ('get_latitude', 'get_longitude'), ('geom',)]
+            'fields': [('country', ), ('latitude', 'longitude'), ('geom',)]
         }),
     ]
 
-    @staticmethod
-    def get_latitude(obj):
-        if obj.geom:
-            return obj.geom.y
-        else:
-            return None
+class ActiveSiteAdmin(SiteAdmin):
+    list_display = ['id', 'name', 'country', 'max_ma', 'min_ma', 'fossil_count', 'formation']
 
-    @staticmethod
-    def get_longitude(obj):
-        if obj.geom:
-            return obj.geom.x
-        else:
-            return None
-
+    def get_queryset(self, request):
+        return Site.objects.filter(origins=True)
 
 class ContextAdmin(BingGeoAdmin):
     save_as = True
@@ -73,10 +92,10 @@ class ContextAdmin(BingGeoAdmin):
                      'older_interval', 'younger_interval', 'max_age', 'min_age', 'best_age']
     list_filter = ['origins', 'site__name']
     list_per_page = 500
-    readonly_fields = ['latitude', 'longitude']
+    # readonly_fields = ['latitude', 'longitude']
     fieldsets = [
         ('Context Details', {
-            'fields': [('name', 'site', 'origins', 'source')],
+            'fields': [('name', 'origins', 'source')],
         }),
         ('Stratigraphy', {
             'fields': [('geological_formation', 'geological_member',)],
@@ -95,6 +114,8 @@ class ContextAdmin(BingGeoAdmin):
         }),
     ]
 
+    actions = ['create_site_from_context']
+
     def site_link(self, obj):
         if obj.site:
             url = reverse('admin:origins_site_change', args=(obj.site.id,))
@@ -110,9 +131,41 @@ class ContextAdmin(BingGeoAdmin):
             self.current_obj = obj
         return super(ContextAdmin, self).get_form(request, obj, **kwargs)
 
+    def create_site_from_context(self, request, queryset):
+        def create_site(context):
+            new_site = Site()
+            for key in new_site.get_concrete_field_names():
+                try:
+                    new_site.__dict__[key] = context.__dict__[key]
+                except KeyError:
+                    pass
+            if new_site.verbatim_lat and new_site.verbatim_lng:
+                new_site.geom = Point(float(new_site.verbatim_lng), float(new_site.verbatim_lat))
+                new_site.country = origins.util.get_country_from_geom(new_site.geom)
+            new_site.save()
+            return new_site
+
+        obj_count = 0
+        for obj in queryset:
+            new_site=create_site(obj)  # create a new site based on the data in the context
+            obj.site = new_site  # assign the newly created site to the context
+            obj_count += 1
+        if obj_count == 1:
+            count_string = '1 record'
+        if obj_count > 1:
+            count_string = '{} records'.format(obj_count)
+        messages.add_message(request, messages.INFO,
+                             'Successfully updated {}'.format(count_string))
+    create_site_from_context.short_description = 'Create Site object(s) from Context(s)'
+
+
+
+
+
+
     # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
     #     """
-    #     Simplify choice list for context to only those context objects occurring at the site.
+    #     Simplify choice list for sites to only those sites from the designated country.
     #     :param db_field:
     #     :param request:
     #     :param kwargs:
@@ -120,7 +173,7 @@ class ContextAdmin(BingGeoAdmin):
     #     """
     #
     #     if db_field.name == "site":
-    #         kwargs["queryset"] = Site.objects.filter(geom__distance_lte=(self.current_obj.geom, Distance(m=10000)))
+    #         kwargs["queryset"] = Site.objects.filter(country=self.current_obj.country).filter(origins=True)
     #     return super(ContextAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -143,17 +196,17 @@ class PhotosInline(admin.StackedInline):
     readonly_fields = ('thumbnail',)
     fieldsets = [
         ('Photos', {
-            'fields': [('image', 'thumbnail')]})]
+            'fields': [('default_image', 'image', 'thumbnail', 'description')]})]
 
 
 class FossilAdmin(admin.ModelAdmin):
-    list_display = ['id', 'catalog_number', 'verbatim_Locality', 'context__site', 'context_link', 'context__formation',
-                    'country', 'nickname', 'context__max_age', 'context__min_age', 'context__best_age']
-    list_filter = ['origins', 'continent', 'holotype']
+    list_display = ['id', 'catalog_number', 'site', 'context_link',
+                    'country', 'context__best_age', 'default_image']
+    list_filter = ['origins', 'country', 'holotype']
     list_display_links = ['id', 'catalog_number']
-    search_fields = ['place_name', 'country', 'locality',
+    search_fields = ['catalog_number', 'place_name', 'country', 'locality',
                      'fossil_element__skeletal_element']
-    readonly_fields = ['element_count', 'aapa', 'id']
+    readonly_fields = ['element_count', 'aapa', 'id', 'default_image']
 
     list_per_page = 200
     inlines = [
@@ -164,7 +217,11 @@ class FossilAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('Fossil Details', {
-            'fields': [('id', 'catalog_number', 'guid', 'uuid', 'organism_id'),
+            'fields': [('id', 'catalog_number'),
+                        (
+                        #'guid',
+                         'uuid', 'organism_id'),
+                       ('description'),
                        ('nickname', 'place_name'),
                        ('holotype', 'lifestage', 'sex'),
                        ('origins',)],
@@ -182,12 +239,14 @@ class FossilAdmin(admin.ModelAdmin):
             'classes': ['collapse'],
         }),
         ('Location', {
-            'fields': [('locality', 'country', 'continent', 'context')]
+            'fields': [('site', 'locality', 'country', 'continent', 'context')]
         }),
         ('Image', {
             'fields': [('image',)]
         })
     ]
+
+    actions = ['toggle_origins', 'update_sites']
 
     def context__formation(self, obj):
         """
@@ -281,17 +340,51 @@ class FossilAdmin(admin.ModelAdmin):
         :param kwargs:
         :return:
         """
-        if db_field.name == "context":
-            if self.current_obj:
-                if self.current_obj.context and self.current_obj.context.site:
-                    kwargs["queryset"] = Context.objects.filter(site=self.current_obj.context.site)
-                elif self.current_obj.country:
-                    kwargs["queryset"] = Context.objects.filter(site__country=self.current_obj.country).filter(origins=True)
-                else:
-                    kwargs["queryset"] = Context.objects.filter(origins=True)
-                    # If ever I add geom for fossil specimens, then query below useful to find closest context objects
-                    # nearby = Context.objects.filter(geom__distance_lte=(self.geom, D(m=10000)))[:5]
+        if db_field.name == "site" and self.current_obj:
+            kwargs["queryset"] = Site.objects.filter(country=self.current_obj.country).order_by('name')
+        # if db_field.name == "context":
+        #     if self.current_obj:
+        #         if self.current_obj.context and self.current_obj.context.site:
+        #             kwargs["queryset"] = Context.objects.filter(site=self.current_obj.context.site)
+        #         elif self.current_obj.country:
+        #             kwargs["queryset"] = Context.objects.filter(site__country=self.current_obj.country).filter(origins=True)
+        #         else:
+        #             kwargs["queryset"] = Context.objects.filter(origins=True)
+        #             # If ever I add geom for fossil specimens, then query below useful to find closest context objects
+        #             # nearby = Context.objects.filter(geom__distance_lte=(self.geom, D(m=10000)))[:5]
         return super(FossilAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def update_sites(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        ct = ContentType.objects.get_for_model(queryset.model)
+        ids = '?ids={}'.format(','.join(selected))
+        redirect_url = reverse('admin:update_sites')
+        return HttpResponseRedirect(redirect_url + ids)
+
+    def toggle_origins(modeladmin, request, queryset):
+        for obj in queryset:
+            obj.origins = not(obj.origins)
+            obj.save()
+
+    def change_xy(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        redirect_url = reverse("admin:change_xy")
+        return HttpResponseRedirect(redirect_url + "?ids=%s" % (",".join(selected)))
+    change_xy.short_description = "Manually change coordinates for a point"
+
+    # Add to the admin urls
+    def get_urls(self):
+        return [
+                   #url(r'^update_sites/(?P<ids>)/$',
+                    url(r'^update_sites/$',
+                    permission_required('origins.update_sites', login_url='login/')(
+                        origins.views.UpdateSites.as_view()),
+                    name="update_sites"),
+                # url(r'^change_xy/$',
+                #     permission_required('lgrp.change_occurrence', login_url='login/')(lgrp.views.change_coordinates_view),
+                #     name="change_xy"),
+               ] + super(FossilAdmin, self).get_urls()
+
 
 
 # Register your models here.
