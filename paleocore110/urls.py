@@ -40,7 +40,7 @@ urlpatterns = [
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's serving mechanism
     url(r'standard/', include('standard.urls', namespace='standard')),
-    #url(r'', include(mlp_urls)),
+    url(r'^origins/', include('origins.urls', namespace='origins')),
     url(r'^projects/', include('projects.urls', namespace='projects')),
 
     # wagtail includes.
