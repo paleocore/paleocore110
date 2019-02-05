@@ -1,7 +1,6 @@
 # IMPORTS
 # Django imports
 from django.contrib.gis.db import models
-from paleocore110.settings.base import INSTALLED_APPS
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.apps import apps
@@ -34,7 +33,7 @@ from utils.models import RelatedLink, CarouselItem
 class PaleoCoreBaseClass(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     date_created = models.DateTimeField('Created',
-                                        default = timezone.now,
+                                        default=timezone.now,
                                         # auto_now_add=True,
                                         help_text='The date and time this resource was first created.')
     date_last_modified = models.DateTimeField('Modified',
@@ -63,7 +62,6 @@ class PaleoCoreBaseClass(models.Model):
         field_list = self._meta.get_fields()
         return [f.name for f in field_list if f.concrete]
 
-
     def get_all_field_names(self):
         """
         Field names from model
@@ -79,7 +77,6 @@ class PaleoCoreBaseClass(models.Model):
         """
         field_list = self._meta.get_fields()  # produce a list of field objects
         return [f.name for f in field_list if f.is_relation]  # return a list of names for fk fields
-
 
     class Meta:
         abstract = True
@@ -126,7 +123,8 @@ class Taxon(PaleoCoreBaseClass):
     # e.g. Homo sapiens
     # name = sapiens
     # label = Homo sapiens
-    label_help_text = """For a species, the name field contains the specific epithet and the label contains the full scientific name, e.g. Homo sapiens, name = sapiens, label = Homo sapiens"""
+    label_help_text = """For a species, the name field contains the specific epithet and the label contains the full 
+    scientific name, e.g. Homo sapiens, name = sapiens, label = Homo sapiens"""
     label = models.CharField(max_length=244, null=True, blank=True, help_text=label_help_text)
 
     def __str__(self):
@@ -185,19 +183,12 @@ class Taxon(PaleoCoreBaseClass):
         result = None
         app = self._meta.app_label
         try:
-            content_type = ContentType.objects.get(app_label=app, model='biology') # assumes the model is named Biology
+            content_type = ContentType.objects.get(app_label=app, model='biology')  # assumes the model is named Biology
             this_biology = content_type.model_class()
             result = this_biology.objects.filter(taxon=self).count()
         except ContentType.DoesNotExist:
             pass  # If no matching content type then we'll pass here and return None
         return result
-
-
-    # def __str__(self):
-    #     if self.rank.name == 'Species' and self.parent:
-    #         return "[" + self.rank.name + "] " + self.parent.name + " " + self.name
-    #     else:
-    #         return "[" + self.rank.name + "] " + str(self.name)
 
     class Meta:
         abstract = True
@@ -235,6 +226,7 @@ class PaleoCoreGeomBaseClass(PaleoCoreBaseClass):
     georeference_remarks = models.TextField(max_length=500, null=True, blank=True)
     geom = models.PointField(srid=4326, null=True, blank=True)
     objects = models.GeoManager()
+
     def gcs_coordinates(self, coordinate):
         """
         Get the wgs84 gcs coordinates for a point regardless of the point's srs.  Assumes gdal can transform any srs
@@ -416,7 +408,7 @@ class PaleoCoreCollectionCodeBaseClass(PaleoCoreBaseClass):
         return name_string
 
     class Meta:
-        abstract=True
+        abstract = True
 
 
 class PaleoCoreStratigraphicUnitBaseClass(PaleoCoreBaseClass):
@@ -534,8 +526,6 @@ class ProjectPage(Page):
             model_class = content_type.model_class()
             result = model_class.objects.all().count()
         return result
-
-
 
     @property
     def project_index(self):
