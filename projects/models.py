@@ -520,9 +520,19 @@ class ProjectPage(Page):
     is_public = models.BooleanField(default=False)
 
     def record_count(self):
+        """
+        Function to tabulate the number of Finds in a project database. Counts are based on the number of
+        records in the occurrence table for most projects, or the context table for cc and fc. This function
+        assumes that base finds are stored in an occurrence table or a context table. Ideally all these should
+        be changed to a Find table which will provide a standardized structure.
+        :return: Returns an integer record count.
+        """
         result = 0
         if apps.is_installed(self.slug):  # check if slug matches an installed app name
-            content_type = ContentType.objects.get(app_label=self.slug, model='occurrence')
+            try:
+                content_type = ContentType.objects.get(app_label=self.slug, model='occurrence')
+            except ContentType.DoesNotExist:
+                content_type = ContentType.objects.get(app_label=self.slug, model='context')
             model_class = content_type.model_class()
             result = model_class.objects.all().count()
         return result
