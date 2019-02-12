@@ -17,6 +17,7 @@ from django.contrib import messages
 from dateutil.parser import parse
 from django.core.files.base import ContentFile
 
+
 class DownloadKMLView(generic.FormView):
     template_name = 'projects/download_kml.html'
     form_class = DownloadKMLForm
@@ -303,7 +304,8 @@ class ImportKMZ(generic.FormView):
             :param kml_placemark_list:
             :return:
             """
-            occurrence_count, archaeology_count, biology_count, geology_count = [0,0,0,0]
+            message_string = ''
+            occurrence_count, archaeology_count, biology_count, geology_count = [0, 0, 0, 0]
             Occurrence.objects.all().update(last_import=False)  # Toggle off all last imports
             for o in kml_placemark_list:
 
@@ -333,7 +335,7 @@ class ImportKMZ(generic.FormView):
                         archaeology_count += 1
                     elif item_type in ("Faunal", "Fauna", "Floral", "Flora"):
                         lgrp_occ = Biology()
-                        biology_count +=1
+                        biology_count += 1
                     elif item_type in ("Geological", "Geology"):
                         lgrp_occ = Geology()
                         geology_count += 1
@@ -349,7 +351,7 @@ class ImportKMZ(generic.FormView):
                     if attributes_dict.get("Basis Of Record") in ("Fossil", "FossilSpecimen", "Collection"):
                         lgrp_occ.basis_of_record = "Collection"
                     elif attributes_dict.get("Basis Of Record") in ("Observation", "HumanObservation"):
-                        lgrp_occ.basis_of_record = "Observation"
+                        lgrp_occ.basis_of_record = "HumanObservation"
 
                     # Validate Item Type
                     item_type = attributes_dict.get("Item Type")
@@ -363,6 +365,7 @@ class ImportKMZ(generic.FormView):
                         lgrp_occ.item_type = "Geological"
 
                     # Date Recorded
+                    error_string = ''
                     try:
                         # parse the time
                         lgrp_occ.date_recorded = parse(attributes_dict.get("Time"))
@@ -533,7 +536,6 @@ class Summary(generic.ListView):
         Creates a table of occurrence counts by subclass
         :return:
         """
-        html_table=""
         total_count = Occurrence.objects.all().count()
         arch_count = Archaeology.objects.all().count()
         bio_count = Biology.objects.all().count()
@@ -560,8 +562,7 @@ class Summary(generic.ListView):
         return html_table
 
     def warnings(self):
-        result={}
-        result['warning_flag'] = False
+        result = {'warning_flag': False}
         if Occurrence.get_duplicate_barcodes():
             result['warning_flag'] = True
             result['duplicate_barcodes'] = Occurrence.get_duplicate_barcodes()
@@ -570,7 +571,6 @@ class Summary(generic.ListView):
             result['warning_flag'] = True
             result['missing_barcodes'] = Occurrence.get_missing_barcode_objects()
         return result
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -581,7 +581,6 @@ class Summary(generic.ListView):
         context['occurrence_count_table'] = self.create_occurrence_count_table()
         context['warnings'] = self.warnings()
         return context
-
 
 
 # class UploadShapefileView(generic.FormView):
@@ -609,15 +608,14 @@ class Summary(generic.ListView):
 #         shapes = sf.shapes()
 #         return super(UploadShapefileView, self).form_valid(form)
 
-
 def change_coordinates_view(request):
     if request.method == "POST":
         form = ChangeXYForm(request.POST)
         if form.is_valid():
             obs = Occurrence.objects.get(pk=request.POST["DB_id"])
-            #coordinates = utm.to_latlon(float(request.POST["new_easting"]),
+            # coordinates = utm.to_latlon(float(request.POST["new_easting"]),
             #                            float(request.POST["new_northing"]), 37, "N")
-            #pnt = GEOSGeometry("POINT (" + str(coordinates[1]) + " " + str(coordinates[0]) + ")", 4326)  # WKT
+            # pnt = GEOSGeometry("POINT (" + str(coordinates[1]) + " " + str(coordinates[0]) + ")", 4326)  # WKT
             pnt = GEOSGeometry("POINT (" + request.POST["new_easting"] + " " + request.POST["new_northing"] + ")",
                                32637)
             obs.geom = pnt
@@ -689,4 +687,5 @@ def occurrence2biology_view(request):
                         "item_description": selected_object.item_description
                         }
         the_form = Occurrence2Biology(initial=initial_data)
-        return render_to_response('projects/occurrence2biology.html', {"theForm": the_form, "initial_data": initial_data}, RequestContext(request))
+        return render_to_response('projects/occurrence2biology.html',
+                                  {"theForm": the_form, "initial_data": initial_data}, RequestContext(request))
