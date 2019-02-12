@@ -13,7 +13,7 @@ import projects.admin
 class ImagesInline(admin.TabularInline):
     model = Image
     readonly_fields = ['id', 'thumbnail']
-    fields = ['id', 'image', 'thumbnail', 'description',]
+    fields = ['id', 'image', 'thumbnail', 'description']
     extra = 0
 
 
@@ -29,8 +29,6 @@ lgrp_default_list_display = ('coll_code',
                              'item_type',
                              'collecting_method',
                              'collector_person',
-                             #'item_scientific_name',
-                             #'item_description',
                              'year_collected',
                              'in_situ',
                              'thumbnail')
@@ -126,24 +124,24 @@ lgrp_occurrence_fieldsets = (
 biology_additional_fieldsets = (
     ('Elements', {
         'fields': [
-        ('element', 'element_portion', 'side', 'element_number', 'element_modifier'),
-        ('uli1', 'uli2', 'ulc', 'ulp3', 'ulp4', 'ulm1', 'ulm2', 'ulm3'),
-        ('uri1', 'uri2', 'urc', 'urp3', 'urp4', 'urm1', 'urm2', 'urm3'),
-        ('lri1', 'lri2', 'lrc', 'lrp3', 'lrp4', 'lrm1', 'lrm2', 'lrm3'),
-        ('lli1', 'lli2', 'llc', 'llp3', 'llp4', 'llm1', 'llm2', 'llm3'),
-        ('indet_incisor', 'indet_canine', 'indet_premolar', 'indet_molar', 'indet_tooth'), 'deciduous',
-        ('element_remarks',)]
-    }),               # biology_additional_fieldsets[0]
+            ('element', 'element_portion', 'side', 'element_number', 'element_modifier'),
+            ('uli1', 'uli2', 'ulc', 'ulp3', 'ulp4', 'ulm1', 'ulm2', 'ulm3'),
+            ('uri1', 'uri2', 'urc', 'urp3', 'urp4', 'urm1', 'urm2', 'urm3'),
+            ('lri1', 'lri2', 'lrc', 'lrp3', 'lrp4', 'lrm1', 'lrm2', 'lrm3'),
+            ('lli1', 'lli2', 'llc', 'llp3', 'llp4', 'llm1', 'llm2', 'llm3'),
+            ('indet_incisor', 'indet_canine', 'indet_premolar', 'indet_molar', 'indet_tooth'), 'deciduous',
+            ('element_remarks',)]
+    }),  # biology_additional_fieldsets[0]
     ('Taxonomy', {
         'fields': [
-        ('taxon', 'identification_qualifier'),
-                             ('identified_by', 'year_identified', 'type_status'),
-                             ('taxonomy_remarks',)]
-                  }),               # biology_additional_fieldsets[1]
+            ('taxon', 'identification_qualifier'),
+            ('identified_by', 'year_identified', 'type_status'),
+            ('taxonomy_remarks',)]
+    }),  # biology_additional_fieldsets[1]
     ('Taphonomy', {  # biology_additional_fieldsets[2]
         'fields': [('weathering', 'surface_modification')],
         # 'classes': ['collapse'],
-    }),              # biology_additional_fieldsets[2]
+    }),  # biology_additional_fieldsets[2]
 )
 
 biology_fieldsets = (
@@ -170,6 +168,7 @@ lgrp_biology_list_display = ('coll_code',
                              'in_situ',
                              'thumbnail')
 
+
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
     OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
@@ -177,7 +176,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     list_display = lgrp_default_list_display  # use list() to clone rather than modify in place
     list_select_related = lgrp_default_list_select_related + ('archaeology', 'biology', 'geology')
     list_display_links = ['coll_code', 'barcode', 'basis_of_record']
-    list_filter = lgrp_default_list_filter
+    list_filter = lgrp_default_list_filter + ('analytical_unit_found', 'drainage_region')
     fieldsets = lgrp_occurrence_fieldsets
     readonly_fields = lgrp_readonly_fields
     search_fields = lgrp_search_fields
@@ -201,10 +200,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
                     permission_required('lgrp.change_occurrence', login_url='login/')(
                         lgrp.views.ChangeCoordinates.as_view()),
                     name="change_xy"),
-                # url(r'^change_xy/$',
-                #     permission_required('lgrp.change_occurrence', login_url='login/')(lgrp.views.change_coordinates_view),
-                #     name="change_xy"),
-               ] + super(OccurrenceAdmin, self).get_urls()
+                ] + super(OccurrenceAdmin, self).get_urls()
 
 
 class ArchaeologyAdmin(OccurrenceAdmin):
