@@ -349,7 +349,8 @@ class ImportKMZ(generic.FormView):
 
                     # Validate Basis of Record
                     if attributes_dict.get("Basis Of Record") in ("Fossil", "FossilSpecimen", "Collection"):
-                        lgrp_occ.basis_of_record = "Collection"
+                        # TODO update basis_of_record vocab, change Fossil Specimen to Collection
+                        lgrp_occ.basis_of_record = "FossilSpecimen"
                     elif attributes_dict.get("Basis Of Record") in ("Observation", "HumanObservation"):
                         lgrp_occ.basis_of_record = "HumanObservation"
 
@@ -395,7 +396,7 @@ class ImportKMZ(generic.FormView):
                         if match and match_count == 1:
                             lgrp_occ.taxon = match_list[0]
 
-                    # lgrp_occ.item_description = attributes_dict.get("Description")
+                    lgrp_occ.item_description = attributes_dict.get("Description")
                     # if lgrp_occ.item_description:
                     #     match, match_count, match_list = match_element(lgrp_occ)
                     #     if match and match_count ==1:
