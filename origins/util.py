@@ -5,7 +5,7 @@ from lxml import etree
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.gis.geos import Point
 from django.utils.text import slugify
-#import shapefile
+# import shapefile
 
 # pbdb_file_path = "/Users/reedd/Documents/projects/ete/pbdb/pbdb_test_no_header.csv"
 pbdb_collections_contexts_file_path = "/Users/reedd/Documents/projects/ete/pbdb/pbdb_collections_Africa_no_header.csv"
@@ -132,7 +132,6 @@ def create_site_from_context(context):
     if new_site.verbatim_lat and new_site.verbatim_lng:
         new_site.geom = Point(float(new_site.verbatim_lng), float(new_site.verbatim_lat))
     new_site.save()
-
 
     # context_data_dict = {f: context.__getattribute__(f) for f in context.get_concrete_field_names()}
     # sites_data_dict = {}
@@ -273,32 +272,49 @@ def get_country_from_geom(geom):
         country_code = None
     return country_code
 
+
 mpath = '/Users/reedd/Documents/projects/origins/makapansgat/makapansgat_hominins.txt'
+
+
 def import_makapansgat(path=mpath):
+    """
+    Procudure to import fossil specimen data from Makapansgat
+    :param path:
+    :return:
+    """
     data_file = open(path, 'U')
     lines = data_file.readlines()
-    header = lines[0]
-    site = Site.objects.get(pk=6251)  # get Makapansgat site
+    # header = lines[0]
+    # site = Site.objects.get(pk=6251)  # get Makapansgat site
     for line in lines[1:]:  # iterate through lines in the data file
         data = line.split('\t')  # tab delimited
         new_fossil = Fossil(catalog_number=data[0])  # create a new fossil
         new_fossil.description = data[1]
         new_fossil.verbatim_PlaceName = data[2]
-        specimen_string = 'cat_no: {}  element: {}  place: {}'.format(new_fossil.catalog_number, new_fossil.description, new_fossil.verbatim_PlaceName)
+        specimen_string = 'cat_no: {}  element: {}  place: {}'.format(new_fossil.catalog_number, new_fossil.description,
+                                                                      new_fossil.verbatim_PlaceName)
         print(specimen_string)
         new_fossil.save()
 
+
 gs_path = '/Users/reedd/Documents/projects/origins/gw_hod/human_origins_db_all_records.txt'
+
+
 def import_gwhod(path=gs_path):
+    """
+    Procedure to read in data from the George Washington University Human Origins Database
+    :param path:
+    :return:
+    """
     data_file = open(path, 'U')
     lines = data_file.readlines()
     data_file.close()
-    for line in lines[410:]: # skip header
+    for line in lines[410:]:  # skip header
         data = line.split('\t')
         catalog_number = data[0].strip()  # remove extra whitespace
         taxon = data[1].strip()
         try:
-            Fossil.objects.get(catalog_number = data[0])
+            Fossil.objects.get(catalog_number=catalog_number)
         except Fossil.DoesNotExist:
             if taxon not in ['Homo erectus']:
                 print(line)
@@ -323,15 +339,17 @@ def import_gwhod(path=gs_path):
 #         w.record(s.name, s.formation, s.fossil_count, s.max_ma, s.min_ma)
 #     w.save(filepath)
 
+
 def create_site_page(site):
     """
-    Utility to create new wagtail pages for each site in site table
+    Procedure to create a new Origins.SitePage related to a Site object using a template. The template is used
+    to provide default entries and to set the position in the page hierarchy.
     :return:
     """
-
+    # This is clunky and assumes a page titled "Template" exists.
     template_page = Page.objects.get(title='Template')
-    site_slug=slugify(site.name)
-    update_dict=dict(
+    site_slug = slugify(site.name)
+    update_dict = dict(
         site=site,
         slug=slugify(site_slug),
         title=site.name,
@@ -341,5 +359,4 @@ def create_site_page(site):
         feed_image=None,
         intro=site.name
     )
-
-    new_page = template_page.copy(update_attrs=update_dict)
+    template_page.copy(update_attrs=update_dict)
