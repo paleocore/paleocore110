@@ -1,0 +1,156 @@
+{% extends "origins/sites_base.html" %}
+{% load wagtailcore_tags %}
+{% load leaflet_tags %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
+    <!--<link rel="stylesheet" href="https://openlayers.org/en/v5.3.0/css/ol.css" type="text/css"> -->
+    <style>
+      .map {
+        height: 600px;
+        width: 100%;
+      }
+    </style>
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+
+{% endblock %}
+
+
+{% block content %}
+
+    <div id="content" class="row">
+        <!--
+        <a href="{% url 'extended_feed' %}" target="_blank" class="button float-right" style="border-radius: 100%;"><i class="fa fa-rss" id="project-rss"></i></a>
+        -->
+        {% if request.GET.tag|length %}
+        <h4>Showing projects tagged as {{ request.GET.tag|safe }} <a href=" {% pageurl self %} ">Show all</a></h4>
+        {% endif %}
+
+        <div class="row">
+            <div class="small-12 columns">
+                    <h1>Origins Sites</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-12 columns">
+
+<h2>Site Map</h2>
+    <div id="map" class="map"></div>
+      <select id="layer-select">
+       <option value="Aerial">Aerial</option>
+       <option value="AerialWithLabels" selected>Aerial with labels</option>
+       <option value="Road">Road (static)</option>
+       <option value="RoadOnDemand">Road (dynamic)</option>
+
+     </select>
+
+      <script type="text/javascript">
+
+      let image = new ol.style.Circle({
+        radius: 5,
+        fill: new ol.style.Fill({color: 'red'}),
+        stroke: new ol.style.Stroke({color: 'red', width: 1})
+      });
+
+      let styles = {
+        'Point': new ol.style.Style({
+          image: image
+        })};
+
+        let styleFunction = function(feature) {
+        return styles[feature.getGeometry().getType()];
+      };
+
+
+      let siteSource = new ol.source.Vector({
+        url:'http://localhost:8000/origins/origins.geojson',
+        format: new ol.format.GeoJSON(),
+        projection: 'EPSG:4326'
+      });
+
+
+      let vectorLayer = new ol.layer.Vector({
+        source: siteSource,
+        //source: vectorSource,
+        style: styleFunction
+      });
+
+      let osmLayer = new ol.layer.Tile({source: new ol.source.OSM()});
+
+
+
+      let bingLayer = new ol.layer.Tile({
+        vsible: false,
+        preload: Infinity,
+        source: new ol.source.BingMaps({
+          key: 'Ar53nx2qnSFcrZZZ4nh6Q_mGb_1BVl3jNP3tldp5lJ8SeUgAnMZGnTCNsTQ7O72e',
+          imagerySet: 'Aerial'
+        })
+      });
+
+
+      // Test Bing Layers
+      let layer_styles = [
+        'Road',
+        'RoadOnDemand',
+        'Aerial',
+        'AerialWithLabels',
+      ];
+
+
+      // End test
+
+      let map = new ol.Map({
+        target: 'map',
+        //layers: layers,
+        layers: [ bingLayer, vectorLayer
+          //osmLayer, vectorLayer
+        ],
+        loadTilesWhileInteracting: true,
+        view: new ol.View({
+          projection: 'EPSG:4326',
+          center: [37.41,8.82],
+          //center: ol.proj.fromLonLat([37.41, 8.82]),
+          zoom: 4
+        })
+      });
+
+
+    </script>
+
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-10 small-centered column">
+                <hr/>
+            </div>
+        </div>
+
+
+        <div id="projects_list" class="row">
+            {% include "origins/includes/site_list_item.html" %}
+        </div>
+
+
+    <div class="row">
+      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
+        {% if sites.has_previous %}
+        <li class="pagination-previous">
+          <a href="?page={{ sites.previous_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}" aria-label="Previous page">Previous</a></li>
+          {% else %}
+          <li class="pagination-previous disabled">Previous</li>
+          {% endif %}
+          <li class="unavailable">Page {{ sites.number }} of {{ sites.paginator.num_pages }}</li>
+          {% if sites.has_next %}
+          <li class="pagination-next">
+            <a href="?page={{ sites.next_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}" aria-label="Next page">Next</a></li>
+            {% else %}
+            <li class="pagination-next disabled">Next</li>
+            {% endif %}
+          </ul>
+        </div>
+    </div>
+{% endblock %}
