@@ -164,6 +164,7 @@ class Site(projects.models.PaleoCoreSiteBaseClass):
     class Meta:
         ordering = ['name']
 
+
 class ActiveSite(Site):
     class Meta:
         proxy = True
@@ -275,8 +276,6 @@ class Fossil(models.Model):
     verbatim_Country = models.CharField(max_length=20, null=True, blank=True)
     verbatim_provenience = models.TextField(null=True, blank=True)
 
-
-
     def __str__(self):
         return str(self.id)+' '+str(self.catalog_number)
 
@@ -298,8 +297,8 @@ class Fossil(models.Model):
             return None
 
     default_image.short_description = 'Fossil Thumbnail'
-    default_image.allow_tags=True
-    default_image.mark_safe=True
+    default_image.allow_tags = True
+    default_image.mark_safe = True
 
     def aapa(self):
         """
@@ -415,7 +414,7 @@ class SiteIndexPage(Page):
     ]
 
     @property
-    def get_sites(self):
+    def get_sites_pages(self):
         # Get list of live site pages that are descendants of this page
         site_page_list = SitePage.objects.live().descendant_of(self)
 
@@ -426,27 +425,28 @@ class SiteIndexPage(Page):
 
     def get_context(self, request):
         # Get site_list
-        site_list = self.get_sites
+        site_page_list = self.get_sites_pages
 
         # Filter by tag
         tag = request.GET.get('tag')
         if tag:
-            site_list = site_list.filter(tags__name=tag)
+            site_page_list = site_page_list.filter(tags__name=tag)
 
         # Pagination
         page = request.GET.get('page')
-        paginator = Paginator(site_list, 10)  # Show 10 site_list per page
+        paginator = Paginator(site_page_list, 50)  # Show 50 site_list per page
         try:
-            site_list = paginator.page(page)
+            site_page_list = paginator.page(page)
         except PageNotAnInteger:
-            site_list = paginator.page(1)
+            site_page_list = paginator.page(1)
         except EmptyPage:
-            site_list = paginator.page(paginator.num_pages)
+            site_page_list = paginator.page(paginator.num_pages)
 
         # Update template context
         context = super(SiteIndexPage, self).get_context(request)
-        context['projects'] = site_list
+        context['site_pages'] = site_page_list
         return context
+
 
 SiteIndexPage.content_panels = [
     FieldPanel('title', classname="full title"),
@@ -520,7 +520,6 @@ class SitePage(Page):
         """
         fossils = self.get_fossils
 
-
     def get_context(self, request):
         # Get site_list
         fossil_list = self.get_fossils
@@ -549,6 +548,7 @@ class SitePage(Page):
     def site_index(self):
         # Find closest ancestor which is a site index
         return self.get_ancestors().type(SiteIndexPage).last()
+
 
 SitePage.content_panels = [
     FieldPanel('site'),
