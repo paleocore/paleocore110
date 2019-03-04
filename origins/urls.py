@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from origins.models import SitePage
+from origins.models import SitePage, WorldBorder
 from .views import MyGeoJSONLayerView
 
 urlpatterns = [
@@ -11,4 +11,10 @@ urlpatterns = [
                                    properties=['title', 'slug', 'url_path'],
                                    geometry_field='location'),
         name='sites_geojson'),
+url(r'^countries.geojson$',
+        MyGeoJSONLayerView.as_view(model=WorldBorder,
+                                   crs=False,
+                                   properties=['name', 'area', 'pop2005', 'fips'],
+                                   geometry_field='mpoly'),
+        name='countries_geojson'),
 ]
