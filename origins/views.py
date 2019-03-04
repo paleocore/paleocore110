@@ -6,6 +6,7 @@ from django.contrib import messages
 from djgeojson.views import GeoJSONLayerView, GeoJSONResponseMixin
 from djgeojson.serializers import Serializer as GeoJSONSerializer
 
+
 class UpdateSites(generic.FormView):
     template_name = 'admin/origins/site/update_sites.html'
     form_class = UpdateSitesModelForm
@@ -18,7 +19,7 @@ class UpdateSites(generic.FormView):
         idstring = self.request.GET['ids']
         idlist = idstring.split(',')
         new_site = form.cleaned_data['site']
-        update_count=0
+        update_count = 0
         for fossil_id in idlist:
             fossil = Fossil.objects.get(pk=fossil_id)
             fossil.site = new_site
@@ -28,11 +29,9 @@ class UpdateSites(generic.FormView):
             count_string = '1 record'
         if update_count > 1:
             count_string = '{} records'.format(update_count)
-        messages.add_message(self.request, messages.INFO,
-                                 'Successfully updated {}'.format(count_string))
-
-
+        messages.add_message(self.request, messages.INFO, 'Successfully updated {}'.format(count_string))
         return super(UpdateSites, self).form_valid(form)
+
 
 class MyGeoJSONLayerView(GeoJSONLayerView):
 
@@ -58,5 +57,4 @@ class MyGeoJSONLayerView(GeoJSONLayerView):
         serializer.serialize(queryset, stream=response, ensure_ascii=False,
                              crs=self.crs,  # in geoJSON crs is deprecated, raises error 36 in ol.source
                              **options)
-        #return super(MyGeoJSONLayerView, self).render_to_response(context, **response_kwargs)
         return response
