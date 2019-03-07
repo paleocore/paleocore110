@@ -254,7 +254,8 @@
 
     var myDom = {
         points: {
-          text: document.getElementById('points-text'),
+          text: 'Normal'
+          //text: document.getElementById('points-text'),
           //align: document.getElementById('points-align'),
           //baseline: document.getElementById('points-baseline'),
           //rotation: document.getElementById('points-rotation'),
@@ -530,12 +531,12 @@
       };
       */
     map.addInteraction(selectPointerMove)
-    selectPointerMove.on('select', function(e) {
-            document.getElementById('status').innerHTML = '&nbsp;' +
-                e.target.getFeatures().getLength() +
-                ' selected features (last operation selected ' + e.selected.length +
-                ' and deselected ' + e.deselected.length + ' features)';
-          });
+    // selectPointerMove.on('select', function(e) {
+    //         document.getElementById('status').innerHTML = '&nbsp;' +
+    //             e.target.getFeatures().getLength() +
+    //             ' selected features (last operation selected ' + e.selected.length +
+    //             ' and deselected ' + e.deselected.length + ' features)';
+    //       });
 
 
       // Delete
