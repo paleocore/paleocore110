@@ -202,7 +202,7 @@
       </div>
 
 
-
+      <!--
       <div class="columns small-4">
         <form class="form-inline">
           <label>Action type &nbsp;</label>
@@ -216,6 +216,7 @@
         <span id="status">&nbsp;0 selected features</span>
         </form>
       </div>
+      -->
       <!-- Map Layer Selector -->
       <div class="columns small-4">
         <select id="layer-select">
@@ -225,6 +226,8 @@
           <option value="RoadOnDemand">Road (dynamic)</option>
         </select>
       </div>
+
+
     </div>
   </div>
   <div class="clearall"></div>
@@ -343,6 +346,17 @@
       return new ol.style.Style({
         image: new ol.style.Circle({
           radius: 5,
+          fill: new ol.style.Fill({color: 'red'}),
+          stroke: new ol.style.Stroke({color: 'red', width: 1})
+        }),
+        //text: createTextStyle(feature, resolution, myDom.points)
+      });
+    }
+
+    function pointSelectedStyleFunction(feature, resolution) {
+      return new ol.style.Style({
+        image: new ol.style.Circle({
+          radius: 5,
           fill: new ol.style.Fill({color: 'rgba(255, 0, 0, 0.5)'}),
           stroke: new ol.style.Stroke({color: 'red', width: 1})
         }),
@@ -403,8 +417,8 @@
     let map = new ol.Map({
       target: 'map',
       //layers: [country_vector],
-      layers: [country_vector, siteLayer],
-      //layers: bingLayers.concat(vectorLayer),  // overlay vector layers on tiles
+      //layers: [country_vector, siteLayer],
+      layers: bingLayers.concat(siteLayer),  // overlay vector layers on tiles
       loadTilesWhileInteracting: true,
       view: new ol.View({
         projection: 'EPSG:4326',
@@ -462,19 +476,21 @@
     }
 
     // selection
-    var select = null; // ref to currently selected interaction
+    //var select = null; // ref to currently selected interaction
 
-      // select interaction working on "singleclick"
-      var selectSingleClick = new ol.interaction.Select();
+    // select interaction working on "singleclick"
+    //var selectSingleClick = new ol.interaction.Select();
 
-      // select interaction working on "click"
-      var selectClick = new ol.interaction.Select({
-        condition: ol.events.condition.click
-      });
+    // select interaction working on "click"
+    var selectClick = new ol.interaction.Select({
+      condition: ol.events.condition.click,
+      style: pointSelectedStyleFunction,
+    });
 
       // select interaction working on "pointermove"
       var selectPointerMove = new ol.interaction.Select({
-        condition: ol.events.condition.pointerMove
+        condition: ol.events.condition.pointerMove,
+        style: pointSelectedStyleFunction,
       });
 
       var selectAltClick = new ol.interaction.Select({
@@ -485,6 +501,7 @@
 
       var selectElement = document.getElementById('type');
 
+      /* Delete
       var changeInteraction = function() {
         if (select !== null) {
           map.removeInteraction(select);
@@ -511,13 +528,22 @@
           });
         }
       };
+      */
+    map.addInteraction(selectPointerMove)
+    selectPointerMove.on('select', function(e) {
+            document.getElementById('status').innerHTML = '&nbsp;' +
+                e.target.getFeatures().getLength() +
+                ' selected features (last operation selected ' + e.selected.length +
+                ' and deselected ' + e.deselected.length + ' features)';
+          });
 
 
+      // Delete
       /**
        * onchange callback on the select element.
        */
-      selectElement.onchange = changeInteraction;
-      changeInteraction();
+      //selectElement.onchange = changeInteraction;
+      //changeInteraction();
 
 
 
