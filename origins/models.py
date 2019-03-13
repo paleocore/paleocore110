@@ -283,7 +283,18 @@ class Fossil(models.Model):
         return FossilElement.objects.filter(fossil=self.id).count()
 
     def elements(self):
-        return self.fossilelement_set.all()
+        """
+        function to get a queryset of all skeletal elements associated with a fossil
+        :return:
+        """
+        return self.fossil_element.all()
+
+    def element_description(self):
+        """
+        function to get a text description of all skeletal elements associated with a fossil
+        :return:
+        """
+        return ', '.join(["{} {}".format(e.skeletal_element_side, e.skeletal_element) for e in self.elements()])
 
     def default_image(self):
         """
@@ -338,6 +349,10 @@ class FossilElement(models.Model):
     skeletal_element_complete = models.CharField(max_length=40, null=True, blank=True)
     skeletal_element_class = models.CharField(max_length=40, null=True, blank=True)
     continent = models.CharField(max_length=20, null=True, blank=True)
+
+    # Uberon fields
+    side = models.CharField(max_length=100, null=True, blank=True)
+
     # foreign keys
     fossil = models.ForeignKey(Fossil, on_delete=models.CASCADE, null=True, blank=False, related_name='fossil_element')
 
