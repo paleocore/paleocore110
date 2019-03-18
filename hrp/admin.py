@@ -337,7 +337,7 @@ class BiologyAdmin(OccurrenceAdmin):
 
     def create_data_csv(self, request, queryset):
         response = HttpResponse(content_type='text/csv')  # declare the response type
-        response['Content-Disposition'] = 'attachment; filename="LGRP_Biology.csv"'  # declare the file name
+        response['Content-Disposition'] = 'attachment; filename="HRP_Biology.csv"'  # declare the file name
         writer = unicodecsv.writer(response)  # open a .csv writer
         o = Occurrence()  # create an empty instance of an occurrence object
         b = Biology()  # create an empty instance of a biology object
