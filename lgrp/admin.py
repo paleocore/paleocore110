@@ -1,13 +1,28 @@
 from django.contrib import admin
 from django.contrib.auth.decorators import permission_required
 from django.conf.urls import url
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, StreamingHttpResponse
 from django.core.urlresolvers import reverse
 
 from .models import *
 import lgrp.views
-import unicodecsv
+import csv
 import projects.admin
+
+
+class Echo(object):
+    """
+    From the django docs on streaming large csv files
+    https://docs.djangoproject.com/en/1.11/howto/outputting-csv/#streaming-csv-files
+    An object that implement just the write method of the file-like interface.
+    """
+    def write(self, value):
+        """
+        Wrtie the value by returning it, instead of storing in a buffer
+        :param value:
+        :return:
+        """
+        return value
 
 
 class ImagesInline(admin.TabularInline):
@@ -216,14 +231,15 @@ class BiologyAdmin(OccurrenceAdmin):
 
     def create_data_csv(self, request, queryset):
         """
-        Export data to csv format. Still some issues with unicode characters.
+        Export data to csv format.
         :param request:
         :param queryset:
         :return:
         """
+
         response = HttpResponse(content_type='text/csv')  # declare the response type
         response['Content-Disposition'] = 'attachment; filename="LGRP_Biology.csv"'  # declare the file name
-        writer = unicodecsv.writer(response)  # open a .csv writer
+        writer = csv.writer(response)  # open a .csv writer # I think python3 fully resolves unicode issues.
         b = Biology()  # create an empty instance of a biology object
 
         # Fetch model field names. We need to account for data originating from tables, relations and methods.
