@@ -236,22 +236,18 @@ class BiologyAdmin(OccurrenceAdmin):
         :param queryset:
         :return:
         """
-
-        response = HttpResponse(content_type='text/csv')  # declare the response type
-        response['Content-Disposition'] = 'attachment; filename="LGRP_Biology.csv"'  # declare the file name
-        writer = csv.writer(response)  # open a .csv writer # I think python3 fully resolves unicode issues.
-        b = Biology()  # create an empty instance of a biology object
+        pseudo_buffer = Echo()
+        writer = csv.writer(pseudo_buffer)
 
         # Fetch model field names. We need to account for data originating from tables, relations and methods.
+        b = Biology()  # create an empty instance of a biology object
         concrete_field_names = b.get_concrete_field_names()  # fetch a list of concrete field names
         method_field_names = b.method_fields_to_export()  # fetch a list for method field names
-
         fk_fields = [f for f in b._meta.get_fields() if f.is_relation]  # get a list of field objects
         fk_field_names = [f.name for f in fk_fields]  # fetch a list of foreign key field names
 
-        # Concatenate to make a master field list
-        field_names = concrete_field_names + method_field_names + fk_field_names
-        writer.writerow(field_names)  # write column headers
+        def get_headers():
+            return concrete_field_names + method_field_names + fk_field_names
 
         def get_fk_values(occurrence, fk):
             """
@@ -277,19 +273,22 @@ class BiologyAdmin(OccurrenceAdmin):
 
             return return_string
 
-        for occurrence in queryset:  # iterate through the occurrence instances selected in the admin
-            # The next line uses string comprehension to build a list of values for each field.
-            # All values are converted to strings.
-            concrete_values = [getattr(occurrence, field) for field in concrete_field_names]
-            # Create a list of values from method calls. Note the parenthesis after getattr in the list comprehension.
-            method_values = [getattr(occurrence, method)() for method in method_field_names]
-            # Create a list of values from related tables. One to many fields have related values concatenated in str.
-            fk_values = [get_fk_values(occurrence, fk) for fk in fk_field_names]
-
+        def get_row_data(o, cfs=concrete_field_names, mfs=method_field_names, fks=fk_field_names):
+            concrete_values = [getattr(o, field) for field in cfs]
+            method_values = [getattr(o, method)() for method in mfs]
+            fk_values = [get_fk_values(o, fk) for fk in fks]
             row_data = concrete_values + method_values + fk_values
-            cleaned_row_data = ['' if i in [None, False, 'None', 'False'] else i for i in row_data]  # Replace ''.
-            writer.writerow(cleaned_row_data)
+            return ['' if i in [None, False, 'None', 'False'] else i for i in row_data]  # Replace ''.
 
+        def get_rows(items):
+            yield writer.writerow(get_headers())
+            for item in items:
+                yield writer.writerow(get_row_data(item))
+
+        response = StreamingHttpResponse(
+            streaming_content=(get_rows(queryset)),
+            content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="LGRP_Biology_Export.csv"'
         return response
     create_data_csv.short_description = 'Download Selected to .csv'
 
