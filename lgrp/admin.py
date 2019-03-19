@@ -231,7 +231,14 @@ class BiologyAdmin(OccurrenceAdmin):
 
     def create_data_csv(self, request, queryset):
         """
-        Export data to csv format.
+        Export data to csv format.  The LGRP version of this admin action uses StreamingHTTPResponse because it
+        takes ca 155 seconds for the server to query the data, which causes a server timeout using the normal
+        HTTPResponse class. Need to optimize the query to run faster, but in the meantime I implemented the
+        streaming response to prevent the timeout. The lag seems to be caused by the large number of
+        related tables and foreign key relations that need to be followed when exporting the data. The HRP dataset
+        is larger but takes less time to export because it has fewer foreign key relationships. The long-term solution
+        is to separate the export and the download actions, i.e. have the action save the export to a file and then
+        redirect to another webpage showing all the export files available for download.
         :param request:
         :param queryset:
         :return:
