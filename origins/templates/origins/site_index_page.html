@@ -1,23 +1,15 @@
 {% extends "origins/sites_base.html" %}
 {% load wagtailcore_tags %}
-{% load leaflet_tags %}
 
 {% block extra_css %}
+  <!-- openlayers css -->
   <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
-  <!--<link rel="stylesheet" href="https://openlayers.org/en/v5.3.0/css/ol.css" type="text/css"> -->
-  <style>
-    .map {
-      height: 600px;
-      width: 100%;
-    }
-  </style>
-  <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
-  <!-- temporary label style controls -->
-
+  <!-- datatables css for foundation -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/dataTables.foundation.min.css">
 {% endblock %}
 
 {% block content %}
-
+  <!-- start row -->
   <div class="row">
     <!-- Tags -->
     {% if request.GET.tag|length %}
@@ -32,26 +24,40 @@
     </div>
 
     <!-- Map -->
+    <div class="small-12 columns">
+      <div id="map" class="map"></div>
+    </div>
 
-      <div class="small-12 columns">
-        <div id="map" class="map"></div>
-      </div>
+    <!-- Map Layer Selector -->
+    <div class="columns small-4">
+      <select id="layer-select">
+        <option value="Aerial">Satellite</option>
+        <option value="AerialWithLabels" selected>Satellite with labels</option>
+        <option value="Road">Road</option>
+        <!--
+        <option value="RoadOnDemand">Road (dynamic)</option>
+        -->
+      </select>
+    </div>
 
-      &nbsp;<br/>
+    <!-- Horizontal Rule -->
+    <div class="small-10 small-centered column">
+      <hr/>
+    </div>
+  </div>
+  <!-- endrow -->
 
-      <!-- Map Layer Selector -->
-      <div class="columns small-4">
-        <select id="layer-select">
-          <option value="Aerial">Aerial</option>
-          <option value="AerialWithLabels" selected>Aerial with labels</option>
-          <option value="Road">Road (static)</option>
-          <option value="RoadOnDemand">Road (dynamic)</option>
-        </select>
-      </div>
+  <!-- start row -->
+  <div class="row">
+  {% include "origins/includes/site_list_item.html" %}
+  </div>
+  <!-- end row -->
+{% endblock %}
 
-
-    <!-- Map Javascript -->
-    <script type="text/javascript">
+{% block extra_js %}
+  <!-- map js -->
+  <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+  <script type="text/javascript">
 
       let styles = {
         'Point': new ol.style.Style({
@@ -65,26 +71,10 @@
         }),
         })};
 
-
       // Start Label Test
-      var openSansAdded = false;
-
-      var myDom = {
+      let myDom = {
           points: {
             text: 'Normal'
-            //text: document.getElementById('points-text'),
-            //align: document.getElementById('points-align'),
-            //baseline: document.getElementById('points-baseline'),
-            //rotation: document.getElementById('points-rotation'),
-            //font: document.getElementById('points-font'),
-            //weight: document.getElementById('points-weight'),
-            //size: document.getElementById('points-size'),
-            //offsetX: document.getElementById('points-offset-x'),
-            //offsetY: document.getElementById('points-offset-y'),
-            //color: document.getElementById('points-color'),
-            //outline: document.getElementById('points-outline'),
-            //outlineWidth: document.getElementById('points-outline-width'),
-            //maxreso: document.getElementById('points-maxreso')
           },
         };
 
@@ -109,58 +99,22 @@
           return text;
       };
 
-      var createTextStyle = function(feature, resolution, dom) {
-          //var align = dom.align.value;
-          //var baseline = dom.baseline.value;
-          //var size = dom.size.value;
-          //var offsetX = parseInt(dom.offsetX.value, 10);
-          //var offsetY = parseInt(dom.offsetY.value, 10);
-          //var weight = dom.weight.value;
-          //var placement = dom.placement ? dom.placement.value : undefined;
-          //var maxAngle = dom.maxangle ? parseFloat(dom.maxangle.value) : undefined;
-          //var overflow = dom.overflow ? (dom.overflow.value == 'true') : undefined;
-          //var rotation = parseFloat(dom.rotation.value);
-          // if (dom.font.value == '\'Open Sans\'' && !openSansAdded) {
-          //   var openSans = document.createElement('link');
-          //   openSans.href = 'https://fonts.googleapis.com/css?family=Open+Sans';
-          //   openSans.rel = 'stylesheet';
-          //   document.getElementsByTagName('head')[0].appendChild(openSans);
-          //   openSansAdded = true;
-          // }
-          //var font = weight + ' ' + size + ' ' + dom.font.value;
-          //var fillColor = dom.color.value;
-          //var outlineColor = dom.outline.value;
-          //var outlineWidth = parseInt(dom.outlineWidth.value, 10);
-
+      let createTextStyle = function(feature, resolution, dom) {
           return new ol.style.Text({
             textAlign: 'left',
             textBaseline: 'middle',
             font: 'normal 12px Arial',
-            // textAlign: align == '' ? undefined : align,
-            // textBaseline: baseline,
-            // font: font,
-
             text: getText(feature, resolution, dom),
-
             fill: new ol.style.Fill({color: 'red'}),
             stroke: new ol.style.Stroke({color: '#ffffff', width: 3}),
-            // fill: new ol.style.Fill({color: fillColor}),
-            // stroke: new ol.style.Stroke({color: outlineColor, width: outlineWidth}),
             offsetX: 10,
             offsetY: -10,
             placement: 'point',
             overflow: 'false',
-            // offsetX: offsetX,
-            // offsetY: offsetY,
-            // placement: placement,
-            // maxAngle: maxAngle,
-            // overflow: overflow,
-            // rotation: rotation
           });
       };
 
       // Points
-
       let red_transparent_fill = new ol.style.Fill({color: 'rgba(255, 0, 0, 0.5)'})
       let red_solid_fill = new ol.style.Fill({color: 'red'})
       let red_solid_stroke = new ol.style.Stroke({color: 'red', width: 1})
@@ -190,7 +144,7 @@
         return styles[feature.getGeometry().getType()];
       };
 
-      // Get site locations from geJSON
+      // Get site locations from geoJSON
       let siteSource = new ol.source.Vector({
         url:'http://localhost:8000/origins/origins.geojson',
         format: new ol.format.GeoJSON(),
@@ -260,11 +214,6 @@
       bing_layer_select.addEventListener('change', onChange);
       onChange();
 
-      // document.getElementById('refresh-points')
-      //     .addEventListener('click', function() {
-      //       siteLayer.setStyle(pointStyleFunction);
-      //     });
-
       // String truncation function
       /**
        * @param {number} n The max number of characters to keep.
@@ -297,110 +246,37 @@
         return str;
       }
 
-      // selection
-      //var select = null; // ref to currently selected interaction
-
-      // select interaction working on "singleclick"
-      //var selectSingleClick = new ol.interaction.Select();
-
       // select interaction working on "click"
-      var selectClick = new ol.interaction.Select({
+      let selectClick = new ol.interaction.Select({
         condition: ol.events.condition.click,
         style: pointSelectedStyleFunction,
       });
 
         // select interaction working on "pointermove"
-        var selectPointerMove = new ol.interaction.Select({
+        let selectPointerMove = new ol.interaction.Select({
           condition: ol.events.condition.pointerMove,
           style: pointSelectedStyleFunction,
         });
 
-        var selectAltClick = new ol.interaction.Select({
+        let selectAltClick = new ol.interaction.Select({
           condition: function(mapBrowserEvent) {
             return click(mapBrowserEvent) && ol.events.condition.altKeyOnly(mapBrowserEvent);
           }
         });
 
-        var selectElement = document.getElementById('type');
+        let selectElement = document.getElementById('type');
 
-        /* Delete
-        var changeInteraction = function() {
-          if (select !== null) {
-            map.removeInteraction(select);
-          }
-          var value = selectElement.value;
-          if (value == 'singleclick') {
-            select = selectSingleClick;
-          } else if (value == 'click') {
-            select = selectClick;
-          } else if (value == 'pointermove') {
-            select = selectPointerMove;
-          } else if (value == 'altclick') {
-            select = selectAltClick;
-          } else {
-            select = null;
-          }
-          if (select !== null) {
-            map.addInteraction(select);
-            select.on('select', function(e) {
-              document.getElementById('status').innerHTML = '&nbsp;' +
-                  e.target.getFeatures().getLength() +
-                  ' selected features (last operation selected ' + e.selected.length +
-                  ' and deselected ' + e.deselected.length + ' features)';
-            });
-          }
-        };
-        */
+
       map.addInteraction(selectPointerMove)
-      // selectPointerMove.on('select', function(e) {
-      //         document.getElementById('status').innerHTML = '&nbsp;' +
-      //             e.target.getFeatures().getLength() +
-      //             ' selected features (last operation selected ' + e.selected.length +
-      //             ' and deselected ' + e.deselected.length + ' features)';
-      //       });
-
-
-        // Delete
-        /**
-         * onchange callback on the select element.
-         */
-        //selectElement.onchange = changeInteraction;
-        //changeInteraction();
-
-
-
     </script>
 
-      <!-- Horizontal Rule -->
-
-      <div class="small-10 small-centered column">
-        <hr/>
-      </div>
-
-  </div>
-    <!-- Site List -->
-    <div id="projects_list" >
-        {% include "origins/includes/site_list_item.html" %}
-    </div>
-
-    <!-- Bottom Pagination -->
-    <div class="row">
-      <ul class="pagination text-center" role="navigation" aria-label="Pagination">
-        {% if sites.has_previous %}
-          <li class="pagination-previous">
-            <a href="?page={{ sites.previous_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}" aria-label="Previous page">Previous</a></li>
-            {% else %}
-          <li class="pagination-previous disabled">Previous</li>
-        {% endif %}
-          <li class="unavailable">Page {{ sites.number }} of {{ sites.paginator.num_pages }}</li>
-        {% if sites.has_next %}
-          <li class="pagination-next">
-              <a href="?page={{ sites.next_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}" aria-label="Next page">Next</a></li>
-        {% else %}
-          <li class="pagination-next disabled">Next</li>
-        {% endif %}
-      </ul>
-    </div>
-</div>
-
+  <!-- datatable js -->
+  <script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.19/js/dataTables.foundation.min.js"></script>
+	<script type="text/javascript" class="init">
+    $(document).ready(function() {
+      $('#example1').DataTable();
+    } );
+	</script>=
 {% endblock %}
+
