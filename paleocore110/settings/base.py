@@ -10,21 +10,19 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 from sys import path
 import environ
-env = environ.Env(DEBUG=(bool, False),)
 
-# Absolute filesystem path to the top-level project folder:
+# the environ library (not to be confused with os.environ) is used to maintain evnironment variables outside the
+# settings.py file. This improves security by storing sensitive variables (passwords, database login details) in a
+# separate file not uploaded to the GitHub repository.
 
-root = environ.Path(__file__) - 3
-PROJECT_ROOT = root()
+env = environ.Env(DEBUG=(bool, False),)  # create instance of an Env class
+root = environ.Path(__file__) - 3  # save absolute filesystem path to the root path as as an Env.Path object
+PROJECT_ROOT = root()  # project path as string, e.g. '/Users/dnr266/Documents/pycharm/paleocore110'
+environ.Env.read_env(root('.env'))  # locate the .env file in the project root directory
+DJANGO_ROOT = root.path('paleocore110')  # e.g. '/Users/dnr266/Documents/pycharm/paleocore110/paleocore110'
 
-environ.Env.read_env(root('.env'))
-
-# Absolute filesystem path to the Django project directory:
-DJANGO_ROOT = root.path('paleocore110')
-
-# Add our project to our pythonpath, this way we don't need to type our project
-# name in our dotted import paths:
-path.append(DJANGO_ROOT)
+# Add our project to our pythonpath, this way we don't need to type our project name in our dotted import paths:
+path.append(DJANGO_ROOT)  # add DJANGO_ROOT to python path list
 
 DEBUG = env('DEBUG')
 
@@ -56,8 +54,8 @@ INSTALLED_APPS = (
     'wagtail.wagtailadmin',
     'wagtail.wagtailcore',
     'wagtailfontawesome',
-     'wagalytics',
-     'cachalot',
+    'wagalytics',
+    'cachalot',
     'utils',
     'pages',
     'blog',
@@ -86,7 +84,6 @@ INSTALLED_APPS = (
     'omo_mursi',
     'origins',
     'standard',
-    'vif',
     'wt',
 )
 
