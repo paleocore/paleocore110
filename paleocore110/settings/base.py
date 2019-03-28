@@ -34,6 +34,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django.contrib.humanize',
 
     'compressor',
     'taggit',
@@ -183,7 +184,7 @@ COMPRESS_OFFLINE = False
 
 # Settings for wagalytics
 # see https://github.com/tomdyson/wagalytics
-GA_KEY_FILEPATH = env('GA_KEY_FILEPATH', default='/path/to/secure/directory/your-key.json')
+GA_KEY_FILEPATH = env('GA_KEY_FILEPATH', default='~/.ssh/paleocore-7940c3328cc8.json')
 GA_VIEW_ID = env('GA_VIEW_ID', default='ga:xxxxxxxxxxxxx')
 
 
