@@ -253,6 +253,7 @@ class Fossil(models.Model):
     image = models.ImageField(max_length=255, blank=True, upload_to="uploads/images/origins", null=True)
 
     # Record
+    source = models.CharField(max_length=100, null=True, blank=True)
     created_by = models.CharField(max_length=100, null=True, blank=True)
     created = models.DateTimeField('Modified', auto_now_add=True)
     modified = models.DateTimeField('Modified', auto_now=True,
@@ -577,6 +578,163 @@ SitePage.content_panels = [
 ]
 
 SitePage.promote_panels = Page.promote_panels + [
+    ImageChooserPanel('feed_image'),
+    FieldPanel('tags'),
+]
+
+
+class FossilIndexPageRelatedLink(Orderable, RelatedLink):
+    page = ParentalKey('origins.FossilIndexPage', related_name='fossil_related_links')
+    
+    
+class FossilIndexPage(Page):
+    intro = RichTextField(blank=True)
+
+    search_fields = Page.search_fields + [
+        index.SearchField('intro'),
+    ]
+
+    @property
+    def get_child_pages(self):
+        # Get list of live site pages that are descendants of this page
+        fossil_page_list = FossilPage.objects.live().descendant_of(self)
+
+        # Order by most recent date first
+        fossil_page_list = fossil_page_list.order_by('title')
+
+        return fossil_page_list
+
+    def get_context(self, request):
+        # Get site_list
+        fossil_page_list = self.get_child_pages
+
+        # Filter by tag
+        tag = request.GET.get('tag')
+        if tag:
+            fossil_page_list = fossil_page_list.filter(tags__name=tag)
+
+        # Pagination
+        page = request.GET.get('page')
+        paginator = Paginator(fossil_page_list, 50)  # Show 50 site_list per page
+        try:
+            fossil_page_list = paginator.page(page)
+        except PageNotAnInteger:
+            fossil_page_list = paginator.page(1)
+        except EmptyPage:
+            fossil_page_list = paginator.page(paginator.num_pages)
+
+        # Update template context
+        context = super(FossilIndexPage, self).get_context(request)
+        context['site_pages'] = fossil_page_list
+        return context
+
+
+FossilIndexPage.content_panels = [
+    FieldPanel('title', classname="full title"),
+    FieldPanel('intro', classname="full"),
+    InlinePanel('fossil_related_links', label="Related links"),
+]
+
+FossilIndexPage.promote_panels = Page.promote_panels
+
+
+class FossilPageCarouselItem(Orderable, CarouselItem):
+    page = ParentalKey('origins.FossilPage', related_name='fossil_carousel_items')
+
+
+class FossilPageRelatedLink(Orderable, RelatedLink):
+    page = ParentalKey('origins.FossilPage', related_name='fossil_related_links')
+
+
+class FossilPageTag(TaggedItemBase):
+    content_object = ParentalKey('origins.FossilPage', related_name='fossil_tagged_items')
+
+
+class FossilPage(Page):
+    fossil = models.ForeignKey('origins.Fossil', null=True, blank=True, on_delete=models.SET_NULL)
+    intro = RichTextField()
+    body = StreamField([
+        ('heading', blocks.CharBlock(classname="full title")),
+        ('paragraph', blocks.RichTextBlock()),
+        ('image', ImageChooserBlock()),
+    ])
+    tags = ClusterTaggableManager(through=FossilPageTag, blank=True)
+    date = models.DateField("Post date")
+    feed_image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    location = models.PointField(srid=4326, null=True, blank=True)
+
+    search_fields = Page.search_fields + [
+        index.SearchField('body'),
+    ]
+    is_public = models.BooleanField(default=False)
+
+    @property
+    def get_fossils(self):
+        # Get list of fossils associated with the site on this page
+        # current_site = Fossil.objects.get(name=self.title)
+        fossil_list = Fossil.objects.filter(site=self.site)
+
+        # Order by most recent date first
+        fossil_list = fossil_list.order_by('catalog_number')
+
+        return fossil_list
+
+    @property
+    def get_taxa(self):
+        """
+        This function requires a bit more work because at present Fossils are not linked to taxa!
+        :return:
+        """
+        fossils = self.get_fossils
+
+    def get_context(self, request):
+        # Get site_list
+        fossil_list = self.get_fossils
+
+        # Filter by tag
+        tag = request.GET.get('tag')
+        if tag:
+            fossil_list = fossil_list.filter(tags__name=tag)
+
+        # Pagination
+        page = request.GET.get('page')
+        paginator = Paginator(fossil_list, 10)  # Show 10 site_list per page
+        try:
+            site_list = paginator.page(page)
+        except PageNotAnInteger:
+            site_list = paginator.page(1)
+        except EmptyPage:
+            site_list = paginator.page(paginator.num_pages)
+
+        # Update template context
+        context = super(FossilPage, self).get_context(request)
+        context['fossil_list'] = fossil_list
+        return context
+
+    @property
+    def fossil_index(self):
+        # Find closest ancestor which is a fossil index
+        return self.get_ancestors().type(FossilIndexPage).last()
+
+
+FossilPage.content_panels = [
+    FieldPanel('fossil'),
+    FieldPanel('title', classname="full title"),
+    FieldPanel('date'),
+    FieldPanel('intro', classname="full"),
+    StreamFieldPanel('body'),
+    InlinePanel('fossil_carousel_items', label="Carousel items"),
+    InlinePanel('fossil_related_links', label="Related links"),
+    GeoPanel('location')
+]
+
+FossilPage.promote_panels = Page.promote_panels + [
     ImageChooserPanel('feed_image'),
     FieldPanel('tags'),
 ]
