@@ -13,6 +13,7 @@ import origins.views
 from django.contrib import messages
 from django.contrib.gis.geos import Point
 
+
 class ReferenceAdmin(admin.ModelAdmin):
     list_display = ['id', 'reference_no', 'author1last', 'reftitle']
     search_fields = ['reference_no', 'author1init', 'author1last', 'author2init', 'author2last',
@@ -32,20 +33,20 @@ class ContextInline(admin.TabularInline):
 class SiteAdmin(BingGeoAdmin):
     save_as = True
     list_display = ['id', 'name', 'country',
-                    #'verbatim_collection_name',
-                    #'longitude', 'latitude',
-                    #'verbatim_early_interval',
-                    #'verbatim_late_interval',
+                    # 'verbatim_collection_name',
+                    # 'longitude', 'latitude',
+                    # 'verbatim_early_interval',
+                    # 'verbatim_late_interval',
                     'max_ma',
                     'min_ma',
                     'fossil_count',
                     'formation',
                     'verbatim_collection_name',
-                    #'context_usages',
-                    #'verbatim_reference_no',
-                    #'origins'
+                    # 'context_usages',
+                    # 'verbatim_reference_no',
+                    # 'origins'
                     ]
-    #list_editable = ['name', 'origins']
+    # list_editable = ['name', 'origins']
     readonly_fields = ['latitude', 'longitude', 'fossil_usages', 'context_usages']
     search_fields = ['id', 'name', 'alternate_names', 'country', 'verbatim_collection_name',
                      'verbatim_early_interval',
@@ -78,11 +79,13 @@ class SiteAdmin(BingGeoAdmin):
         }),
     ]
 
+
 class ActiveSiteAdmin(SiteAdmin):
     list_display = ['id', 'name', 'country', 'max_ma', 'min_ma', 'fossil_count', 'formation']
 
     def get_queryset(self, request):
         return Site.objects.filter(origins=True)
+
 
 class ContextAdmin(BingGeoAdmin):
     save_as = True
@@ -118,8 +121,8 @@ class ContextAdmin(BingGeoAdmin):
 
     def site_link(self, obj):
         if obj.site:
-            url = reverse('admin:origins_site_change', args=(obj.site.id,))
-            return format_html('<a href={}>{}</a>'.format(url, obj.site))
+            site_url = reverse('admin:origins_site_change', args=(obj.site.id,))
+            return format_html('<a href={}>{}</a>'.format(site_url, obj.site))
         else:
             return None
 
@@ -157,11 +160,6 @@ class ContextAdmin(BingGeoAdmin):
         messages.add_message(request, messages.INFO,
                              'Successfully updated {}'.format(count_string))
     create_site_from_context.short_description = 'Create Site object(s) from Context(s)'
-
-
-
-
-
 
     # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
     #     """
@@ -201,12 +199,12 @@ class PhotosInline(admin.StackedInline):
 
 class FossilAdmin(admin.ModelAdmin):
     list_display = ['id', 'catalog_number', 'site', 'context_link',
-                    'country', 'context__best_age', 'default_image']
-    list_filter = ['origins', 'country', 'holotype']
+                    'country', 'context__best_age', 'default_image', 'element_description', 'source']
+    list_filter = ['origins', 'holotype', 'source', 'country', ]
     list_display_links = ['id', 'catalog_number']
     search_fields = ['catalog_number', 'place_name', 'country', 'locality',
                      'fossil_element__skeletal_element']
-    readonly_fields = ['element_count', 'aapa', 'id', 'default_image']
+    readonly_fields = ['element_count', 'aapa', 'id', 'default_image', 'element_description']
 
     list_per_page = 200
     inlines = [
@@ -217,7 +215,7 @@ class FossilAdmin(admin.ModelAdmin):
 
     fieldsets = [
         ('Fossil Details', {
-            'fields': [('id', 'catalog_number'),
+            'fields': [('id', 'catalog_number', 'source'),
                         (
                         #'guid',
                          'uuid', 'organism_id'),
@@ -241,9 +239,9 @@ class FossilAdmin(admin.ModelAdmin):
         ('Location', {
             'fields': [('site', 'locality', 'country', 'continent', 'context')]
         }),
-        ('Image', {
-            'fields': [('image',)]
-        })
+        # ('Image', {
+        #     'fields': [('image',)]
+        # })
     ]
 
     actions = ['toggle_origins', 'update_sites']
@@ -264,8 +262,8 @@ class FossilAdmin(admin.ModelAdmin):
 
     def context_link(self, obj):
         if obj.context:
-            url = reverse('admin:origins_context_change', args=(obj.context.id,))
-            return format_html('<a href={}>{}</a>'.format(url, obj.context))
+            context_url = reverse('admin:origins_context_change', args=(obj.context.id,))
+            return format_html('<a href={}>{}</a>'.format(context_url, obj.context))
         else:
             return None
 
@@ -381,10 +379,10 @@ class FossilAdmin(admin.ModelAdmin):
                         origins.views.UpdateSites.as_view()),
                     name="update_sites"),
                 # url(r'^change_xy/$',
-                #     permission_required('lgrp.change_occurrence', login_url='login/')(lgrp.views.change_coordinates_view),
+                #     permission_required('lgrp.change_occurrence',
+                   # login_url='login/')(lgrp.views.change_coordinates_view),
                 #     name="change_xy"),
                ] + super(FossilAdmin, self).get_urls()
-
 
 
 # Register your models here.
