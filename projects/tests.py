@@ -1,16 +1,27 @@
 # Subclassing the django TestCase with Test Case for Abstract Models
 # from django.test import TestCase
 from projects.test_abstract_classes import ModelMixinTestCase
-
-from projects.models import PaleoCoreBaseClass
+from projects.models import PaleoCoreBaseClass, PaleoCoreGeomBaseClass
+from sys import path
+import environ
 from django.contrib.gis.geos import Point, Polygon
+env = environ.Env(DEBUG=(bool, False),)  # create instance of an Env class
+# root = environ.Path(__file__) - 3  # save absolute filesystem path to the root path as as an Env.Path object=
+# PROJECT_ROOT = root()  # project path as string, e.g. '/Users/dnr266/Documents/pycharm/paleocore110'
+# environ.Env.read_env(root('.env'))  # locate the .env file in the project root directory
+# DJANGO_ROOT = '/Users/dnr266/Documents/pycharm/paleocore110'
+# DJANGO_ROOT = root.path('paleocore110')  # e.g. '/Users/dnr266/Documents/pycharm/paleocore110/paleocore110'
+environ.Env.read_env('/Users/dnr266/Documents/pycharm/paleocore110/.env')
+PROJECT_ROOT = '/Users/dnr266/Documents/pycharm/paleocore110'
+DJANGO_ROOT = '/Users/dnr266/Documents/pycharm/paleocore110/paleocore110'
+path.append(DJANGO_ROOT)  # add DJANGO_ROOT to python path list
 
 
-class PaleoCoreBaseClassMethodsTests(ModelMixinTestCase):
+class PaleoCoreGepmBaseClassMethodsTests(ModelMixinTestCase):
     """
     Test projects Context instance methods
     """
-    mixin = PaleoCoreBaseClass
+    mixin = PaleoCoreGeomBaseClass
 
     def setUp(self):
         self.model.objects.create(pk=1,
@@ -46,4 +57,25 @@ class PaleoCoreBaseClassMethodsTests(ModelMixinTestCase):
 
     def test_pcbase_get_concrete_field_names_method(self):
         context_instance = self.model.objects.get(pk=1)
-        self.assertEqual(context_instance.get_concrete_field_names(), ['id', 'name', 'geom'])
+        self.assertEqual(context_instance.get_concrete_field_names(), ['id',
+                                                                       'name',
+                                                                       'date_created',
+                                                                       'date_last_modified',
+                                                                       'problem',
+                                                                       'problem_comment',
+                                                                       'remarks',
+                                                                       'last_import',
+                                                                       'georeference_remarks',
+                                                                       'geom'
+                                                                       ])
+
+
+class TaxonTests(ModelMixinTestCase):
+    mixin = PaleoCoreBaseClass
+
+    fixtures = [
+        'projects/fixtures/taxon_test_data.json',
+        'projects/fixtures/taxonrank_test_data.json',
+        'projects/fixtures/identification_qualifier_test_data.json'
+    ]
+    pass
