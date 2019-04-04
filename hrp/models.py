@@ -8,6 +8,7 @@ from hrp.ontologies import *
 from django.contrib.gis.geos import Point
 import projects.models
 
+
 class TaxonRank(projects.models.TaxonRank):
     class Meta:
         verbose_name = "HRP Taxon Rank"
@@ -27,6 +28,7 @@ class IdentificationQualifier(projects.models.IdentificationQualifier):
     class Meta:
         verbose_name = "HRP ID Qualifier"
         verbose_name_plural = "HRP ID Qualifiers"
+
 
 # Locality Class
 class Locality(projects.models.PaleoCoreLocalityBaseClass):
@@ -243,9 +245,11 @@ class Biology(Occurrence):
     side = models.CharField("Side", null=True, blank=True, max_length=50, choices=HRP_SIDE_CHOICES)
     element = models.CharField("Element", null=True, blank=True, max_length=50, choices=HRP_ELEMENT_CHOICES)
     # TODO add element_modifier choices once field is cleaned
-    element_modifier = models.CharField("Element Mod", null=True, blank=True, max_length=50, choices=HRP_ELEMENT_MODIFIER_CHOICES)
+    element_modifier = models.CharField("Element Mod", null=True, blank=True, max_length=50,
+                                        choices=HRP_ELEMENT_MODIFIER_CHOICES)
     # TODO populate portion after migrate
-    element_portion = models.CharField("Element Portion", null=True, blank=True, max_length=50, choices=HRP_ELEMENT_PORTION_CHOICES)
+    element_portion = models.CharField("Element Portion", null=True, blank=True, max_length=50,
+                                       choices=HRP_ELEMENT_PORTION_CHOICES)
     # TODO populate number choices after migrate
     element_number = models.CharField(null=True, blank=True, max_length=50, choices=HRP_ELEMENT_NUMBER_CHOICES)
     element_remarks = models.TextField(max_length=500, null=True, blank=True)
