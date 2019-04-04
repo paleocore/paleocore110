@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.contrib.gis import admin
 from django.contrib.gis.admin import OSMGeoAdmin
+from projects.admin import TaxonomyAdmin, TaxonRankAdmin
 
 ###############
 # Media Admin #
@@ -20,6 +21,7 @@ class FilesInline(admin.TabularInline):
     model = File
     extra = 0
     readonly_fields = ("id",)
+
 
 class DGGeoAdmin(OSMGeoAdmin):
     """
@@ -84,6 +86,15 @@ class LocalityAdmin(DGGeoAdmin):
 ####################
 # Occurrence Admin #
 ####################
+geological_context_fieldset = ('Geological Context', {
+        'fields': [
+            ('analytical_unit_1', 'analytical_unit_2', 'analytical_unit_3'),
+            ('analytical_unit_found', 'analytical_unit_likely', 'analytical_unit_simplified'),
+            ('in_situ', 'ranked'),
+            ('stratigraphic_member',),
+            ('locality', 'drainage_region')]
+    })
+
 occurrence_fieldsets = (
     ('Record Details', {
         'fields': [('id', 'date_last_modified',)]
@@ -96,21 +107,12 @@ occurrence_fieldsets = (
 
     ('Occurrence Details', {
         'fields': [('basis_of_record', 'item_type', 'disposition', 'preparation_status'),
-                   ('collecting_method', 'finder', 'collector', 'individual_count'),
+                   ('collecting_method', 'finder', 'collector', 'item_number'),
                    ('item_description', 'item_scientific_name', 'image'),
                    ('problem', 'problem_comment'),
                    ('remarks',)]
     }),
-    ('Geological Context', {
-        'fields': [('stratigraphic_marker_upper', 'distance_from_upper'),
-                   ('stratigraphic_marker_lower', 'distance_from_lower'),
-                   ('stratigraphic_marker_found', 'distance_from_found'),
-                   ('stratigraphic_marker_likely', 'distance_from_likely'),
-                   ('analytical_unit', 'analytical_unit_2', 'analytical_unit_3'),
-                   ('in_situ', 'ranked'),
-                   ('stratigraphic_member',),
-                   ('locality', 'drainage_region')]
-    }),
+    geological_context_fieldset,
 
     ('Location Details', {
         'fields': [('longitude', 'latitude'),
@@ -124,12 +126,13 @@ default_list_display = ('barcode', 'field_number', 'catalog_number', 'basis_of_r
                         'year_collected',
                         'in_situ', 'problem', 'disposition', 'easting', 'northing')
 
+
 class OccurrenceAdmin(DGGeoAdmin):
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
-    readonly_fields = default_read_only_fields+('photo', 'catalog_number', 'longitude', 'latitude')
-    list_display = list(default_list_display+('thumbnail',))
+    readonly_fields = default_read_only_fields + ('photo', 'catalog_number', 'longitude', 'latitude')
+    list_display = list(default_list_display + ('thumbnail',))
     default_list_filter = ['basis_of_record', 'item_type',
-                   'field_number', 'collector', 'problem', 'disposition']
+                           'field_number', 'collector', 'problem', 'disposition']
     list_index = list_display.index('field_number')
     list_display.pop(list_index)
     list_display.insert(1, 'locality')
@@ -138,7 +141,7 @@ class OccurrenceAdmin(DGGeoAdmin):
     fieldsets = occurrence_fieldsets
     list_filter = default_list_filter
     default_search_fields = ('id', 'item_scientific_name', 'item_description', 'barcode', 'catalog_number')
-    search_fields = list(default_search_fields)+['id']
+    search_fields = list(default_search_fields) + ['id']
     search_fields.pop(search_fields.index('catalog_number'))
     list_per_page = 500
     options = {
@@ -244,16 +247,6 @@ class OccurrenceAdmin(DGGeoAdmin):
                                                                                 closest_locality_key))
 
 
-###################
-# Taxonomy Admin  #
-###################
-
-class TaxonomyAdmin(admin.ModelAdmin):
-    list_display = ("id", "rank", "taxon", "full_lineage")
-    search_fields = ("taxon",)
-    list_filter = ("rank",)
-    readonly_fields = "full_lineage"
-
 #################
 # Biology Admin #
 #################
@@ -288,22 +281,13 @@ biology_fieldsets = (
 
     ('Occurrence Details', {
         'fields': [('basis_of_record', 'item_type', 'disposition', 'preparation_status'),
-                   ('collecting_method', 'finder', 'collector', 'individual_count'),
+                   ('collecting_method', 'finder', 'collector', 'item_count'),
                    ('item_description', 'item_scientific_name', 'image'),
                    ('problem', 'problem_comment'),
                    ('remarks',)]
     }),
     biology_element_fieldsets[0],
-    ('Geological Context', {
-        'fields': [('stratigraphic_marker_upper', 'distance_from_upper'),
-                   ('stratigraphic_marker_lower', 'distance_from_lower'),
-                   ('stratigraphic_marker_found', 'distance_from_found'),
-                   ('stratigraphic_marker_likely', 'distance_from_likely'),
-                   ('analytical_unit', 'analytical_unit_2', 'analytical_unit_3'),
-                   ('in_situ', 'ranked'),
-                   ('stratigraphic_member',),
-                   ('locality', 'drainage_region')]
-    }),
+    geological_context_fieldset,
 
     ('Location Details', {
         'fields': [('longitude', 'latitude'),
@@ -407,7 +391,6 @@ class GeologyAdmin(OccurrenceAdmin):
     pass
 
 
-
 ##########################
 # Register Admin Classes #
 ##########################
@@ -418,5 +401,5 @@ admin.site.register(Geology, GeologyAdmin)
 admin.site.register(Hydrology, HydrologyAdmin)
 admin.site.register(Locality, LocalityAdmin)
 admin.site.register(Occurrence, OccurrenceAdmin)
-admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
-admin.site.register(TaxonRank, projects.admin.TaxonRankAdmin)
+admin.site.register(Taxon, TaxonomyAdmin)
+admin.site.register(TaxonRank, TaxonRankAdmin)
