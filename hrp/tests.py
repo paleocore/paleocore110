@@ -1,30 +1,9 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from hrp.models import Occurrence, Biology, Locality
 from hrp.models import Taxon, IdentificationQualifier
 from datetime import datetime
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point, Polygon
-
-
-# class LocalityMethodsTests(TestCase):
-#     """
-#     Test Locality instance creation and methods
-#     """
-#     def test_locality_save_simple(self):
-#         starting_record_count = Locality.objects.count()  # get current record count
-#
-#         # Create a simple square polygon
-#         # Note that the first tuple and last tuple must have exact same coordinates.
-#         pnt = Point(41.6, 11.2)
-#         new_locality = Locality(locality_number=1, geom=pnt)
-#         new_locality.save()
-#         self.assertEqual(Locality.objects.count(), starting_record_count+1)
-#
-#     def test_locality_create_simple(self):
-#         starting_record_count = Locality.objects.count()  # get current record count
-#         pnt = Point(41.2, 11.2)
-#         Locality.objects.create(locality_number=2, geom=pnt)
-#         self.assertEqual(Locality.objects.count(), starting_record_count+1)
 
 
 class OccurrenceCreationMethodTests(TestCase):
@@ -33,6 +12,7 @@ class OccurrenceCreationMethodTests(TestCase):
     """
 
     def setUp(self):
+        User.objects.create_superuser(username='test', email='foo@yahoo.com', password='test')
 
         # id values need to be added explicitly
         Locality.objects.create(id=1, locality_number=1, geom=Point(41.1, 11.1))
@@ -84,9 +64,18 @@ class OccurrenceCreationMethodTests(TestCase):
         self.assertEqual(new_occurrence.date_last_modified.day, now.day)  # test date last modified is correct
         self.assertEqual(new_occurrence.point_x(), 41.3)
 
-        response = self.client.get('/admin/omo_mursi/', follow=True)
+        # While not logged in should redirect to admin login page
+        response = self.client.get('/django-admin/hrp/', follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Username')  # redirects to login form
+
+        # When logged in should proceed to admin page
+        user = User.objects.get(username='test')
+        self.client.force_login(user)
+        response = self.client.get('/django-admin/hrp/occurrence/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Select HRP Occurrence to change | Django site admin')
+        self.assertContains(response, '0 of 1 selected')
 
 
 class OccurrenceMethodTests(TestCase):
@@ -97,7 +86,7 @@ class OccurrenceMethodTests(TestCase):
     def setUp(self):
 
         # Create a simple square locality polygon
-        Locality.objects.create(locality_number=288, collection_code='A.L.', geom=Point(41.1, 11.1))
+        Locality.objects.create(id=288, locality_number=288, collection_code='A.L.', geom=Point(41.1, 11.1))
 
         # Create one occurrence point in at Locality 1
         Occurrence.objects.create(geom=Point(41.1, 11.1),
@@ -109,21 +98,30 @@ class OccurrenceMethodTests(TestCase):
                                   field_number=datetime.now())
 
     def test_point_x_method(self):
-        dik1 = Occurrence.objects.get(barcode=1)
-        self.assertEqual(dik1.point_x(), 41.1)
+        occ1 = Occurrence.objects.get(barcode=1)
+        self.assertEqual(occ1.point_x(), 41.1)
 
     def test_point_y_method(self):
-        dik1 = Occurrence.objects.get(barcode=1)
-        self.assertEqual(dik1.point_y(), 11.1)
+        occ1 = Occurrence.objects.get(barcode=1)
+        self.assertEqual(occ1.point_y(), 11.1)
 
     def test_easting_method(self):
-        dik1 = Occurrence.objects.get(barcode=1)
-        self.assertEqual(dik1.easting(), 729382.2689836712)
+        occ1 = Occurrence.objects.get(barcode=1)
+        self.assertEqual(round(occ1.easting(), 4), round(729382.2689836712, 4))
 
     def test_northing_method(self):
-        dik1 = Occurrence.objects.get(barcode=1)
-        self.assertEqual(dik1.northing(), 1227846.080614904)
+        occ1 = Occurrence.objects.get(barcode=1)
+        self.assertEqual(round(occ1.northing(), 4), round(1227846.080614904, 4))
 
+    def test_catalog_number(self):
+        occ1 = Occurrence.objects.get(barcode=1)
+        occ1.collection_code = 'A.L.'
+        self.assertEqual(occ1.catalog_number(), 'A.L. 288-1a')
+
+    def test_get_all_field_names(self):
+        hrp1 = Occurrence.objects.get(barcode=1)
+        self.assertEqual(len(hrp1.get_all_field_names()), 52)  # currently 52 fields for HRP Occurrence
+        self.assertTrue("name" in hrp1.get_all_field_names())
 
 
 class BiologyMethodTests(TestCase):
@@ -131,11 +129,11 @@ class BiologyMethodTests(TestCase):
     Test Biology instance methods
     """
     fixtures = [
-        'fixtures/fiber_data_150611.json',
-        'taxonomy/fixtures/taxonomy_data_150611.json'
+        'hrp/fixtures/hrp_taxon_test_data.json'
     ]
 
     def setUp(self):
+        User.objects.create_superuser(username='test', email='foo@yahoo.com', password='test')
 
         Locality.objects.create(id=1, locality_number=1, geom=Point(41.1, 11.1))
         Locality.objects.create(id=2, locality_number=2, geom=Point(41.2, 11.2))
@@ -203,145 +201,36 @@ class BiologyMethodTests(TestCase):
         self.assertEqual(new_occurrence.point_x(), 41.21)
         self.assertEqual(Biology.objects.count(), biology_starting_record_count+1)  # no biology record was added?
         self.assertEqual(Biology.objects.filter(basis_of_record__exact="Observation").count(), 1)
-        response = self.client.get('/admin/omo_mursi/', follow=True)
+        response = self.client.get('/django-admin/hrp/', follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Username')  # redirects to login form
 
-#        response = self.client.get('/admin/omo_mursi/biology/')
-#        self.assertEqual(response.status_code, 200)
-#        response = self.client.get('/admin/omo_mursi/biology/'+str(new_occurrence.pk)+'/')
-#        self.assertEqual(response.status_code, 200)
-#
-#
-# class HRPViewsTests(TestCase):
-#     """
-#     The HRP Views Test Case depends on two fixtures.
-#     """
-#     fixtures = [
-#         'fixtures/fiber_data_150611.json',
-#         'taxonomy/fixtures/taxonomy_data_150611.json',
-#     ]
-#
-#     def setUp(self):
-#
-#         # Populate Localities
-#         def create_square_locality(x, y):
-#             return Polygon(
-#                 (
-#                     (x-0.01, y+0.01),
-#                     (x+0.01, y+0.01),
-#                     (x+0.01, y-0.01),
-#                     (x-0.01, y-0.01),
-#                     (x-0.01, y+0.01)
-#                 )
-#             )
-#
-#         Locality.objects.create(locality_number=1, geom=create_square_locality(41.1, 11.1))
-#         Locality.objects.create(locality_number=2, geom=create_square_locality(41.2, 11.2))
-#         Locality.objects.create(locality_number=3, geom=create_square_locality(41.3, 11.3))
-#         Locality.objects.create(locality_number=4, geom=create_square_locality(41.4, 11.4))
-#
-#         # Populate Biology instances
-#         id_qualifier = IdentificationQualifier.objects.get(name__exact="None")
-#         barcode_index = 1
-#         mammal_orders = (("Primates", "Primates"),
-#                          ("Perissodactyla", "Perissodactyla"),
-#                          ("Artiodactyla", "Artiodactyla"),
-#                          ("Rodentia", "Rodentia"),
-#                          ("Carnivora", "Carnivora"),)
-#
-#         for order_tuple_element in mammal_orders:
-#             Biology.objects.create(
-#                 barcode=barcode_index,
-#                 basis_of_record="HumanObservation",
-#                 collection_code="HRP",
-#                 locality_number="1",
-#                 item_number=barcode_index,
-#                 geom=Point(41.11, 11.11),
-#                 locality=Locality.objects.get(locality_number__exact=1),
-#                 taxon=Taxon.objects.get(name__exact=order_tuple_element[0]),
-#                 identification_qualifier=id_qualifier,
-#                 field_number=datetime.now()
-#             )
-#             barcode_index += 1
-#
-#         self.assertEqual(Locality.objects.count(), 4)
-#         self.assertEqual(Occurrence.objects.count(), len(mammal_orders))
-#
-#     def test_admin_list_view(self):
-#         response = self.client.get('/admin/omo_mursi/', follow=True)
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, 'Username')  # redirects to login form
-#
-#
-# class HRPAdminViewTests(TestCase):
-#     """
-#     The HRP Views Test Case depends on two fixtures.
-#     """
-#     fixtures = [
-#         'fixtures/fiber_data_150611.json',
-#         'taxonomy/fixtures/taxonomy_data_150611.json',
-#     ]
-#
-#     def setUp(self):
-#
-#         # Populate Localities
-#         def create_square_locality(x, y):
-#             return Polygon(
-#                 (
-#                     (x-0.01, y+0.01),
-#                     (x+0.01, y+0.01),
-#                     (x+0.01, y-0.01),
-#                     (x-0.01, y-0.01),
-#                     (x-0.01, y+0.01)
-#                 )
-#             )
-#
-#         Locality.objects.create(locality_number=1, geom=create_square_locality(41.1, 11.1))
-#         Locality.objects.create(locality_number=2, geom=create_square_locality(41.2, 11.2))
-#         Locality.objects.create(locality_number=3, geom=create_square_locality(41.3, 11.3))
-#         Locality.objects.create(locality_number=4, geom=create_square_locality(41.4, 11.4))
-#
-#         # Populate Biology instances
-#         id_qualifier = IdentificationQualifier.objects.get(name__exact="None")
-#         barcode_index = 1
-#         mammal_orders = (("Primates", "Primates"),
-#                          ("Perissodactyla", "Perissodactyla"),
-#                          ("Artiodactyla", "Artiodactyla"),
-#                          ("Rodentia", "Rodentia"),
-#                          ("Carnivora", "Carnivora"),)
-#
-#         for order_tuple_element in mammal_orders:
-#             Biology.objects.create(
-#                 barcode=barcode_index,
-#                 basis_of_record="HumanObservation",
-#                 collection_code="HRP",
-#                 locality_number="1",
-#                 item_number=barcode_index,
-#                 geom=Point(41.11, 11.11),
-#                 locality=Locality.objects.get(locality_number__exact=1),
-#                 taxon=Taxon.objects.get(name__exact=order_tuple_element[0]),
-#                 identification_qualifier=id_qualifier,
-#                 field_number=datetime.now()
-#             )
-#             barcode_index += 1
-#
-#         self.assertEqual(Locality.objects.count(), 4)
-#         self.assertEqual(Occurrence.objects.count(), len(mammal_orders))
-#
-#         test_user = User.objects.create_user(username='test_user', password='password')
-#         test_user.is_staff = True
-#         test_user.save()
-#
-#     def test_admin_list_view(self):
-#         response = self.client.get('/admin/omo_mursi/', follow=True)
-#         self.assertEqual(response.status_code, 200)
-#         self.assertContains(response, 'Username')  # redirects to login form
-#
-#     def test_admin_list_view_with_login(self):
-#         test_user = User.objects.get(username='test_user')
-#         self.assertEqual(test_user.is_staff, True)  # Test user is staff
-#         self.client.login(username='test_user', password='password')
-#         response = self.client.get('/admin/omo_mursi/', follow=True)
-#         self.assertEqual(response.status_code, 403)
-#         #self.assertContains(response, 'Username')  # redirects to login form
+    def test_biology_admin_view(self):
+        """
+        Create a single Biology object then test that we can open and render the Biology admin page
+        :return:
+        """
+        Biology.objects.create(
+            barcode=2222,
+            basis_of_record="Observation",
+            collection_code="COL",
+            item_number="1",
+            geom=Point(41.21, 11.21),
+            locality=Locality.objects.get(locality_number__exact=2),
+            taxon=Taxon.objects.get(name__exact="Primates"),
+            identification_qualifier=IdentificationQualifier.objects.get(name__exact="None"),
+            field_number=datetime.now()
+        )
+
+        # While not logged in should redirect to admin login page
+        response = self.client.get('/django-admin/hrp/biology', follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Username')  # redirects to login form
+
+        # When logged in should proceed to admin page
+        user = User.objects.get(username='test')
+        self.client.force_login(user)
+        response = self.client.get('/django-admin/hrp/biology/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Select HRP Biology to change | Django site admin')
+        self.assertContains(response, '0 of 1 selected')
