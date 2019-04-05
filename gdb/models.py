@@ -112,10 +112,7 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
     """
     locality_number = models.IntegerField(primary_key=True)  # NOT NULL
     locality_field_number = models.CharField(null=True, blank=True, max_length=50)
-    #name = models.CharField(null=True, blank=True, max_length=50)  # Locality Name
     date_discovered = models.DateField(null=True, blank=True)
-    #formation = models.CharField(null=True, blank=True, max_length=50)  # Formation
-    #member = models.CharField(null=True, blank=True, max_length=50)
     NALMA = models.CharField(null=True, blank=True, max_length=50,
                              choices=gdb.ontologies.NALMA_CHOICES,
                              default=gdb.ontologies.wasatchian
@@ -131,14 +128,12 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
     verbatim_elevation = models.IntegerField(null=True, blank=True)  # Elevation
     gps_date = models.DateField(null=True, blank=True, editable=True)
     resource_area = models.CharField(null=True, blank=True, max_length=50)
-    notes = models.TextField(null=True, blank=True)
+    notes = CKRichTextField(null=True, blank=True)
     cm_locality_number = models.IntegerField(null=True, blank=True)  # CM Loc #
     region = models.CharField(null=True, blank=True, max_length=50)
     blm_district = models.CharField(null=True, blank=True, max_length=50)
     county = models.CharField(null=True, blank=True, max_length=50)
     image = models.FileField(max_length=255, blank=True, upload_to="uploads/images/gdb", null=True)
-    #geom = models.GeometryField(srid=4326, blank=True, null=True)
-    #date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
 
     def __str__(self):
         """
@@ -158,10 +153,10 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
             lon_string = lon_dms.split()
             if len(lat_string) == 4 and len(lon_string) == 4:
                 lat_dd = (float(lat_string[2])/60+float(lat_string[1]))/60+float(lat_string[0])
-                if lat_string[3]=="S":
+                if lat_string[3] == "S":
                     lat_dd *= -1  # southern latitudes should be negative
                 lon_dd = (float(lon_string[2])/60+float(lon_string[1]))/60+float(lon_string[0])
-                if lon_string[3]=="W":
+                if lon_string[3] == "W":
                     lon_dd *= -1
             return "POINT ("+str(lon_dd)+" "+str(lat_dd)+")"
 

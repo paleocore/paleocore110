@@ -22,7 +22,29 @@ default_admin_fieldsets = (
     }),
     ('Locality', {
         'fields': [
-                   ('locality',),('nalma',),('sub_age',),
+                   ('locality',), ('nalma',), ('sub_age',),
+                   ],
+    })
+)
+
+biology_default_admin_fieldsets = (
+    ('Curatorial', {
+        'fields': [('catalog_number',),
+                   ('cm_catalog_number',),
+                   ('date_collected', 'date_time_collected', 'date_last_modified')]
+    }),
+
+    ('Occurrence Details', {
+        'fields': [('basis_of_record', 'item_type',),
+                   ('collecting_method',),
+                   ('item_description', 'item_scientific_name', 'image'),
+                   ('on_loan', 'loan_date', 'loan_recipient'),
+                   ('problem', 'problem_comment'),
+                   ('remarks', 'notes')],
+    }),
+    ('Locality', {
+        'fields': [
+                   ('locality',), ('nalma',), ('sub_age',),
                    ],
     })
 )
@@ -52,8 +74,7 @@ old_taxonomy_fieldsets = ('Old Taxonomic Descriptions', {
     'classes':['collapse']
 })
 
-locality_fieldsets = (
-    ('Record', {
+locality_fieldsets = (('Record', {
         'fields': [('name',),
                    ('locality_number',),
                    ('locality_field_number',),
@@ -94,6 +115,7 @@ locality_fieldsets = (
     }),
 )
 
+
 class OccurrenceAdmin(admin.ModelAdmin):
     # readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
     readonly_fields = ['catalog_number']
@@ -120,7 +142,7 @@ class LocalityInline(admin.TabularInline):
 
 class BiologyAdmin(admin.ModelAdmin):
     readonly_fields = ['catalog_number', 'nalma', 'sub_age']
-    biology_fieldsets = list(default_admin_fieldsets)
+    biology_fieldsets = list(biology_default_admin_fieldsets)
     #
     # chronology_fieldsets = ('Chronology', {'fields': [('locality','nalma', 'sub_age')]})
     # # biology_fieldsets.insert(2, description_fieldsets)
