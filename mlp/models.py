@@ -27,8 +27,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     item_number = models.IntegerField("Item #", null=True, blank=True)
     item_part = models.CharField("Item Part", max_length=10, null=True, blank=True)
     catalog_number = models.CharField("Catalog #", max_length=255, blank=True, null=True)
-    # TODO add rich text field for remarks
-    # remarks = models.TextField(max_length=255, null=True, blank=True)
     item_scientific_name = models.CharField("Sci Name", max_length=255, null=True, blank=True)
     item_description = models.CharField("Description", max_length=255, blank=True, null=True)
     # georeference_remarks = models.CharField(max_length=50, null=True, blank=True)
@@ -175,6 +173,7 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
         #db_table = 'mlp_occurrence'
         verbose_name = '01-MLP Occurrence'
         verbose_name_plural = '01-MLP Occurrences'
+
 
 class Archaeology(Occurrence):
     find_type = models.CharField(null=True, blank=True, max_length=255)
