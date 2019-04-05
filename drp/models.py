@@ -18,8 +18,6 @@ class TaxonRank(projects.models.TaxonRank):
         return str(self.name)
 
 
-
-
 class Taxon(projects.models.Taxon):
     name = models.CharField(null=False, blank=False, max_length=255, unique=False)
     parent = models.ForeignKey('self', null=True, blank=True)
@@ -106,6 +104,7 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
     def __str__(self):
         return str(self.collection_code) + " " + str(self.paleolocality_number)
 
+
 # This is the DRP data model. It is only partly PaleoCore compliant.
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
@@ -118,7 +117,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     item_number = models.IntegerField("Item #", null=True, blank=True)
     item_part = models.CharField("Item Part", max_length=10, null=True, blank=True)
     catalog_number = models.CharField("Catalog #", max_length=255, blank=True, null=True)
-    remarks = models.TextField("Remarks", null=True, blank=True, max_length=2500)
     item_scientific_name = models.CharField("Sci Name", max_length=255, null=True, blank=True)
     item_description = models.CharField("Description", max_length=255, blank=True, null=True)
     georeference_remarks = models.CharField(max_length=50, null=True, blank=True)
@@ -178,7 +176,7 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     def save(self, *args, **kwargs):  # custom save method for occurrence
         the_catalog_number = str(self.collection_code) + "-" + str(self.paleolocality_number) + \
                              str(self.paleo_sublocality) + "-" + str(self.item_number) + str(self.item_part)
-        self.catalog_number = the_catalog_number.replace("None","")
+        self.catalog_number = the_catalog_number.replace("None", "")
         self.date_last_modified = datetime.now()  # TODO change date_last_modified autonow option to accomplish this
 
         # call the normal drp_occurrence save method using alternate database
