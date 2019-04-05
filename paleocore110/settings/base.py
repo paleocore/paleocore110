@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 from sys import path
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 # the environ library (not to be confused with os.environ) is used to maintain evnironment variables outside the
 # settings.py file. This improves security by storing sensitive variables (passwords, database login details) in a
@@ -55,7 +56,6 @@ INSTALLED_APPS = (
     'wagtail.wagtailadmin',
     'wagtail.wagtailcore',
     'wagtailfontawesome',
-    'wagalytics',
     'cachalot',
     'utils',
     'pages',
@@ -73,6 +73,7 @@ INSTALLED_APPS = (
     'djgeojson',
     'wagtailgeowidget',
     'mapwidgets',
+    'ckeditor',
 
     'projects',
     'cc',
@@ -183,19 +184,28 @@ COMPRESS_OFFLINE = False
 
 
 # Settings for wagalytics
+# Need to configure API keys with Google Analytics and then deploy
 # see https://github.com/tomdyson/wagalytics
-GA_KEY_FILEPATH = env('GA_KEY_FILEPATH', default='~/.ssh/paleocore-7940c3328cc8.json')
-GA_VIEW_ID = env('GA_VIEW_ID', default='ga:xxxxxxxxxxxxx')
+# INSTALLED_APPS += ('wagalytics',)  # note trailing comma is required
+# GA_KEY_FILEPATH = env('GA_KEY_FILEPATH', default='~/.ssh/paleocore-7940c3328cc8.json')
+# GA_VIEW_ID = env('GA_VIEW_ID', default='ga:xxxxxxxxxxxxx')
 
 
 # Google Maps Key
-GOOGLE_MAPS_KEY = 'AIzaSyAMODxiUnSdRtzHAnDBYxZZ2QBJHLJxpSA'
+try:
+    GOOGLE_MAPS_API_KEY = env('GOOGLE_MAPS_API_KEY')  # don't allow env variables to crash server!
+except ImproperlyConfigured:
+    GOOGLE_MAPS_API_KEY = ''
+
+# Configuration for  Wagtail Geo Widget
+GOOGLE_MAPS_V3_APIKEY = GOOGLE_MAPS_API_KEY
+
+# Configuration for map widgets
 DYNAMIC_MAP_URL = ''
 STATIC_MAP_URL = ''
-
 MAP_WIDGETS = {
     "GooglePointFieldWidget": (),
-    "GOOGLE_MAP_API_KEY": GOOGLE_MAPS_KEY
+    "GOOGLE_MAP_API_KEY": GOOGLE_MAPS_API_KEY,
 }
 
 # Wagtail settings
