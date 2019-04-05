@@ -26,7 +26,7 @@ from modelcluster.fields import ParentalKey
 from modelcluster.tags import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from utils.models import RelatedLink, CarouselItem
-
+from ckeditor.fields import RichTextField as CKRichTextField
 
 # MODELS
 # Abstract Models - Not managed by migrations, not in DB
@@ -44,8 +44,8 @@ class PaleoCoreBaseClass(models.Model):
                                   help_text='Is there a problem with this record that needs attention?')
     problem_comment = models.TextField(max_length=255, blank=True, null=True,
                                        help_text='Description of the problem.')
-    remarks = models.TextField("Record Remarks", max_length=500, null=True, blank=True,
-                               help_text='General remarks about this database record.')
+    remarks = CKRichTextField("Record Remarks", null=True, blank=True,
+                              help_text='General remarks about this database record.')
     last_import = models.BooleanField(default=False)
 
     def __str__(self):
@@ -189,6 +189,34 @@ class Taxon(PaleoCoreBaseClass):
         except ContentType.DoesNotExist:
             pass  # If no matching content type then we'll pass here and return None
         return result
+
+    def get_higher_taxon(self, rank):
+        """
+        Method to get arbitrary higher rank for a taxon.
+        :param rank: The target TaxonRank object
+        :return: returns a Taxon object of a specified rank if higher taxon exists.
+        Returns None for lower taxonomic rank.
+
+        """
+        if self.taxon.rank == rank:  # if current taxon rank equals target return current
+            current_taxon = self.taxon  # set current taxon
+        elif self.taxon.rank.ordinal < rank:
+            current_taxon = None
+        else:
+            while current_taxon.rank > rank:  # iterate through taxon hierarchy until rank equals target
+                current_taxon = current_taxon.parent
+        return current_taxon  # return the appropriate higher taxon object
+
+        # if taxon_rank_object.ordinal >= self.rank:  # trying to bet lower rank
+        #     raise: ObjectDoesNotExist
+
+    def get_children(self):
+        """
+        Method to get the children taxa
+        :return: Returns a queryset of children Taxon objects that have existing Biology instances
+        """
+        children_taxon_objects = type(self).objects.filter(parent=self)
+
 
     class Meta:
         abstract = True
