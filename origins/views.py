@@ -5,6 +5,7 @@ from .models import Fossil, Site
 from django.contrib import messages
 from djgeojson.views import GeoJSONLayerView, GeoJSONResponseMixin
 from djgeojson.serializers import Serializer as GeoJSONSerializer
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class UpdateSites(generic.FormView):
