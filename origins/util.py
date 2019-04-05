@@ -360,3 +360,19 @@ def create_site_page(site):
         intro=site.name
     )
     template_page.copy(update_attrs=update_dict)
+
+
+def create_fossil_page(fossil):
+    template_page = Page.objects.get(title='FossilTemplate')
+    fossil_slug = slugify(fossil.catalog_number)
+    update_dict = dict(
+        fossil=fossil,
+        slug=fossil_slug,
+        title=fossil.catalog_number,
+        body=None,
+        location=fossil.geom,
+        date=fossil.created,
+        feed_image=None,
+        intro=fossil.catalog_number
+    )
+    template_page.copy(update_attrs=update_dict)
