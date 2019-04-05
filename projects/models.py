@@ -101,22 +101,26 @@ class Taxon(PaleoCoreBaseClass):
     Taxon <- PaleoCoreBaseClass
     A biological taxon at any rank, e.g. Mammalia, Homo, Homo sapiens idaltu
 
-    Attributes of Taxon: name - last_import are inherited from PaleoCoreBaseClass
+    Attributes of Taxon:
+
+    Attributes "name" through "last_import" are inherited from PaleoCoreBaseClass
+
+    The attributes "parent" and "rank" are assumed to be defined in each inheriting class.
+    They cannot be defined here because they are foreign keys and fks cannot be included in Abstract Classes.
+    The methods included in this abstract class assume that the fields rank and parent are defined.
+
     name
     date_created
     date_last_modified
     problem, problem_comment
     remarks,
     last_import
-
-    label
-
+    ------
     parent
     rank
+    ------
+    label
 
-    The attributes parent and rank are assumed to be defined in each project models.py.
-    They cannot be defined here because they are foreign keys and fks cannot be included in Abstract Classes.
-    The methods included in this abstract class assume that the fields rank and parent are defined.
     """
     # For a species, the name field contains the specific epithet and
     # the label field contains the full scientific name.
@@ -216,7 +220,6 @@ class Taxon(PaleoCoreBaseClass):
         :return: Returns a queryset of children Taxon objects that have existing Biology instances
         """
         children_taxon_objects = type(self).objects.filter(parent=self)
-
 
     class Meta:
         abstract = True
