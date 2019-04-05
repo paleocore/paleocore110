@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models
 import gdb.ontologies
 import projects.models
+from ckeditor.fields import RichTextField as CKRichTextField
 
 
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
@@ -10,13 +11,10 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     catalog_number = models.AutoField(primary_key=True)  # NOT NULL
     cm_catalog_number = models.IntegerField(null=True, blank=True)  # CM SPec #
     locality = models.ForeignKey("Locality", to_field="locality_number", null=True, blank=True)
-
-    #date_time_collected is deprecated and hidden
     date_time_collected = models.DateTimeField(null=True, blank=True)
     date_collected = models.DateField(null=True, blank=True, editable=True)
     time_collected = models.CharField(null=True, blank=True, max_length=50)
-    #date_last_modified = models.DateTimeField("Date Last Modified", auto_now=True)
-    basis_of_record = models.CharField("Basis of Record", max_length=50, blank=False, null=False, # NOT NULL
+    basis_of_record = models.CharField("Basis of Record", max_length=50, blank=False, null=False,  # NOT NULL
                                        choices=gdb.ontologies.BASIS_OF_RECORD_VOCABULARY,
                                        default=gdb.ontologies.fossil)
     item_type = models.CharField("Item Type", max_length=255, blank=True, null=True,
@@ -35,12 +33,10 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     on_loan = models.BooleanField(default=False)  # Loan Status
 
     # Geospatial
-    #geom = models.GeometryField(srid=4326, blank=True, null=True)
     elevation = models.DecimalField(max_digits=10, decimal_places=4, blank=True, null=True)
 
     def __str__(self):
         return str(self.catalog_number)
-
 
     @staticmethod
     def method_fields_to_export():
@@ -51,7 +47,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
         :return:
         """
         return []  # The GDB project has no method fields to export
-
 
     class Meta:
         verbose_name = "GDB Occurrence"
@@ -85,7 +80,7 @@ class Biology(Occurrence):
     element = models.CharField(null=True, blank=True, max_length=50)
     side = models.CharField(null=True, blank=True, max_length=50)
     attributes = models.CharField(null=True, blank=True, max_length=50)
-    notes = models.TextField(null=True, blank=True, max_length=64000)
+    notes = CKRichTextField(null=True, blank=True)
     lower_tooth = models.CharField(null=True, blank=True, max_length=50)
     upper_tooth = models.CharField(null=True, blank=True, max_length=50)
     jaw = models.CharField(null=True, blank=True, max_length=50)
@@ -105,7 +100,6 @@ class Biology(Occurrence):
                                                  on_delete=models.SET_NULL,
                                                  related_name='gdb_id_qualifier_bio_occurrences',
                                                  null=True, blank=True)
-
 
     class Meta:
         verbose_name = "GDB Biology"
@@ -203,9 +197,3 @@ class IdentificationQualifier(projects.models.IdentificationQualifier):
 
     class Meta:
         verbose_name = "GDB ID Qualifier"
-
-
-
-
-
-
