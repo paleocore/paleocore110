@@ -3,7 +3,7 @@ import projects.models
 from lgrp.ontologies import *
 from projects.ontologies import ITEM_TYPE_VOCABULARY
 import os
-from django.contrib.gis.geos import Point
+
 
 # Occurrence Class and Subclasses
 class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
@@ -16,9 +16,6 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     # Event - inherited
 
     # Find
-
-
-
     item_type = models.CharField("Item Type", max_length=255, blank=True, null=False,
                                  choices=ITEM_TYPE_VOCABULARY)  # NOT NULL
     # item_scientific_name should be transfered to inherited name field
@@ -318,8 +315,6 @@ class Biology(Occurrence):
         verbose_name = "03-LGRP Biology"
         verbose_name_plural = "03-LGRP Biology"
 
-
-
     @staticmethod
     def find_unmatched_values(field_name):
         """
@@ -395,6 +390,7 @@ class IdentificationQualifier(projects.models.IdentificationQualifier):
     class Meta:
         verbose_name = "10-LGRP ID Qualifier"
 
+
 # Hydrology Class
 class Hydrology(models.Model):
     length = models.DecimalField(max_digits=38, decimal_places=8, null=True, blank=True)
@@ -434,4 +430,3 @@ class File(models.Model):
     occurrence = models.ForeignKey("Occurrence", related_name='occurrence_files')
     file = models.FileField(upload_to="uploads/files", null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-
