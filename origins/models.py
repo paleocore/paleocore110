@@ -21,6 +21,7 @@ from modelcluster.fields import ParentalKey
 from modelcluster.tags import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from utils.models import RelatedLink, CarouselItem
+from .ontologies import CONTINENT_CHOICES
 
 
 # Taxonomy models inherited from paleo core base project
@@ -246,7 +247,7 @@ class Fossil(models.Model):
     site = models.ForeignKey(Site, null=True, blank=True)
     # country = models.CharField(max_length=10, null=True, blank=True)
     country = CountryField('Country', blank=True, null=True)
-    continent = models.CharField(max_length=20, null=True, blank=True)
+    continent = models.CharField(max_length=20, null=True, blank=True, choices=CONTINENT_CHOICES)
     geom = models.PointField(null=True, blank=True)
 
     # Media
@@ -325,6 +326,8 @@ class Fossil(models.Model):
 
 
 class FossilElement(models.Model):
+    # Records
+    source = models.CharField(max_length=100, null=True, blank=True)
     # Human Origins Program DB fields
     verbatim_PlaceName = models.CharField(max_length=100, null=True, blank=True)
     verbatim_HomininElement = models.CharField(max_length=40, null=True, blank=True)
@@ -373,8 +376,11 @@ class Photo(models.Model):
     default_image = models.BooleanField(default=False)
 
     def thumbnail(self):
-        image_url = os.path.join(self.image.url)
-        return '<a href="{}"><img src="{}" style="width:300px" /></a>'.format(image_url, image_url)
+        if self.image:  # test that the photo has an image.
+            image_url = os.path.join(self.image.url)
+            return '<a href="{}"><img src="{}" style="width:300px" /></a>'.format(image_url, image_url)
+        else:
+            return None
 
     thumbnail.short_description = 'Image'
     thumbnail.allow_tags = True
@@ -537,6 +543,11 @@ class SitePage(Page):
         fossils = self.get_fossils
 
     def get_context(self, request):
+        """
+        Add fossils to the site context
+        :param request:
+        :return:
+        """
         # Get site_list
         fossil_list = self.get_fossils
 
@@ -674,48 +685,48 @@ class FossilPage(Page):
     ]
     is_public = models.BooleanField(default=False)
 
-    @property
-    def get_fossils(self):
-        # Get list of fossils associated with the site on this page
-        # current_site = Fossil.objects.get(name=self.title)
-        fossil_list = Fossil.objects.filter(site=self.site)
+    # @property
+    # def get_fossils(self):
+    #     # Get list of fossils associated with the site on this page
+    #     # current_site = Fossil.objects.get(name=self.title)
+    #     fossil_list = Fossil.objects.filter(catalog_number=self.intro)
+    #
+    #     # Order by most recent date first
+    #     fossil_list = fossil_list.order_by('catalog_number')
+    #
+    #     return fossil_list
 
-        # Order by most recent date first
-        fossil_list = fossil_list.order_by('catalog_number')
+    # @property
+    # def get_taxa(self):
+    #     """
+    #     This function requires a bit more work because at present Fossils are not linked to taxa!
+    #     :return:
+    #     """
+    #     fossils = self.get_fossils
 
-        return fossil_list
-
-    @property
-    def get_taxa(self):
-        """
-        This function requires a bit more work because at present Fossils are not linked to taxa!
-        :return:
-        """
-        fossils = self.get_fossils
-
-    def get_context(self, request):
-        # Get site_list
-        fossil_list = self.get_fossils
-
-        # Filter by tag
-        tag = request.GET.get('tag')
-        if tag:
-            fossil_list = fossil_list.filter(tags__name=tag)
-
-        # Pagination
-        page = request.GET.get('page')
-        paginator = Paginator(fossil_list, 10)  # Show 10 site_list per page
-        try:
-            site_list = paginator.page(page)
-        except PageNotAnInteger:
-            site_list = paginator.page(1)
-        except EmptyPage:
-            site_list = paginator.page(paginator.num_pages)
-
-        # Update template context
-        context = super(FossilPage, self).get_context(request)
-        context['fossil_list'] = fossil_list
-        return context
+    # def get_context(self, request):
+    #     # Get site_list
+    #     fossil_list = self.get_fossils
+    #
+    #     # Filter by tag
+    #     tag = request.GET.get('tag')
+    #     if tag:
+    #         fossil_list = fossil_list.filter(tags__name=tag)
+    #
+    #     # Pagination
+    #     page = request.GET.get('page')
+    #     paginator = Paginator(fossil_list, 10)  # Show 10 site_list per page
+    #     try:
+    #         fossil_list = paginator.page(page)
+    #     except PageNotAnInteger:
+    #         fossil_list = paginator.page(1)
+    #     except EmptyPage:
+    #         fossil_list = paginator.page(paginator.num_pages)
+    #
+    #     # Update template context
+    #     context = super(FossilPage, self).get_context(request)
+    #     context['fossil_list'] = fossil_list
+    #     return context
 
     @property
     def fossil_index(self):
@@ -731,7 +742,7 @@ FossilPage.content_panels = [
     StreamFieldPanel('body'),
     InlinePanel('fossil_carousel_items', label="Carousel items"),
     InlinePanel('fossil_related_links', label="Related links"),
-    GeoPanel('location')
+    #GeoPanel('location')
 ]
 
 FossilPage.promote_panels = Page.promote_panels + [
