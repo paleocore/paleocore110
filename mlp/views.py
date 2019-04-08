@@ -537,29 +537,54 @@ class Summary(generic.ListView):
         Creates a table of occurrence counts by subclass
         :return:
         """
-        total_count = Occurrence.objects.all().count()
-        arch_count = Archaeology.objects.all().count()
-        bio_count = Biology.objects.all().count()
-        geo_count = Geology.objects.all().count()
 
         html_table = """
         <table>
         <tr>
-          <th>Instance</th><th>Count</th>
+          <th>Instance</th>
+          <th>Collected</th>
+          <th>Observed</th>
+          <th>Total Count</th>
         </tr>
         <tr>
-          <td>Occurrences</td><td>{}</td>
+          <td>Finds</td>
+          <td>{collected_occurrence_count}</td>
+          <td>{observed_occurrence_count}</td>
+          <td>{total_occurrence_count}</td>
         </tr>
         <tr>
-          <td>Archaeology</td><td>{}</td>
+          <td>Archaeology</td>
+          <td>{collected_archaeology_count}</td>
+          <td>{observed_archaeology_count}</td>
+          <td>{total_archaeology_count}</td>
         </tr>
         <tr>
-          <td>Biology</td><td>{}</td>
+          <td>Biology</td>
+          <td>{collected_biology_count}</td>
+          <td>{observed_biology_count}</td>
+          <td>{total_biology_count}</td>
         </tr>
-        <tr><td>Geology</td><td>{}</td>
+        <tr><td>Geology</td>
+            
+            <td>{collected_geology_count}</td>
+          <td>{observed_geology_count}</td>
+          <td>{total_geology_count}</td>
         </tr>
       </table>
-      """.format(total_count, arch_count, bio_count, geo_count)
+      """.format(
+            total_occurrence_count=Occurrence.objects.all().count(),
+            collected_occurrence_count=Occurrence.objects.filter(basis_of_record='FossilSpecimen').count(),
+            observed_occurrence_count=Occurrence.objects.filter(basis_of_record='HumanObservation').count(),
+            total_archaeology_count=Archaeology.objects.all().count(),
+            collected_archaeology_count=Archaeology.objects.filter(basis_of_record='FossilSpecimen').count(),
+            observed_archaeology_count=Archaeology.objects.filter(basis_of_record='HumanObservation').count(),
+            total_biology_count=Biology.objects.all().count(),
+            collected_biology_count=Biology.objects.filter(basis_of_record='FossilSpecimen').count(),
+            observed_biology_count=Biology.objects.filter(basis_of_record='HumanObservation').count(),
+            total_geology_count=Geology.objects.all().count(),
+            collected_geology_count=Geology.objects.filter(basis_of_record='FossilSpecimen').count(),
+            observed_geology_count=Geology.objects.filter(basis_of_record='HumanObservation').count(),   
+        )
         return html_table
 
     def warnings(self):
