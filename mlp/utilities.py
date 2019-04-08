@@ -133,6 +133,7 @@ def get_identification_qualifier_from_string(id_qual_string):
         return IdentificationQualifier.objects.get(name=id_qual_string)  # last change to match novel idq
     # If no match is found ObjectDoesNotExist error is raised.
 
+
 def get_taxon_from_scientific_name(scientific_name):
     """
     Function retrieves a taxon object from a colon delimited item_scientific_name string
@@ -220,6 +221,7 @@ def occurrence2biology(oi):
 
         oi.delete()
         new_biology.save()
+
 
 def occurrence2archaeology(oi):
     """
@@ -680,3 +682,33 @@ def update_biology_identifications(header, data, dry_run=False):
             bio.save()  # save item
 
 
+def taxon_count(t):
+    try:
+        count = Biology.objects.filter(taxon=t).count()
+    except:
+        count = None
+    return count
+
+
+def get_taxa_counts(rank=None):
+    """
+    function to generate taxonomic lists based on Biology instances for a project
+    :param rank:
+    :return: Returns a list of tuples containing the taxon and taxon rank,
+    e.g. [(<Life>,<root>), (<Animalia>, <Kingdom>), ... ]
+    """
+
+    biology_objects = Biology.objects.all()
+    taxon_set = set([b.taxon for b in biology_objects])
+    taxon_object_list = [(t, t.rank, taxon_count(t)) for t in taxon_set]
+    if rank:
+        pass
+    return taxon_object_list
+
+
+def get_taxa():
+    """
+    Get a list of distinct taxon objects for biology instances
+    :return: Returns a list
+    """
+    return [b.taxon for b in Biology.objects.distinct('taxon')]
