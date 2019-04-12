@@ -1,6 +1,6 @@
 __author__ = 'reedd'
 
-from .models import Occurrence, Archaeology, Biology, Taxon, IdentificationQualifier
+from .models import Occurrence, Archaeology, Biology, Geology, Taxon, IdentificationQualifier
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 import collections
 
@@ -243,6 +243,52 @@ def occurrence2archaeology(oi):
 
         new_archaeology.save()
         #oi.delete()
+
+
+def find2geo(oi):
+    """
+    Procedure to convert a Find (formerly Occurrence) to a Geology subclass.
+    :param oi: occurrence in stance
+    :return:
+    """
+    if oi.item_type in ['Geological']:  # convert only geological items to Geology subclass
+        # Create a new Geology object
+        print("Creating a new geo object for pk {}".format(oi.id))
+        new_geo = Geology(barcode=oi.barcode,
+                          geom=oi.geom)
+        print("Copying data")
+        for key in list(oi.__dict__.keys()):
+            new_geo.__dict__[key]=oi.__dict__[key]
+        print("Saving")
+        new_geo.save()
+
+
+def get_finds():
+    """
+    Get Finds that are not subclassses, e.g. Find but not Biology
+    :return: Returns a queryset of Find objects
+    """
+    all_find_ids = {f.id for f in Occurrence.objects.all()}
+    subclass_ids = {f.occurrence_ptr_id for f in Biology.objects.all()} | \
+                   {f.occurrence_ptr_id for f in Archaeology.objects.all()} | \
+                   {f.occurrence_ptr_id for f in Geology.objects.all()}
+    find_ids = all_find_ids.difference(subclass_ids)
+    # return list(find_ids)
+    return Occurrence.objects.filter(id__in=find_ids)
+
+
+def subtype_finds():
+    untyped_finds = get_finds()
+    for f in untyped_finds:
+        if f.item_type in ['Faunal', 'Floral'] and f.item_scientific_name!='No Fossils At This Location':
+            occurrence2biology(f)
+        elif f.item_type in ['Archaeological', 'Artifactual']:
+            occurrence2archaeology(f)
+        elif f.item_type in ['Geological']:
+            find2geo(f)
+        else:
+            pass
+
 
 
 def update_occurrence2biology():

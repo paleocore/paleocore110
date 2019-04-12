@@ -16,6 +16,7 @@ from django.template import RequestContext
 from django.contrib import messages
 from dateutil.parser import parse
 from django.core.files.base import ContentFile
+from .utilities import *
 
 
 class DownloadKMLView(generic.FormView):
@@ -532,7 +533,8 @@ class Summary(generic.ListView):
     model = Occurrence
     context_object_name = 'occurrences'
 
-    def create_occurrence_count_table(self):
+    @staticmethod
+    def create_occurrence_count_table():
         """
         Creates a table of occurrence counts by subclass
         :return:
@@ -547,10 +549,11 @@ class Summary(generic.ListView):
           <th>Total Count</th>
         </tr>
         <tr>
-          <td>Finds</td>
-          <td>{collected_occurrence_count}</td>
-          <td>{observed_occurrence_count}</td>
-          <td>{total_occurrence_count}</td>
+          <td>No Fossils</td>
+          <td>--</td>
+          <td>{no_fossil_count}</td>
+          <td>{no_fossil_count}</td>
+          
         </tr>
         <tr>
           <td>Archaeology</td>
@@ -564,17 +567,21 @@ class Summary(generic.ListView):
           <td>{observed_biology_count}</td>
           <td>{total_biology_count}</td>
         </tr>
-        <tr><td>Geology</td>
-            
+        <tr>
+            <td>Geology</td>
             <td>{collected_geology_count}</td>
           <td>{observed_geology_count}</td>
           <td>{total_geology_count}</td>
         </tr>
+        <tr>
+            <td>Totals</td>
+            <td>{collected_occurrence_count}</td>
+           <td>{observed_occurrence_count}</td>
+          <td>{total_occurrence_count}</td>
+        </tr>
       </table>
       """.format(
-            total_occurrence_count=Occurrence.objects.all().count(),
-            collected_occurrence_count=Occurrence.objects.filter(basis_of_record='FossilSpecimen').count(),
-            observed_occurrence_count=Occurrence.objects.filter(basis_of_record='HumanObservation').count(),
+            no_fossil_count=get_finds().count(),
             total_archaeology_count=Archaeology.objects.all().count(),
             collected_archaeology_count=Archaeology.objects.filter(basis_of_record='FossilSpecimen').count(),
             observed_archaeology_count=Archaeology.objects.filter(basis_of_record='HumanObservation').count(),
@@ -583,7 +590,10 @@ class Summary(generic.ListView):
             observed_biology_count=Biology.objects.filter(basis_of_record='HumanObservation').count(),
             total_geology_count=Geology.objects.all().count(),
             collected_geology_count=Geology.objects.filter(basis_of_record='FossilSpecimen').count(),
-            observed_geology_count=Geology.objects.filter(basis_of_record='HumanObservation').count(),   
+            observed_geology_count=Geology.objects.filter(basis_of_record='HumanObservation').count(),
+            total_occurrence_count=Occurrence.objects.all().count(),
+            collected_occurrence_count=Occurrence.objects.filter(basis_of_record='FossilSpecimen').count(),
+            observed_occurrence_count=Occurrence.objects.filter(basis_of_record='HumanObservation').count(),
         )
         return html_table
 
