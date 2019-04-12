@@ -39,6 +39,24 @@ class TermCategoryAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 
+class ProjectTermAdmin(admin.ModelAdmin):
+    model = ProjectTerm
+    list_display = ['get_term_name', 'get_term_class', 'project']
+    list_filter = ['project']
+
+    def get_term_name(self, obj):
+        if obj.mapping:
+            name = obj.mapping
+        else:
+            name = obj.term.name
+        return name
+    get_term_name.short_description = 'Name'
+    get_term_name.ordering = ['term__ordering']
+
+    def get_term_class(self, obj):
+        return obj.term.category
+    get_term_class.short_description = 'Term Class'
+
 # custom admin list filter. this comes straight from the django admin site docs
 # I could add related_term__project to list filters, but this would result in two filters called "project"
 # I get around this by creating a custom SimpleListFilter so I can specify the name
@@ -94,5 +112,6 @@ admin.site.register(TermStatus)
 admin.site.register(TermDataType)
 admin.site.register(TermMapping)
 admin.site.register(TermRelationship)
+admin.site.register(ProjectTerm, ProjectTermAdmin)
 # admin.site.register(TermRelationship, TermRelationshipAdmin)
 # admin.site.register(TermRelationshipType)
