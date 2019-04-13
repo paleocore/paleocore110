@@ -1,21 +1,84 @@
-from django.test import TestCase
-from mlp.models import Occurrence, Biology, Taxon, IdentificationQualifier
+from django.test import TestCase, Client
+from django.test.client import RequestFactory
+from django.contrib.gis.geos import Point
+from django.core.files.uploadedfile import TemporaryUploadedFile
 
-from django.core.urlresolvers import reverse
+from mlp.models import Occurrence, Biology, Taxon, IdentificationQualifier
+from mlp.utilities import html_escape
+
 from datetime import datetime
 import pytz
-from mlp.forms import UploadKMLForm
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.contrib.gis.geos import Point
-from django.contrib.auth.models import User
-from mlp.ontologies import BASIS_OF_RECORD_VOCABULARY, \
-    COLLECTING_METHOD_VOCABULARY, COLLECTOR_CHOICES, ITEM_TYPE_VOCABULARY
-from random import random
+from zipfile import ZipFile
+from fastkml import kml, Placemark, Folder, Document
+from mlp.views import ImportKMZ
+
+# from django.core.urlresolvers import reverse
+# from mlp.forms import UploadKMLForm
+# from django.core.files.uploadedfile import SimpleUploadedFile
+#
+# from django.contrib.auth.models import User
+# from mlp.ontologies import BASIS_OF_RECORD_VOCABULARY, \
+#     COLLECTING_METHOD_VOCABULARY, COLLECTOR_CHOICES, ITEM_TYPE_VOCABULARY
+# from random import random
 
 
 ######################################
 # Tests for models and their methods #
 ######################################
+
+
+class UtilitiesMethodsTests(TestCase):
+    def test_mlp_utilities_html_clean(self):
+        test_text = """I like hippos & Horses and smug "monkeys" that think they > are < snails."""
+        clean_text = """I like hippos &amp; Horses and smug "monkeys" that think they > are < snails."""
+        escaped_text = html_escape(test_text)
+        self.assertEqual(escaped_text, clean_text)
+
+
+class ImportKMZMethodsTests(TestCase):
+    """
+    Test mlp.views.py Import methods
+    """
+    fixtures = [
+        'mlp/fixtures/mlp_taxonomy_test_data.json'
+    ]
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.importkmz = ImportKMZ()
+        self.test_file_path = 'mlp/fixtures/mlp_test_import.kmz'
+        infile = open(self.test_file_path, 'rb')
+        request = self.factory.post('/django-admin/mlp/occurrence/import_kmz/', {'kmlfileUpload': infile})
+        self.importkmz.request = request
+
+    def test_get_import_file(self):
+        self.assertEqual(self.importkmz.get_import_file().name, self.test_file_path.split('/')[-1])
+        self.assertEqual(type(self.importkmz.get_import_file()), TemporaryUploadedFile)
+
+    def test_get_import_extension(self):
+        self.assertEqual(self.importkmz.get_import_file_extension(), 'kmz')
+
+    def test_get_kmz_file(self):
+        self.assertEqual(type(self.importkmz.get_kmz_file()), ZipFile)
+        self.assertEqual(self.importkmz.get_kmz_file().filelist[0].filename, '374.jpg')
+
+    def test_get_kml_file(self):
+        self.assertEqual(type(self.importkmz.get_kml_file()), kml.KML)
+        self.assertEqual(self.importkmz.get_kml_file().to_string()[:10], '<kml xmlns')
+
+    def test_mlp_import_placemarks(self):
+        starting_record_count = Occurrence.objects.count()  # No occurrences in empty db
+        self.assertEqual(starting_record_count, 0)
+        kml_file = self.importkmz.get_kml_file()
+        level1_elements = list(kml_file.features())
+        self.assertEqual(len(level1_elements), 1)
+        self.assertEqual(type(level1_elements[0]), Document)
+        document = level1_elements[0]
+        level2_elements = list(document.features())
+        self.assertEqual(len(level2_elements), 6)
+        self.assertEqual(type(level2_elements[0]), Placemark)
+        placemark_list = level2_elements
+        self.assertEqual(len(placemark_list), 6)
 
 
 class OccurrenceMethodsTests(TestCase):
@@ -29,10 +92,10 @@ class OccurrenceMethodsTests(TestCase):
         """
         starting_record_count = Occurrence.objects.count()  # get current number of occurrence records
         new_occurrence = Occurrence(id=1, item_type="Faunal",
-                                basis_of_record="HumanObservation",
-                                collecting_method="Surface Standard",
-                                field_number=datetime.now(pytz.utc),
-                                geom="POINT (40.8352906016 11.5303732536)")
+                                    basis_of_record="HumanObservation",
+                                    collecting_method="Surface Standard",
+                                    field_number=datetime.now(pytz.utc),
+                                    geom="POINT (40.8352906016 11.5303732536)")
         new_occurrence.save()
         now = datetime.now()
         self.assertEqual(Occurrence.objects.count(), starting_record_count+1)  # test that one record has been added
@@ -135,7 +198,6 @@ class BiologyMethodsTests(TestCase):
         self.assertEqual(new_occurrence.point_y(), 37.7577)
         self.assertEqual(new_occurrence.point_x(), -122.4376)
 
-
     def test_biology_create_observation(self):
         """
         Test Biology instance creation for observations
@@ -164,40 +226,40 @@ class BiologyMethodsTests(TestCase):
         self.assertEqual(new_occurrence.point_y(), 37.7577)
         self.assertEqual(Biology.objects.count(), biology_starting_record_count+1)  # test no biology record was added
         self.assertEqual(Biology.objects.filter(basis_of_record__exact="HumanObservation").count(), 1)
-#
-#     def test_biology_create_biology(self):
-#         """
-#         Test Biology instance creation for observations
-#         """
-#
-#         # self.biology_setup()
-#         new_taxon = Taxon.objects.get(name__exact="Primates")
-#         id_qualifier = IdentificationQualifier.objects.get(name__exact="None")
-#
-#         occurrence_starting_record_count = Occurrence.objects.count()  # get current number of occurrence records
-#         biology_starting_record_count = Biology.objects.count()  # get the current number of biology records
-#         # The simplest occurrence instance we can create needs only a location.
-#         # Using the instance creation and then save methods
-#         new_occurrence = Biology.objects.create(
-#             barcode=1111,
-#             basis_of_record="FossilSpecimen",
-#             collection_code="COL",
-#             item_number="1",
-#             geom=Point(-122.4376, 37.7577),  # An alternate point creation method
-#             taxon=new_taxon,
-#             identification_qualifier=id_qualifier,
-#             field_number=datetime.now()
-#         )
-#         now = datetime.now()
-#         self.assertEqual(Occurrence.objects.count(), occurrence_starting_record_count+1)  # test that a record was added
-#         self.assertEqual(new_occurrence.catalog_number, None)  # test catalog number generation in save method
-#         self.assertEqual(new_occurrence.date_last_modified.day, now.day)  # test date last modified is correct
-#         self.assertEqual(new_occurrence.point_y(), 37.7577)
-#         self.assertEqual(new_occurrence.northing(), 4179080.7650798513)
-#         self.assertEqual(Biology.objects.count(), biology_starting_record_count+1)  # test no biology record was added
-#         self.assertEqual(Biology.objects.filter(basis_of_record__exact="FossilSpecimen").count(), 1)
-#
-#
+
+    def test_biology_create_biology(self):
+        """
+        Test Biology instance creation for observations
+        """
+
+        # self.biology_setup()
+        new_taxon = Taxon.objects.get(name__exact="Primates")
+        id_qualifier = IdentificationQualifier.objects.get(name__exact="None")
+
+        occurrence_starting_record_count = Occurrence.objects.count()  # get current number of occurrence records
+        biology_starting_record_count = Biology.objects.count()  # get the current number of biology records
+        # The simplest occurrence instance we can create needs only a location.
+        # Using the instance creation and then save methods
+        new_occurrence = Biology.objects.create(
+            barcode=1111,
+            basis_of_record="FossilSpecimen",
+            collection_code="COL",
+            item_number="1",
+            geom=Point(-122.4376, 37.7577),  # An alternate point creation method
+            taxon=new_taxon,
+            identification_qualifier=id_qualifier,
+            field_number=datetime.now()
+        )
+        now = datetime.now()
+        self.assertEqual(Occurrence.objects.count(), occurrence_starting_record_count+1)  # test that a record was added
+        self.assertEqual(new_occurrence.catalog_number, None)  # test catalog number generation in save method
+        self.assertEqual(new_occurrence.date_last_modified.day, now.day)  # test date last modified is correct
+        self.assertEqual(new_occurrence.point_y(), 37.7577)
+        self.assertAlmostEqual(new_occurrence.northing(), 4179080.7650798513, 3)  # UTMs match to mm
+        self.assertEqual(Biology.objects.count(), biology_starting_record_count+1)  # test no biology record was added
+        self.assertEqual(Biology.objects.filter(basis_of_record__exact="FossilSpecimen").count(), 1)
+
+
 # class MilleLogyaViews(TestCase):
 #     """
 #     The TestCase depends on two fixtures, which contain public data and are included on the GitHub repository.

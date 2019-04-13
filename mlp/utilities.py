@@ -305,7 +305,7 @@ def update_occurrence2biology():
         except ObjectDoesNotExist:
             print("{}. Converting Occurrence id: {} barcode: {} to Biology.".format(count, f.id, f.barcode))
             occurrence2biology(f)
-            converted.append(f.id)
+            converted.append(f.id) # f doesn't have id yet!
         count += 1
     print("Run completed. {} occurrences already existed. {} were converted.".format(len(existing), len(converted)))
     return existing, converted
@@ -700,9 +700,9 @@ def update_biology_identifications(header, data, dry_run=False):
     for row in data:
         rowdict = dict(zip(header, row))  # combine header and row data into dictionary for easy reference
         id = int(rowdict['id'])
-        bio = Biology.objects.get(pk=id) # fetch the object from the DB
+        bio = Biology.objects.get(pk=id)  # fetch the object from the DB
         bio.item_scientific_name = rowdict['item_scientific_name']  # update item_scientific_name
-        bio.item_description = rowdict['item_description'] # update item_description
+        bio.item_description = rowdict['item_description']  # update item_description
         print(id)
         try:
             bio.taxon = get_taxon_from_scientific_name(rowdict['taxon']) # find matching taxon and update
@@ -722,7 +722,10 @@ def update_biology_identifications(header, data, dry_run=False):
         except IndexError:
             pass
         bio.identified_by = mlp.ontologies.denis_geraads
-        print('{} {} {} {} {} {} {}'.format(bio.id, bio.item_description, bio.item_scientific_name, bio.taxon, bio.identification_qualifier, bio.identification_remarks, bio.identified_by))
+        print('{} {} {} {} {} {} {}'.format(bio.id, bio.item_description,
+                                            bio.item_scientific_name, bio.taxon,
+                                            bio.identification_qualifier,
+                                            bio.identification_remarks, bio.identified_by))
 
         if not dry_run:
             bio.save()  # save item
@@ -758,3 +761,21 @@ def get_taxa():
     :return: Returns a list
     """
     return [b.taxon for b in Biology.objects.distinct('taxon')]
+
+
+html_escape_table = {
+    "&": "&amp;",
+    # ">": "&gt;",
+    # "<": "&lt;",
+    # "'": "&apos;",
+    # '"': "&quot;",
+}
+
+
+def html_escape(text):
+    """
+    Escape unsafe characters from text strings and replace with html
+    :param text:
+    :return:
+    """
+    return "".join(html_escape_table.get(c, c) for c in text)
