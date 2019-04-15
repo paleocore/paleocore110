@@ -1,24 +1,30 @@
-from django.conf import settings
-from django.views import generic
+# External Libraries
 import os
-from .models import Occurrence, Biology, Archaeology, Geology
-from .forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology, DeleteAllForm
 from fastkml import kml, Placemark, Folder, Document
 from lxml import etree
 from datetime import datetime
 from django.contrib.gis.geos import GEOSGeometry
 from pygeoif import geometry
 from zipfile import ZipFile
-from mlp.models import Taxon, IdentificationQualifier
+
+# Django Libraries
+from django.conf import settings
+from django.views import generic
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib import messages
 from dateutil.parser import parse
 from django.core.files.base import ContentFile
+
+# App Libraries
+from .models import Occurrence, Biology, Archaeology, Geology, Taxon, IdentificationQualifier
+from .forms import UploadKMLForm, DownloadKMLForm, ChangeXYForm, Occurrence2Biology, DeleteAllForm
 from .utilities import html_escape, get_finds
+from .ontologies import *  # import vocabularies and choice lists
 
 
+# Delete Me Depricated Class
 class DownloadKMLView(generic.FormView):
     template_name = 'projects/download_kml.html'
     form_class = DownloadKMLForm
@@ -78,6 +84,7 @@ class DownloadKMLView(generic.FormView):
         return response
 
 
+# Delete Me -- Deprecated Class
 class UploadKMLView(generic.FormView):
     template_name = 'projects/upload_kml.html'
     form_class = UploadKMLForm
@@ -339,8 +346,8 @@ class ImportKMZ(generic.FormView):
                 escaped_description = html_escape(o.description)  # escape &
                 table = etree.fromstring(escaped_description)  # get the table element the data from the xml.
                 attributes = table.xpath("//text()|//img")  # get all text values and image tags from xml string
-                # TODO test attributes is even length
-                # Create a diction ary from the attribute list. The list has key value pairs as alternating
+
+                # Create a dictionary from the attribute list. The list has key value pairs as alternating
                 # elements in the list, the line below takes the first and every other elements and adds them
                 # as keys, then the second and every other element and adds them as values.
                 # e.g.
@@ -348,20 +355,23 @@ class ImportKMZ(generic.FormView):
                 # attributes[1::2] = ["Collection", "May 27, 2017, 10:12 AM", "Faunal" ...]
                 # zip creates a list of tuples  = [("Basis of Record", "Collection), ...]
                 # which is converted to a dictionary.
-                attributes_dict = dict(zip(attributes[0::2], attributes[1::2]))
-
+                if len(attributes) % 2 == 0:  # attribuetes list should be even length
+                    attributes_dict = dict(zip(attributes[0::2], attributes[1::2]))
+                else:
+                    raise KeyError
                 # Step 2 - Create a new Occurrence object (or subtype)
                 lgrp_occ = None
                 # Determine the appropriate subtype and initialize
                 item_type = attributes_dict.get("Item Type")
                 occurrence_count += 1
-                if item_type in ("Artifact", "Artifactual", "Archeology", "Archaeological"):
+                # variables imported from .ontologies
+                if item_type in (artifactual, "Artifactual", "Archeology", "Archaeological"):
                     lgrp_occ = Archaeology()
                     archaeology_count += 1
-                elif item_type in ("Faunal", "Fauna", "Floral", "Flora"):
+                elif item_type in (faunal, "Fauna", "Floral", "Flora"):
                     lgrp_occ = Biology()
                     biology_count += 1
-                elif item_type in ("Geological", "Geology"):
+                elif item_type in (geological, "Geology"):
                     lgrp_occ = Geology()
                     geology_count += 1
 
@@ -373,22 +383,22 @@ class ImportKMZ(generic.FormView):
                 lgrp_occ.verbatim_kml_data = attributes
 
                 # Validate Basis of Record
-                if attributes_dict.get("Basis Of Record") in ("Fossil", "FossilSpecimen", "Collection"):
+                if attributes_dict.get("Basis Of Record") in (fossil_specimen, "Fossil", "Collection"):
                     # TODO update basis_of_record vocab, change Fossil Specimen to Collection
-                    lgrp_occ.basis_of_record = "FossilSpecimen"
-                elif attributes_dict.get("Basis Of Record") in ("Observation", "HumanObservation"):
-                    lgrp_occ.basis_of_record = "HumanObservation"
+                    lgrp_occ.basis_of_record = fossil_specimen  # from .ontologies
+                elif attributes_dict.get("Basis Of Record") in (human_observation, "Observation"):
+                    lgrp_occ.basis_of_record = human_observation  # from .ontologies
 
                 # Validate Item Type
                 item_type = attributes_dict.get("Item Type")
-                if item_type in ("Artifact", "Artifactual", "Archeology", "Archaeological"):
-                    lgrp_occ.item_type = "Artifactual"
-                elif item_type in ("Faunal", "Fauna"):
-                    lgrp_occ.item_type = "Faunal"
-                elif item_type in ("Floral", "Flora"):
-                    lgrp_occ.item_type = "Floral"
-                elif item_type in ("Geological", "Geology"):
-                    lgrp_occ.item_type = "Geological"
+                if item_type in (artifactual, "Artifact", "Archeology", "Archaeological"):
+                    lgrp_occ.item_type = artifactual
+                elif item_type in (faunal, "Fauna"):
+                    lgrp_occ.item_type = faunal
+                elif item_type in (floral, "Flora"):
+                    lgrp_occ.item_type = floral
+                elif item_type in (geological, "Geology"):
+                    lgrp_occ.item_type = geological
 
                 # Date Recorded
                 error_string = ''
