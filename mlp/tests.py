@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from django.test.client import RequestFactory
 from django.contrib.gis.geos import Point
+from django.contrib.sessions.middleware import SessionMiddleware
+from django.contrib.messages.middleware import MessageMiddleware
 from django.core.files.uploadedfile import TemporaryUploadedFile
 
 from mlp.models import Occurrence, Biology, Taxon, IdentificationQualifier
@@ -51,6 +53,20 @@ class ImportKMZMethodsTests(TestCase):
         request = self.factory.post('/django-admin/mlp/occurrence/import_kmz/', {'kmlfileUpload': infile})
         self.import_kmz.request = request
 
+    def setup_request(self, request):
+        """Annotate a request object with a session"""
+        middleware = SessionMiddleware()
+        middleware.process_request(request)
+        request.session.save()
+
+        """Annotate a request object with a messages"""
+        middleware = MessageMiddleware()
+        middleware.process_request(request)
+        request.session.save()
+
+        request.session['some'] = 'some'
+        request.session.save()
+
     def test_get_import_file(self):
         self.assertEqual(self.import_kmz.get_import_file().name, self.test_file_path.split('/')[-1])
         self.assertEqual(type(self.import_kmz.get_import_file()), TemporaryUploadedFile)
@@ -79,6 +95,10 @@ class ImportKMZMethodsTests(TestCase):
         self.assertEqual(type(level2_elements[0]), Placemark)
         placemark_list = level2_elements
         self.assertEqual(len(placemark_list), 6)
+        self.setup_request(self.import_kmz.request)  # annotate the request with a message
+        self.import_kmz.import_placemarks(placemark_list)
+        self.assertEqual(Occurrence.objects.count(), 6)
+        self.assertEqual(Occurrence.objects.filter(basis_of_record='HumanObservation').count(), 3)
 
 
 class OccurrenceMethodsTests(TestCase):
