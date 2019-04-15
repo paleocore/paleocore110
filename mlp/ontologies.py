@@ -1,16 +1,37 @@
-BASIS_OF_RECORD_VOCABULARY = (("FossilSpecimen", "Fossil"), ("HumanObservation", "Observation"))
+# Basis of Record Vocabulary
+fossil_specimen = 'FossilSpecimen'  # corresponding to Darwin Core clases
+human_observation = 'HumanObservation'
+BASIS_OF_RECORD_VOCABULARY = ((fossil_specimen, "Fossil"), (human_observation, "Observation"))
 
-ITEM_TYPE_VOCABULARY = (("Artifactual", "Artifactual"), ("Faunal", "Faunal"), ("Floral", "Floral"), ("Geological", "Geological"))
+# Item Type Vocabulary
+artifactual = 'Artifactual'
+faunal = 'Faunal'
+floral = 'Floral'
+geological = 'Geological'
+ITEM_TYPE_VOCABULARY = ((artifactual, "Artifactual"),
+                        (faunal, "Faunal"),
+                        (floral, "Floral"),
+                        (geological, "Geological"))
 
-COLLECTING_METHOD_VOCABULARY = (("Surface Standard", "Surface Standard"),
-                                ("Surface Intensive", "Surface Intensive"),
-                                ("Surface Complete", "Surface Complete"),
-                                ("Exploratory Survey", "Exploratory Survey"),
-                                ("Dry Screen 5mm", "Dry Screen 5mm"),
-                                ("Dry Screen 2mm", "Dry Screen 2mm"),
-                                ("Wet Screen 1mm", "Wet Screen 1mm"),
-                                ("Excavation", "Excavation"))
+# Collecting Method Vocabulary
+surface_standard = 'Surface Standard'
+surface_intensive = 'Surface Intensive'
+surface_complete = "Surface Complete"
+exploratory_survey = "Exploratory Survey"
+dry_screen_5mm = "Dry Screen 5mm"
+dry_screen_2mm = "Dry Screen 2mm"
+dry_screen_1mm = "Wet Screen 1mm"
+excavation = "Excavation"
+COLLECTING_METHOD_VOCABULARY = ((surface_standard, "Surface Standard"),
+                                (surface_intensive, "Surface Intensive"),
+                                (surface_complete, "Surface Complete"),
+                                (exploratory_survey, "Exploratory Survey"),
+                                (dry_screen_5mm, "Dry Screen 5mm"),
+                                (dry_screen_2mm, "Dry Screen 2mm"),
+                                (dry_screen_1mm, "Wet Screen 1mm"),
+                                (excavation, "Excavation"))
 
+# Collector Vocabulary
 zeresenay_alemseged = 'Zeresenay Alemseged'
 denis_geraads = 'Denis Geraads'
 yared_asseffa = 'Yared Asseffa'
@@ -34,8 +55,14 @@ COLLECTOR_CHOICES = ((zeresenay_alemseged, "Zeresenay Alemseged"),
                      (peter_stamos, "Peter Stamos"),
                      (jonathan_wynn, "Jonathan Wynn"))
 
-SIDE_VOCABULARY = (("Left", "Left"),
-                   ("Right", "Right"),
-                   ("Both", "Both"),
-                   ("Axial", "Axial"),  # a median, unsided element
-                   ("Unknown", "Unknown"))
+# Anatomical Side Vocabulary
+left = "Left"
+right = "Right"
+both = "Both"
+axial = "Axial"
+unknown = "Unknown"
+SIDE_VOCABULARY = ((left, "Left"),
+                   (right, "Right"),
+                   (both, "Both"),
+                   (axial, "Axial"),  # a median, unsided element
+                   (unknown, "Unknown"))
