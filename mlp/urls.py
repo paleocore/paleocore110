@@ -5,12 +5,6 @@ from django.contrib.auth.decorators import login_required
 urlpatterns = [
     # Project URLs are included by main urls.py
 
-    # /projects/mlp/upload/
-    url(r'^upload/$', login_required(mlp_views.UploadKMLView.as_view(), login_url='/login/'), name="mlp_upload_kml"),
-
-    # /projects/mlp/download/
-    url(r'^download/$', mlp_views.DownloadKMLView.as_view(), name="mlp_download_kml"),
-
     # /projects/mlp/confirmation/
     url(r'^confirmation/$', mlp_views.Confirmation.as_view(), name="mlp_upload_confirmation"),
 
