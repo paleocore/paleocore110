@@ -45,31 +45,31 @@ class ImportKMZMethodsTests(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.importkmz = ImportKMZ()
+        self.import_kmz = ImportKMZ()
         self.test_file_path = 'mlp/fixtures/mlp_test_import.kmz'
         infile = open(self.test_file_path, 'rb')
         request = self.factory.post('/django-admin/mlp/occurrence/import_kmz/', {'kmlfileUpload': infile})
-        self.importkmz.request = request
+        self.import_kmz.request = request
 
     def test_get_import_file(self):
-        self.assertEqual(self.importkmz.get_import_file().name, self.test_file_path.split('/')[-1])
-        self.assertEqual(type(self.importkmz.get_import_file()), TemporaryUploadedFile)
+        self.assertEqual(self.import_kmz.get_import_file().name, self.test_file_path.split('/')[-1])
+        self.assertEqual(type(self.import_kmz.get_import_file()), TemporaryUploadedFile)
 
     def test_get_import_extension(self):
-        self.assertEqual(self.importkmz.get_import_file_extension(), 'kmz')
+        self.assertEqual(self.import_kmz.get_import_file_extension(), 'kmz')
 
     def test_get_kmz_file(self):
-        self.assertEqual(type(self.importkmz.get_kmz_file()), ZipFile)
-        self.assertEqual(self.importkmz.get_kmz_file().filelist[0].filename, '374.jpg')
+        self.assertEqual(type(self.import_kmz.get_kmz_file()), ZipFile)
+        self.assertEqual(self.import_kmz.get_kmz_file().filelist[0].filename, '374.jpg')
 
     def test_get_kml_file(self):
-        self.assertEqual(type(self.importkmz.get_kml_file()), kml.KML)
-        self.assertEqual(self.importkmz.get_kml_file().to_string()[:10], '<kml xmlns')
+        self.assertEqual(type(self.import_kmz.get_kml_file()), kml.KML)
+        self.assertEqual(self.import_kmz.get_kml_file().to_string()[:10], '<kml xmlns')
 
     def test_mlp_import_placemarks(self):
         starting_record_count = Occurrence.objects.count()  # No occurrences in empty db
         self.assertEqual(starting_record_count, 0)
-        kml_file = self.importkmz.get_kml_file()
+        kml_file = self.import_kmz.get_kml_file()
         level1_elements = list(kml_file.features())
         self.assertEqual(len(level1_elements), 1)
         self.assertEqual(type(level1_elements[0]), Document)
