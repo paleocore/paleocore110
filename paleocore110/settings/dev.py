@@ -2,7 +2,7 @@
 from .base import *
 from os.path import abspath, dirname, join
 
-
+ALLOWED_HOSTS=['127.0.0.1', 'localhost', 'testserver']
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
