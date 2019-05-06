@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     'wagtailgeowidget',
     'mapwidgets',
     'ckeditor',
+    'import_export',
 
     'projects',
     'cc',
@@ -234,3 +235,6 @@ BROKER_URL = 'redis://'
 CELERY_SEND_TASK_ERROR_EMAILS = True
 CELERYD_LOG_COLOR = False
 DEFAULT_FROM_EMAIL = "noreply@paleocore.org"
+
+# Import Export Settings
+IMPORT_EXPORT_USE_TRANSACTIONS = True
