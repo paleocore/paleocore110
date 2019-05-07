@@ -2,12 +2,26 @@
 {% load paleocore110_utils %}
 {% load settings_tags %}
 {% get_settings use_default_site=True %}
-<!DOCTYPE html>
+<!doctype html>
+
+<!-- spaceless tag removes whitespace around html tags in output html -->
 {% spaceless %}
 <html lang="en">
     <head>
+    <!-- specify the character set -->
     <meta charset="utf-8" />
+
+    <!-- useful for IE legacy compatibility and for Bootstrap compatiblity
+    Depending upon what Microsoft browsers you support you may not need to continue using the X-UA-Compatible tag.
+    If you need to support IE9 or IE8, then I would recommend using the tag.
+    If you only support the latest browsers (IE11 and/or Edge) then I would consider dropping this tag altogether.
+    If you use Twitter Bootstrap and need to eliminate validation warnings, this tag must appear in its specified order.
+    -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!--
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    -->
+
     <title>
         {% block title %}
             {% if self.seo_title %}
@@ -33,9 +47,23 @@
     {% block extra_css %}
     {% endblock extra_css %}
 
-    {% block google_analytics %}
+      {% block google_analytics %}
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-137055005-1"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+
+          gtag('js', new Date());
+
+          gtag('config', 'UA-137055005-1');
+        </script>
+
         {% include "utils/includes/google_analytics.html" %}
-    {% endblock google_analytics %}
+      {% endblock google_analytics %}
 
     </head>
 
@@ -48,7 +76,7 @@
     <div class="off-canvas-content" data-off-canvas-content>
 
         {% block breadcrumbs %}
-            {% breadcrumbs %}
+            {% breadcrumbs %} {% comment %}from utils/templatetags/navigation_tags.py {% endcomment %}
         {% endblock breadcrumbs %}
 
         {% block content %}
@@ -70,8 +98,12 @@
         </footer>
     </div>
 
+    <!-- javascript libraries -->
+    <script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
     {% compress js %}
+    <!--
     <script src="{% static 'libs/jquery/dist/jquery.min.js' %}"></script>
+    -->
     <script src="{% static 'libs/foundation-sites/dist/js/foundation.min.js' %}"></script>
     <script src="{% static 'libs/what-input/dist/what-input.min.js' %}"></script>
     <script src="{% static 'libs/bxslider-4/dist/jquery.bxslider.min.js' %}"></script>
@@ -79,6 +111,7 @@
     <script type="text/javascript" src="{% static 'js/app.js' %}"></script>
     {% endcompress %}
 
+    <!-- sitewide javascript -->
     {% block site_js %}
     <script>
     $(document).foundation();
