@@ -23,10 +23,11 @@ from wagtail.wagtailadmin.edit_handlers import (
 )
 from wagtailgeowidget.edit_handlers import GeoPanel
 from modelcluster.fields import ParentalKey
-from modelcluster.tags import ClusterTaggableManager
+from modelcluster.contrib.taggit import ClusterTaggableManager
 from taggit.models import TaggedItemBase
 from utils.models import RelatedLink, CarouselItem
 from ckeditor.fields import RichTextField as CKRichTextField
+
 
 # MODELS
 # Abstract Models - Not managed by migrations, not in DB
@@ -48,6 +49,7 @@ class PaleoCoreBaseClass(models.Model):
                               help_text='General remarks about this database record.')
     last_import = models.BooleanField(default=False)
 
+    # TODO make sure the str method on this class is optimized and producing unnecessary queries
     def __str__(self):
         id_string = '['+str(self.id)+']'
         if self.name:
@@ -142,7 +144,7 @@ class Taxon(PaleoCoreBaseClass):
         :return:
         """
         if self.rank.name == 'Species' and self.parent:
-            self.label = self.parent.name + ' ' +self.name
+            self.label = self.parent.name + ' ' + self.name
         else:
             self.label = self.name
 
@@ -219,7 +221,7 @@ class Taxon(PaleoCoreBaseClass):
         Method to get the children taxa
         :return: Returns a queryset of children Taxon objects that have existing Biology instances
         """
-        children_taxon_objects = type(self).objects.filter(parent=self)
+        return type(self).objects.filter(parent=self)
 
     class Meta:
         abstract = True
@@ -283,42 +285,37 @@ class PaleoCoreGeomBaseClass(PaleoCoreBaseClass):
                     result = pt.coords
         return result
 
-    def utm_coordinates(self, coordinate):
+    def utm_coordinates(self, coordinate='both'):
         """
-        Get the get the wgs84 Universal Transverse Mercator (UTM) coordinates for any point.
+        Get get the wgs84 Universal Transverse Mercator (UTM) coordinates for any point.
         :param coordinate: easting, northing, both
         :return: easting, northing, (easting, northing)
         """
-        def get_epsg(pt):
-            if pt.srid != 4326:
-                pt = pt.transform(4326, clone=True)
-            utm_zone = math.floor((((pt.x + 180) / 6) % 60) + 1)
-            epsg = 32600 + utm_zone  # epsg identifiers follow a pattern by zone
-            if pt.y < 0:
-                epsg = epsg + 100
-            return epsg
 
         result = None
-        if self.geom:
-            if self.geom.geom_type == 'Point':
-                # if wgs84 utm just return value
-                if 32701 <= self.geom.srid <= 32760 or 32601 <= self.geom.srid <= 32660:
-                    pt = self.geom
-                # if wgs84 gcs find zone and convert to utm
-                elif self.geom.srid == 4326:
-                    epsg = get_epsg(self.geom)
-                    pt = self.geom.transform(epsg, clone=True)
-                else:
-                    try:
-                        pt = self.geom.transform(4326, clone=True)
-                    except:
-                        pt = None
-                if coordinate in ['easting', 'east']:
-                    result = pt.x
-                elif coordinate in ['northing', 'north']:
-                    result = pt.y
-                elif coordinate == 'both':
-                    result = pt.coords
+        if self.geom and self.geom.geom_type == 'Point':
+            # EPSG 32701 = UTM Zone 1 South and 32760 = UTM Zone 60 South
+            # EPSG 32601 = UTM Zone 1 North and 32660 = UTM Zone 60 North
+            if 32701 <= self.geom.srid <= 32760 or 32601 <= self.geom.srid <= 32660:  # If wgs84 utm just return value
+                pt = self.geom
+            # if wgs84 gcs find zone and convert to utm
+            elif self.geom.srid == 4326:  # if pt is in WGS84 geographic then get EPSG for WGS84 UTM
+                utm_zone = math.floor((((self.geom.x + 180) / 6) % 60) + 1)  # UTM Zone from lon
+                coordinate_system = 32600 + utm_zone  # epsg identifiers follow a pattern by zone
+                if self.geom.y < 0:
+                    coordinate_system = coordinate_system + 100
+                pt = self.geom.transform(coordinate_system, clone=True)
+            else:
+                try:
+                    pt = self.geom.transform(4326, clone=True)
+                except:
+                    pt = None
+            if coordinate in ['easting', 'east']:
+                result = pt.x
+            elif coordinate in ['northing', 'north']:
+                result = pt.y
+            elif coordinate == 'both':
+                result = pt.coords
         return result
 
     def point_x(self):

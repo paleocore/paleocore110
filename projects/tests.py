@@ -17,7 +17,7 @@ DJANGO_ROOT = '/Users/dnr266/Documents/pycharm/paleocore110/paleocore110'
 path.append(DJANGO_ROOT)  # add DJANGO_ROOT to python path list
 
 
-class PaleoCoreGepmBaseClassMethodsTests(ModelMixinTestCase):
+class PaleoCoreGeomBaseClassMethodsTests(ModelMixinTestCase):
     """
     Test projects Context instance methods
     """
@@ -26,6 +26,8 @@ class PaleoCoreGepmBaseClassMethodsTests(ModelMixinTestCase):
     def setUp(self):
         self.model.objects.create(pk=1,
                                   geom=Point(40.75, 11.5))
+        self.model.objects.create(pk=2,
+                                  geom=Point(500000, 100000, srid=32637))
 
     def test_pcbase_gcs_coordinate_method(self):
         context_instance = self.model.objects.get(pk=1)
@@ -53,7 +55,12 @@ class PaleoCoreGepmBaseClassMethodsTests(ModelMixinTestCase):
     def test_pcbase_utm_coordinates_method(self):
         context_instance = self.model.objects.get(pk=1)
         transformed_pt = context_instance.geom.transform(32637, clone=True)
+        self.assertEqual(context_instance.utm_coordinates(), transformed_pt.coords)
         self.assertEqual(context_instance.utm_coordinates('east'), transformed_pt.x)
+        self.assertEqual(context_instance.utm_coordinates('north'), transformed_pt.y)
+        context_instance2 = self.model.objects.get(pk=2)
+        self.assertAlmostEqual(context_instance2.utm_coordinates('east'), 500000, 3)
+        self.assertAlmostEqual(context_instance2.utm_coordinates('north'), 100000, 3)
 
     def test_pcbase_get_concrete_field_names_method(self):
         context_instance = self.model.objects.get(pk=1)
