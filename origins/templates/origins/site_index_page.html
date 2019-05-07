@@ -1,4 +1,5 @@
-{% extends "origins/sites_base.html" %}
+{% extends "base.html" %}
+{% comment %}{% extends "origins/sites_base.html" %}{% endcomment %}
 {% load wagtailcore_tags %}
 
 {% block extra_css %}
@@ -103,7 +104,7 @@
           return new ol.style.Text({
             textAlign: 'left',
             textBaseline: 'middle',
-            font: 'normal 12px Arial',
+            font: 'normal 14px Arial',
             text: getText(feature, resolution, dom),
             fill: new ol.style.Fill({color: 'red'}),
             stroke: new ol.style.Stroke({color: '#ffffff', width: 3}),
@@ -166,6 +167,12 @@
 
       let osmLayer = new ol.layer.Tile({source: new ol.source.OSM()});
 
+      let omtLayer = new ol.layer.Tile({
+        source: new ol.source.OSM({
+          url: 'http://localhost:32769/styles/klokantech-basic/{z}/{x}/{y}.png'
+        })
+      })
+
       let layer_styles = [
         'Road',
         'RoadOnDemand',
@@ -192,6 +199,7 @@
 
       let map = new ol.Map({
         target: 'map',
+        //layers: [omtLayer, siteLayer],
         //layers: [country_vector],
         //layers: [country_vector, siteLayer],
         layers: bingLayers.concat(siteLayer),  // overlay vector layers on tiles
@@ -275,7 +283,17 @@
 	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.19/js/dataTables.foundation.min.js"></script>
 	<script type="text/javascript" class="init">
     $(document).ready(function() {
-      $('#example1').DataTable();
+      $('#sites').DataTable(
+        {
+          {#"columns":[#}
+          {#  null,#}
+          {#  {"type": "num"},#}
+          {#  null,#}
+          {#  null#}
+          {#],#}
+           "lengthMenu": [25, 50, 75, 100 ],
+        }
+      );
     } );
 	</script>=
 {% endblock %}
