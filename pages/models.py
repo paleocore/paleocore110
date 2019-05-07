@@ -58,6 +58,30 @@ class HomePageContentItem(Orderable, LinkFields):
     ]
 
 
+class HomePageNewsItem(Orderable, LinkFields):
+    page = ParentalKey('pages.HomePage', related_name='news_items')
+    image = models.ForeignKey(
+        'wagtailimages.Image',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+'
+    )
+    title = models.CharField(max_length=100)
+    content = RichTextField(null=True, blank=True,)
+    summary = RichTextField(blank=True)
+    slug = models.SlugField()
+
+    panels = [
+        FieldPanel('title'),
+        ImageChooserPanel('image'),
+        FieldPanel('summary'),
+        FieldPanel('content'),
+        FieldPanel('slug'),
+        MultiFieldPanel(LinkFields.panels, "Link"),
+    ]
+
+
 class HomePageCarouselItem(Orderable, CarouselItem):
     page = ParentalKey('pages.HomePage', related_name='carousel_items')
 
@@ -90,6 +114,7 @@ HomePage.content_panels = [
     FieldPanel('body', classname="full"),
     InlinePanel('carousel_items', label="Carousel items"),
     InlinePanel('content_items', label="Content Blocks"),
+    InlinePanel('news_items', label="News Blocks"),
     InlinePanel('related_links', label="Related links"),
 ]
 
