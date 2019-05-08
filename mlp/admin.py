@@ -31,6 +31,7 @@ mlp_search_fields = ('id',
                      'finder',
                      'collector',)
 
+
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     """
     OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
@@ -74,12 +75,13 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
                        ('point_x', 'point_y'),
                        ('easting', 'northing'),
                        ('geom',)],
-            #'classes': ['collapse'],
+            # 'classes': ['collapse'],
         })
     ]
     readonly_fields = mlp_default_readonly_fields + ('photo',)  # defaults plus photo
     search_fields = mlp_search_fields
     actions = ["create_data_csv", "change_xy", "change_occurrence2biology", "create_simple_data_csv"]
+
     # admin action to manually enter coordinates
     def change_xy(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -102,9 +104,10 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
                 #         mlp.views.ChangeCoordinates.as_view()),
                 #     name="change_xy"),
                 # url(r'^change_xy/$',
-                #     permission_required('lgrp.change_occurrence', login_url='login/')(lgrp.views.change_coordinates_view),
+                #     permission_required('lgrp.change_occurrence', login_url='login/')(
+                # lgrp.views.change_coordinates_view),
                 #     name="change_xy"),
-               ] + super(OccurrenceAdmin, self).get_urls()
+                ] + super(OccurrenceAdmin, self).get_urls()
 
     def change_occurrence2biology(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -112,10 +115,13 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
         return HttpResponseRedirect(redirect_url + "?ids=%s" % (",".join(selected)))
     change_occurrence2biology.short_description = "Change Occurrence to Biology"
 
-
     def create_simple_data_csv(self, request, queryset):
-        #fields_to_export = ['id', 'item_type', 'catalog_number', 'item_scientific_name', 'item_description', 'year_collected']
-        fields_to_export = ['id', 'date_created', 'date_last_modified', 'problem', 'problem_comment', 'remarks', 'georeference_remarks', 'date_recorded', 'year_collected', 'barcode', 'field_number', 'basis_of_record', 'item_type', 'collection_code', 'item_number', 'item_part', 'catalog_number', 'item_scientific_name', 'item_description', 'collecting_method	collector', 'finder', 'disposition', 'field_season', 'individual_count', 'in_situ', 'ranked', 'image', 'weathering', 'surface_modification', 'geom']
+        fields_to_export = ['id', 'date_created', 'date_last_modified', 'problem', 'problem_comment', 'remarks',
+                            'georeference_remarks', 'date_recorded', 'year_collected', 'barcode', 'field_number',
+                            'basis_of_record', 'item_type', 'collection_code', 'item_number', 'item_part',
+                            'catalog_number', 'item_scientific_name', 'item_description', 'collecting_method',
+                            'collector', 'finder', 'disposition', 'field_season', 'individual_count', 'in_situ',
+                            'ranked', 'image', 'weathering', 'surface_modification', 'geom']
         response = HttpResponse(content_type='text/csv')  # declare the response type
         response['Content-Disposition'] = 'attachment; filename="MLP_data.csv"'  # declare the file name
         writer = unicodecsv.writer(response)  # open a .csv writer
@@ -126,7 +132,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
                 row_list = [o.__dict__.get(k) for k in fields_to_export]
                 row_list.append(o.point_x())
                 row_list.append(o.point_y())
-                #row_list.append(o.taxon)
+                # row_list.append(o.taxon)
                 writer.writerow(row_list)
             except:
                 writer.writerow(o.id)
