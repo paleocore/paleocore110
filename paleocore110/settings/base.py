@@ -74,7 +74,7 @@ INSTALLED_APPS = (
     'wagtailgeowidget',
     'mapwidgets',
     'ckeditor',
-    'import_export',
+
 
     'projects',
     'cc',

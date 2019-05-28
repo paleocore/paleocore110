@@ -10,6 +10,7 @@ INSTALLED_APPS += (
     'debug_toolbar',
     'django_extensions',
     'vif',
+    'import_export',
     'taph',
     'olduvai',
 )
