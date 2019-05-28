@@ -11,7 +11,6 @@ INSTALLED_APPS += (
     'django_extensions',
     'vif',
     'taph',
-    'laetoli',
     'olduvai',
 )
 

@@ -84,6 +84,7 @@ INSTALLED_APPS = (
     'mlp',
     'drp',
     'hrp',
+    'laetoli',
     'omo_mursi',
     'origins',
     'standard',
