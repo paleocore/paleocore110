@@ -5,8 +5,8 @@ from .ontologies import LAETOLI_AREAS, LAETOLI_UNITS
 
 class TaxonRank(projects.models.TaxonRank):
     class Meta:
-        verbose_name = "HRP Taxon Rank"
-        verbose_name_plural = "HRP Taxon Ranks"
+        verbose_name = "Laetoli Taxon Rank"
+        verbose_name_plural = "Laetoli Taxon Ranks"
 
 
 class Taxon(projects.models.Taxon):
@@ -14,14 +14,14 @@ class Taxon(projects.models.Taxon):
     rank = models.ForeignKey(TaxonRank)
 
     class Meta:
-        verbose_name = "HRP Taxon"
-        verbose_name_plural = "HRP Taxa"
+        verbose_name = "Laetoli Taxon"
+        verbose_name_plural = "Laetoli Taxa"
 
 
 class IdentificationQualifier(projects.models.IdentificationQualifier):
     class Meta:
-        verbose_name = "HRP ID Qualifier"
-        verbose_name_plural = "HRP ID Qualifiers"
+        verbose_name = "Laetoli ID Qualifier"
+        verbose_name_plural = "Laetoli ID Qualifiers"
 
 
 # Locality Class
