@@ -112,7 +112,7 @@ class FossilAdmin(admin.ModelAdmin):
                      'locality_name',
                      'description'
                      ] + verbatim_taxon_field_list + taxon_field_list
-    list_filter = ['problem', 'locality_name']
+    list_filter = ['problem', 'locality_name', 'tfamily', 'ttribe', 'tgenus']
     actions = ['create_data_csv']
 
     def create_data_csv(self, request, queryset):
