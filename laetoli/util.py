@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from .models import Fossil
 import xlrd
 from datetime import datetime
@@ -5,6 +6,7 @@ import pytz
 import re
 from paleocore110.settings import PROJECT_ROOT
 from sys import path
+import collections
 
 #FOLDER_PATH = '/Users/dnr266/Documents/PaleoCore/projects/Laetoli/csho_versions/'
 FOLDER_PATH = PROJECT_ROOT + '/laetoli/fixtures/'
@@ -184,7 +186,7 @@ def make_row_dict(book, header_list, row_data_cell_list):
 
 def import_sheet(year, file, book, header, sheet, header_row=True, verbose=verbose_default):
     """
-    Import data from an Excel spreadsheet
+    Import data from an Excel spreadsheet. Skips empty rows.
     :param year: Integer value for the woorkbook year.
     :param file: String value containing file name without leading or trailing slashes.
     :param book: An Excel workbook object
@@ -194,9 +196,9 @@ def import_sheet(year, file, book, header, sheet, header_row=True, verbose=verbo
     :param verbose: verbose output desired
     :return: returns an integer row count and an integer created count. If all goes well the two should match.
     """
+    created_count = 0
     starting_row = 1
     row_count = 0
-    created_count = 0
     if not header_row:
         starting_row = 0
     for row in range(starting_row, sheet.nrows):
@@ -206,41 +208,18 @@ def import_sheet(year, file, book, header, sheet, header_row=True, verbose=verbo
         if row_dict:
             row_dict['verbatim_workbook_name'] = file
             row_dict['verbatim_workbook_year'] = year
-            specimen_number = row_dict['verbatim_specimen_number']
-            obj, created = Fossil.objects.get_or_create(defaults=row_dict,
-                                                         verbatim_specimen_number=specimen_number)
-            if not created:
-                print('Row {}, Item {} already exists'.format(row_count, specimen_number))
-                print('Creating new record for duplicate cat number')
-                problem_comment = 'Duplicate catalog number!'
-                # note duplicate in existing record
-                obj.problem = True
-                if obj.problem_comment:
-                    obj.problem_comment = obj.problem_comment + ' ' + problem_comment
-                else:
-                    obj.problem_comment = problem_comment
-                obj.save()
-                # create new record and note duplicate
-                new_bio = Fossil(**row_dict)
-                new_bio.problem = True
-                if new_bio.problem_comment:
-                    new_bio.problem_comment = new_bio.problem_comment + ' ' + problem_comment
-                else:
-                    new_bio.problem_comment = problem_comment
-                new_bio.save()
-
-                created_count += 1
+            # specimen_number = row_dict['verbatim_specimen_number']
+            Fossil.objects.create(**row_dict)
+            created_count += 1
             row_count += 1
-            if created:
-                created_count += 1
         else:  # if empty row
             row_count += 1
-            print('skipping row {}'.format(row_count))
+            print('skipping blank row {}'.format(row_count))
     return row_count, created_count
 
 
 def import_file(folder, file, year, verbose=verbose_default):
-    print("\nProcessing {}".format(file))  # Indicate function has started
+    print("\nImporting data from {}".format(file))  # Indicate function has started
     book = open_book(folder, file)  # open the excel workbook
     sheet = get_max_sheet(book)
     header = get_header_list(sheet)
@@ -292,7 +271,7 @@ def update_catalog_number():
     transfer and validate catalog numbers
     :return: 
     """
-    print("\nUpdating catalog_number from verbatim_specimen_number.")
+    print("Updating catalog_number from verbatim_specimen_number.")
     ep_re = re.compile(r'EP ')
     cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}/[089][01234589][a-zA-Z]$')
     cap = re.compile(r'EP \d{3,4}[A-Z]/[089][01234589]$')
@@ -348,57 +327,151 @@ def update_catalog_number():
             fossil.catalog_number = cn
         fossil.save()
 
-    # Fix EP 120A+B/98
-    fossil = Fossil.objects.get(verbatim_specimen_number='EP 120A+B/98')
-    new_fossil = fossil
-    new_fossil.pk = None
-    new_fossil.catalog_number = 'EP 120b/98'
-    new_fossil.save()
-    fossil.catalog_number = 'EP 120a/98'
+    # Fix 3 Format Errors
+    # Three specimens have badly formed catalog numbers.
+    # format_errors = ['EP 120A+B/98', 'EP 507/07', 'EP 756/06']
+    # 1. Fix EP 120A+B/98
+    ep120 = Fossil.objects.get(verbatim_specimen_number='EP 120A+B/98')
+    ep120.catalog_number = 'EP 120/98'
+    if ep120.remarks:
+        ep120.remarks += ' Catalog number changed from EP 120A+B/98'
+    else:
+        ep120.remarks = 'Catalog number changed from EP 120A+B/98'
+    ep120.save()
+
+    # 2. Fix EP 507/07
+    fossil = Fossil.objects.get(catalog_number='EP 507/07')
+    fossil.catalog_number = 'EP 507/05'
     fossil.save()
 
-    # Delete Duplicates
-    # For EP 1582b/00 choose the item with the more complete description
-    fossils = Fossil.objects.filter(catalog_number='EP 1582b/00').exclude(description='distal metapodial')
-    if len(fossils) == 2:
-        delete_me = fossils[0]
-        delete_me.delete()
-    fossil = Fossil.objects.get(catalog_number='EP 1582b/00')
-    clear_problem_duplicate(fossil)
+    # 3. Fix EP 756/06
+    fossil = Fossil.objects.get(catalog_number='EP 756/06')
+    fossil.catalog_number = 'EP 756/05'
+    fossil.save()
 
-    # For rest just delete the first ducplicate
-    for cn in ['EP 1144/04', 'EP 1173/04', 'EP 1400/04', 'EP 1400/04', 'EP 1403/04', 'EP 1542/04', 'EP 515/05']:
+    # Fix 13 Duplicates
+    # Seven specimens are clones. Delete one of each
+    # clones = ['EP 1582b/00', EP 1144/04', 'EP 1173/04', 'EP 1400/04', 'EP 1403/04', 'EP 1542/04', 'EP 515/05']
+    # 1. Fix EP 1582b/00. Keep the item with the more complete description.
+    fossil = Fossil.objects.get(catalog_number='EP 1582b/00', verbatim_element='Dist. M/Podial')
+    fossil.delete()
+
+    # 2 - 7.  Fix 6 cloned entries, delete one copy.
+    for cn in ['EP 1144/04', 'EP 1173/04', 'EP 1400/04', 'EP 1403/04', 'EP 1542/04', 'EP 515/05']:
         fossils = Fossil.objects.filter(catalog_number=cn)
         if len(fossils) == 2:
             delete_me = fossils[0]
             delete_me.delete()
-            clear_problem_duplicate(fossils[1])
+
+    # Fix two pairs of duplicate entries that reflect emended taxonomic identifications of the same specimen.
+    # emended_specimens = ['EP 001/98', 'EP 1477b/00']
+    # EP 001/98 was emended from crocodile to rhino
+    # EP 1477b/00 was emended from suid to felid
+
+    # 8. Fix EP 0001/98.
+    # Delete the crocodile entry and update the taxonomic remarks to reflect the change in the rhino entry.
+    fossil = Fossil.objects.get(catalog_number='EP 001/98', verbatim_family='Crocodylidae')
+    fossil.delete()
+
+    # Update comments to the rhino entry.
+    fossil = Fossil.objects.get(catalog_number='EP 001/98', verbatim_family='Rhinocerotidae')
+    if fossil.taxon_remarks:
+        fossil.taxon_remarks += ' Identification updated from Animalia:Vertebrata:Reptilia:Crocodilia:Crocodylidae'
+        fossil.save()
+    else:
+        fossil.taxon_remarks = 'Identification updated from Animalia:Vertebrata:Reptilia:Crocodilia:Crocodylidae'
+        fossil.save()
+
+    # 9. Fix EP 1477b/00 and also related specimen EP 1477a/00
+    # Delete the suid entry.
+    fossil = Fossil.objects.get(catalog_number='EP 1477b/00', verbatim_order='Artiodactyla')
+    fossil.delete()
+    # Update comments to the the felid entry.
+    fossil = Fossil.objects.get(catalog_number='EP 1477b/00', verbatim_order='Carnivora')
+    if fossil.taxon_remarks:
+        fossil.taxon_remarks += ' Identification updated from Animalia:Vertebrata:Mammalia:Artiodactyla:cf. Suidae'
+        fossil.save()
+    else:
+        fossil.taxon_remarks = 'Identification updated from Animalia:Vertebrata:Mammalia:Artiodactyla:cf. Suidae'
+        fossil.save()
+    # Also emend the taxonomic information for related record EP 1477a/00
+    fossil = Fossil.objects.get(catalog_number='EP 1477a/00')
+    fossil.torder='Carnivora'
+    fossil.tfamily='Felidae'
+    fossil.tsubfamily = None
+    fossil.tgenus = None
+    fossil.ttribe = None
+    fossil.trivial = None
+    fossil.scientific_name = 'Animalia:Vertebrata:Mammalia:Carnivora:Felidae'
+    fossil.save()
+    if fossil.taxon_remarks:
+        fossil.taxon_remarks += ' Identification updated from ' \
+                                'Animalia:Vertebrata:Mammalia:Artiodactyla:Suidae:Kolpochoerus'
+        fossil.save()
+    else:
+        fossil.taxon_remarks = 'Identification updated from ' \
+                               'Animalia:Vertebrata:Mammalia:Artiodactyla:Suidae:Kolpochoerus'
+        fossil.save()
+
+    # We are still left with four duplicates resulting from typos during digitization.
+    # duplicates = ['EP 1052/98', 'EP 1075/03', 'EP 348/04', 'EP 2188/99']
+    # These items need to be fixed individually.
+
+    # 10. Fix EP 1052/98. The Aves specimen has a typo in the catalog number. Should be EP 1062/98
+    fossil = Fossil.objects.get(catalog_number='EP 1052/98', verbatim_class='Aves')
+    fossil.delete()
+    
+    # 11. Fix EP 1075/03. The Serengetilabus specimen has a typo in the catalog number. Should be EP 1975/03
+    fossil = Fossil.objects.get(catalog_number='EP 1075/03', verbatim_genus='Serengetilagus')
+    fossil.catalog_number = 'EP 1975/03'
+    fossil.save()
+
+    # 12. Fix EP 348/04. The distal radius specimen has a typo in the catalog number and incorrect date. It should
+    # read EP 349/04 and the date should be 29 June 2004
+    fossil = Fossil.objects.get(catalog_number='EP 348/04', verbatim_element='Distal radius')
+    fossil.catalog_number = 'EP 349/04'
+    tz = pytz.timezone('Africa/Dar_es_Salaam')
+    fossil.date_recorded = datetime(year=2004, month=6, day=29, tzinfo=tz)
+    fossil.save()
+
+    # 13. Fix EP 2188/99, the Bovidae distal humerus is a typo and should be EP 2188/03
+    fossil = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='distal humerus')
+    fossil.catalog_number = 'EP 2188/03'
+    fossil.save()
+
+    fossil = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='Lumbar Vertebral Centrum')
+    fossil.catalog_number = 'EP 2188/00'
+    fossil.save()
 
 
-def validate_catalog_numbers():
+def validate_catalog_number():
     print("Validating catalog_number.")
-
-    # initialize result containers
-    validation_errors = {}
-    form = []
-    duplicates = []
-    dates = []
-
-    fossils = Fossil.objects.all()
     # regular expression to test proper format of catalog numbers
-    cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}/[089][01234589]$')
-    for fossil in fossils:
-        if not cat_re.match(fossil.catalog_number):
-            print('Badly formed for id:{} catalog_number:{}'.format(fossil.id, fossil.catalog_number))
-            form.append(fossil.catalog_number)
-        year_str = str(fossil.verbatim_date_discovered.year)[-2:]
-        if fossil.catalog_number[-2:] != year_str:
-            print('Improper date \
-            for id:{} date:{} catalog_number:{}'.format(fossil.id, fossil.date_recorded.year, fossil.catalog_number))
-            dates.append(fossil.catalog_number)
-        if Fossil.objects.filter(catalog_number=fossil.catalog_number).count() > 1:
-            print('Duplicate catalog number for {}'.format(fossil.catalog_number))
-            duplicates.append(fossil.catalog_number)
+    cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]?/[09][01234589]$')
+    # list of catalog_number column in db
+    catalog_list = list(Fossil.objects.values_list('catalog_number', flat=True))
+    # Test catalog numbers against re
+    re_errors_list = [item for item in catalog_list if not cat_re.match(item)]
+    duplicate_list = [item for item, count in collections.Counter(catalog_list).items() if count > 1]
+
+    # Pretty print format errors
+    print("\nFormat Errors\n---------------------")
+    if re_errors_list:
+        for f in re_errors_list:
+            print("Format error in catalog number {}".format(f))
+    else:
+        print("No formatting errors found.")
+
+    # Pretty print duplicates
+    print("\nDuplicate Summary\n---------------------")
+    if duplicate_list:
+        for duplicate_catalog_number in duplicate_list:
+            print("Duplicate catalog number {}".format(duplicate_catalog_number))
+            duplicate_qs = Fossil.objects.filter(catalog_number=duplicate_catalog_number)
+            for d in duplicate_qs:
+                print('id:{}  loc:{}  desc:{}  taxon:{}'.format(d.id, d.locality_name, d.description, d.scientific_name))
+    else:
+        print("No duplicates found.")
 
 
 def update_institution():
@@ -406,7 +479,7 @@ def update_institution():
     Copy data from verbatim_storage into disposition
     :return:
     """
-    print("\nUpdating disposition from verbatim_storage")
+    print("Updating disposition from verbatim_storage")
     for fossil in Fossil.objects.all():
         fossil.disposition = fossil.verbatim_storage
         fossil.save()
@@ -940,6 +1013,10 @@ def update_subfamily():
         f.save()
 
 
+def validate_kingdom():
+    pass
+
+
 def update_scientific_name():
     """
     Update scientific name from taxon columns. Clean data from columns then concatenate to colon delimited string.
@@ -1068,11 +1145,14 @@ def update_stragglers():
 # Main import function
 def main(year_list=CSHO_YEARS):
     # import data
+    print('Importing data from XL spreadsheets')
     for year in year_list:
         file = make_file_string(year)
         import_file(folder=FOLDER_PATH, file=file, year=year)
+    print('====================================')
 
     # update data
+    print('\nUpdating records from verbatim data')
     update_date_recorded()
     update_catalog_number()
     update_institution()
@@ -1087,10 +1167,13 @@ def main(year_list=CSHO_YEARS):
     update_remarks()
     update_problems()
     update_stragglers()
+    print('====================================')
 
+    print('\n Validating records')
     validate_date_recorded()
-    validate_catalog_numbers()
+    validate_catalog_number()
     validate_locality()
+    print('====================================')
 
 
 # Additional utility functions
