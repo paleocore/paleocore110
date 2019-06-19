@@ -64,7 +64,7 @@ verbatim_fieldsets = ('Verbatim Fields', {'fields': [
 record_fieldsets = ('Record Fields', {'fields': [
     ('catalog_number', 'locality_name', 'geological_context_name'),
     ('date_created', 'date_last_modified', 'date_recorded'),
-    ('description',),
+    ('item_count', 'description',),
     ('remarks',),
 ]
 })
