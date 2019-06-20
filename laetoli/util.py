@@ -446,66 +446,6 @@ def update_catalog_number():
     fossil.catalog_number = 'EP 2188/00'
     fossil.save()
 
-    # Split 2 bulk samples that contain multiple taxa.
-    # Warning catalog number is no long unique!
-    # Split records
-
-    for catno in ['EP 1280/01', 'EP 3129/00']:
-        new = Fossil.objects.get(catalog_number=catno)
-        new.pk = None  # delete the pk to create a duplicate with same catalog number but new pk (assigned on save)
-        new.save()
-
-    # Update attributes for splits
-    # EP 1280/01 - split to a and b.
-    ep1280 = Fossil.objects.filter(catalog_number='EP 1280/01')
-    update_dict_1280_achatina = {
-        'catalog_number': 'EP1280/01a',
-        'item_count': 2,
-        'tfamily': 'Achatinidae',
-        'tgenus': 'Achatina',
-        'tspecies': 'zanzibarica',
-        'scientific_name': 'Achatina zanzibarica',
-        'taxon_rank': 'species',
-    }
-    ep1280_achatina = update_from_dict(ep1280[0], update_dict_1280_achatina)
-    ep1280_achatina.save()
-    update_dict_1280_pseudo = {
-        'item_count': 5,
-        'tfamily': 'Subulinidae',
-        'tgenus': 'Pseudoglessula',
-        'tspecies': 'gibbonsi',
-        'scientific_name': 'Pseudoglessula gibbonsi',
-        'identification_qualifier': 'cf. gibbonsi',
-        'taxon_rank': 'species',
-    }
-    ep1280_pseudo = update_from_dict(ep1280[1], update_dict_1280_pseudo)
-    ep1280_pseudo.save()
-
-    # EP 3129/00 - split to a and b
-    ep3129 = Fossil.objects.filter(catalog_number='EP 3129/00')
-    update_dict_3129_achatina = {
-        'item_count': 5,
-        'tfamily': 'Achatinidae',
-        'tgenus': 'Achatina',
-        'tspecies': 'zanzibarica',
-        'scientific_name': 'Achatina zanzibarica',
-        'taxon_rank': 'species',
-    }
-    ep3129_achatina = update_from_dict(ep3129[0], update_dict_3129_achatina)
-    ep3129_achatina.save()
-    update_dict_3129_pseudo = {
-        'item_count': 4,
-        'tfamily': 'Subulinidae',
-        'tgenus': 'Pseudoglessula',
-        'tspecies': 'gibbonsi',
-        'scientific_name': 'Pseudoglessula gibbonsi',
-        'identification_qualifier': 'cf. Pseudoglessula gibbonsi',
-        'taxon_rank': 'species',
-    }
-    ep3129_pseudo = update_from_dict(ep3129[1], update_dict_3129_pseudo)
-    ep3129_pseudo.save()
-
-
 
 def validate_catalog_number():
     print("Validating catalog_number.")
@@ -535,14 +475,6 @@ def validate_catalog_number():
                 print('id:{}  loc:{}  desc:{}  taxon:{}'.format(d.id, d.locality_name, d.description, d.scientific_name))
     else:
         print("No duplicates found.")
-
-    # Validate catalog numbers for splits = ['EP 1280/01', 'EP 3129/99', 'EP 1542/00']
-    splits = ['EP 1280/01', 'EP 3129/00', 'EP 1542/00']
-    for catno in splits:
-        if Fossil.objects.filter(catalog_number=catno).count() == 2:
-            pass
-        else:
-            print("Splite error in catalog number {}".format(catno))
 
 
 def update_institution():
@@ -1118,7 +1050,10 @@ def update_taxon_fields():
     # Fix EP 297/05  verbatim_class = 'Mammalia' but verbatim_order = 'Reptilia ?'
     # Move order entry to taxonomic notes
     f = Fossil.objects.get(catalog_number='EP 297/05')
-    f.taxon_remarks += ' ' + f.verbatim_order  # copy order entry to taxonomic remarks
+    if f.taxon_remarks:
+        f.taxon_remarks += ' ' + f.verbatim_order  # copy order entry to taxonomic remarks
+    else:
+        f.taxon_remarks = f.verbatim_order
     if f.torder:
         f.torder = None  # remove from torder field
     f.save()
@@ -1137,7 +1072,11 @@ def update_taxon_fields():
     # Fix taxon comments and species for EP 688/98
     f = Fossil.objects.get(catalog_number='EP 688/98')
     f.tspecies = 'kohllarseni'
-    f.taxon_remarks += ' Awg - Probably Gazella Kohllarseni'
+    remark_string = 'Awg - Probably Gazella Kohllarseni'
+    if f.taxon_remarks:
+        f.taxon_remarks += ' ' + remark_string
+    else:
+        f.taxon_remarks = remark_string
     f.save()
 
     # Fix taxon field for EP 1542/00
@@ -1249,6 +1188,73 @@ def update_problems():
         f.save()
 
 
+def update_splits():
+    print("Updating splits")
+    # Split 2 bulk samples that contain multiple taxa.
+    # splits = ['EP 1280/01', 'EP 3129/00']
+
+    # EP 1280/01 - split to a and b.
+    ep1280a, ep1280b = split2part(Fossil.objects.get(catalog_number='EP 1280/01'))
+
+    update_dict_1280a = {
+        'catalog_number': 'EP 1280a/01',
+        'item_count': 2,
+        'tfamily': 'Achatinidae',
+        'tgenus': 'Achatina',
+        'tspecies': 'zanzibarica',
+        'scientific_name': 'Achatina zanzibarica',
+        'taxon_rank': 'species',
+    }
+    ep1280a = update_from_dict(ep1280a, update_dict_1280a)  # update first instance
+    ep1280a.save()  # save first instance
+
+    update_dict_1280b = {
+        'catalog_number': 'EP 1280b/01',
+        'item_count': 5,
+        'tfamily': 'Subulinidae',
+        'tgenus': 'Pseudoglessula',
+        'tspecies': 'gibbonsi',
+        'scientific_name': 'Pseudoglessula gibbonsi',
+        'identification_qualifier': 'cf. gibbonsi',
+        'taxon_rank': 'species',
+    }
+    ep1280b = update_from_dict(ep1280b, update_dict_1280b)
+    ep1280b.save()
+
+    # EP 3129/00 - split to a and b
+    ep3129a, ep3129b = split2part(Fossil.objects.get(catalog_number='EP 3129/00'))
+    update_dict_3129a = {
+        'catalog_number': 'EP 3129a/00',
+        'item_count': 8,
+        'tfamily': 'Achatinidae',
+        'tgenus': 'Achatina',
+        'tspecies': 'zanzibarica',
+        'scientific_name': 'Achatina zanzibarica',
+        'taxon_rank': 'species',
+    }
+    ep3129a = update_from_dict(ep3129a, update_dict_3129a)
+    ep3129a.save()
+    update_dict_3129b = {
+        'catalog_number': 'EP 3129b/00',
+        'item_count': 1,
+        'tfamily': 'Subulinidae',
+        'tgenus': 'Pseudoglessula',
+        'tspecies': 'gibbonsi',
+        'scientific_name': 'Pseudoglessula gibbonsi',
+        'identification_qualifier': 'cf. Pseudoglessula gibbonsi',
+        'taxon_rank': 'species',
+    }
+    ep3129b = update_from_dict(ep3129b, update_dict_3129b)
+    ep3129b.save()
+
+
+def validate_splits():
+    # Validate catalog numbers for splits = ['EP 1280/01', 'EP 3129/99']
+    splits = ['EP 1280a/01', 'EP 1280b/01',  'EP 3129a/99', 'EP 3129a/99']
+    for catno in splits:
+        Fossil.objects.get(catalog_number=catno)  # will raise error if splits don't exist.
+
+
 # Main import function
 def main(year_list=CSHO_YEARS):
     # import data
@@ -1272,6 +1278,7 @@ def main(year_list=CSHO_YEARS):
     update_taxon_remarks()
     update_remarks()
     update_problems()
+    update_splits()
     print('====================================')
 
     print('\n Validating records')
@@ -1391,22 +1398,32 @@ def import_report(year_list=CSHO_YEARS):
     return record_count_list
 
 
-def update_from_dict(obj, dict):
+def update_from_dict(obj, update_dict):
     """
+    A function to update an object instance with values stored in a dictionary.
+    In some cases preferred over calling filter(pk=pk).update(**dict) because update does not send signals.
     :param obj: The object instance to be updated
-    :param dict: A dictionary of attribute-value pairs to update the object
+    :param update_dict: A dictionary of attribute-value pairs to update the object
     :return: Returns the object instance with upated values. But still need to save the changes!
     """
-    # A function to update an object instance with values stored in a dictionary.
-    # In some cases preferred over calling filter(pk=pk).update(**dict) because update does not send signals.
-    for attr, value in dict.items:
+    #
+    for attr, value in update_dict.items():
         setattr(obj, attr, value)
     return obj
 
 
 def duplicate(obj):
     """
-    Duplicate an object in the database and return the duplicate
+    Duplicate an object in the database and return the duplicate.
+    Warning, original obj now points to new object
+    a = Fossil.objects.get(catalog_number = 'EP 1280/01')
+    a
+    <Fossil 11132>
+    b = duplicate(a)
+    b
+    <Fossil 11134>
+    a
+    <Fossil 11134> !!!
     :param obj:
     :return: Return the duplicate object.
     """
@@ -1430,10 +1447,12 @@ def split2part(obj):
         if cat_re.match(obj.catalog_number):
             obj.catalog_number = obj.catalog_number.replace('/', 'a/')  # insert part letter
             obj.save()
-            new_obj = duplicate(obj)
-            new_obj.catalog_number = obj.catalog_number.replace('a/', 'b/')
+            old_obj_id = obj.id
+            old_obj = Fossil.objects.get(id=old_obj_id)
+            new_obj = duplicate(obj)  # Here obj now points to new_obj!
+            new_obj.catalog_number = new_obj.catalog_number.replace('a/', 'b/')
             new_obj.save()  # save second copy
-            return obj, new_obj
+            return old_obj, new_obj
         else:
             print("catalog number already has parts")
             return None
@@ -1441,4 +1460,14 @@ def split2part(obj):
         raise TypeError
 
 
-
+def restore_splits():
+    ep1280b = Fossil.objects.get(catalog_number='EP 1280b/01')
+    ep1280b.delete()
+    ep1280 = Fossil.objects.get(catalog_number='EP 1280a/01')
+    ep1280.catalog_number = 'EP 1280/01'
+    ep1280.save()
+    ep3129b = Fossil.objects.get(catalog_number=('EP 3129b/00'))
+    ep3129b.delete()
+    ep3129 = Fossil.objects.get(catalog_number=('EP 3129a/00'))
+    ep3129.catalog_number = 'EP 3129/00'
+    ep3129.save()
