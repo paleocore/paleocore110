@@ -7,6 +7,7 @@ import re
 from paleocore110.settings import PROJECT_ROOT
 from sys import path
 import collections
+import idigbio
 
 #FOLDER_PATH = '/Users/dnr266/Documents/PaleoCore/projects/Laetoli/csho_versions/'
 FOLDER_PATH = PROJECT_ROOT + '/laetoli/fixtures/'
@@ -268,7 +269,9 @@ def validate_date_recorded():
 def update_catalog_number():
     """
     catalog_number = verbatim_specimen_number
-    transfer and validate catalog numbers
+    fix 3 catalog numbers with format errors or incorrect year suffixes
+    remove 7 duplicate (cloned) records
+    fix 6 unique entries that have duplicate catalog numbers from digitizing errors
     :return: 
     """
     print("Updating catalog_number from verbatim_specimen_number.")
@@ -443,6 +446,66 @@ def update_catalog_number():
     fossil.catalog_number = 'EP 2188/00'
     fossil.save()
 
+    # Split 2 bulk samples that contain multiple taxa.
+    # Warning catalog number is no long unique!
+    # Split records
+
+    for catno in ['EP 1280/01', 'EP 3129/00']:
+        new = Fossil.objects.get(catalog_number=catno)
+        new.pk = None  # delete the pk to create a duplicate with same catalog number but new pk (assigned on save)
+        new.save()
+
+    # Update attributes for splits
+    # EP 1280/01 - split to a and b.
+    ep1280 = Fossil.objects.filter(catalog_number='EP 1280/01')
+    update_dict_1280_achatina = {
+        'catalog_number': 'EP1280/01a',
+        'item_count': 2,
+        'tfamily': 'Achatinidae',
+        'tgenus': 'Achatina',
+        'tspecies': 'zanzibarica',
+        'scientific_name': 'Achatina zanzibarica',
+        'taxon_rank': 'species',
+    }
+    ep1280_achatina = update_from_dict(ep1280[0], update_dict_1280_achatina)
+    ep1280_achatina.save()
+    update_dict_1280_pseudo = {
+        'item_count': 5,
+        'tfamily': 'Subulinidae',
+        'tgenus': 'Pseudoglessula',
+        'tspecies': 'gibbonsi',
+        'scientific_name': 'Pseudoglessula gibbonsi',
+        'identification_qualifier': 'cf. gibbonsi',
+        'taxon_rank': 'species',
+    }
+    ep1280_pseudo = update_from_dict(ep1280[1], update_dict_1280_pseudo)
+    ep1280_pseudo.save()
+
+    # EP 3129/00 - split to a and b
+    ep3129 = Fossil.objects.filter(catalog_number='EP 3129/00')
+    update_dict_3129_achatina = {
+        'item_count': 5,
+        'tfamily': 'Achatinidae',
+        'tgenus': 'Achatina',
+        'tspecies': 'zanzibarica',
+        'scientific_name': 'Achatina zanzibarica',
+        'taxon_rank': 'species',
+    }
+    ep3129_achatina = update_from_dict(ep3129[0], update_dict_3129_achatina)
+    ep3129_achatina.save()
+    update_dict_3129_pseudo = {
+        'item_count': 4,
+        'tfamily': 'Subulinidae',
+        'tgenus': 'Pseudoglessula',
+        'tspecies': 'gibbonsi',
+        'scientific_name': 'Pseudoglessula gibbonsi',
+        'identification_qualifier': 'cf. Pseudoglessula gibbonsi',
+        'taxon_rank': 'species',
+    }
+    ep3129_pseudo = update_from_dict(ep3129[1], update_dict_3129_pseudo)
+    ep3129_pseudo.save()
+
+
 
 def validate_catalog_number():
     print("Validating catalog_number.")
@@ -472,6 +535,14 @@ def validate_catalog_number():
                 print('id:{}  loc:{}  desc:{}  taxon:{}'.format(d.id, d.locality_name, d.description, d.scientific_name))
     else:
         print("No duplicates found.")
+
+    # Validate catalog numbers for splits = ['EP 1280/01', 'EP 3129/99', 'EP 1542/00']
+    splits = ['EP 1280/01', 'EP 3129/00', 'EP 1542/00']
+    for catno in splits:
+        if Fossil.objects.filter(catalog_number=catno).count() == 2:
+            pass
+        else:
+            print("Splite error in catalog number {}".format(catno))
 
 
 def update_institution():
@@ -846,6 +917,13 @@ def update_description():
 
 
 def update_taxon_fields():
+    """
+    Function to read values from verbatim taxon field (e.g. verbatim_kingdom, etc.) clean the entries and
+    write them to the taxonomic fields (e.g. tkingdom). All taxon fields start with t to avoid conflicts
+    with python keywords (e.g. class, order). The function also updates the taxon_rank field and the
+    identification_qualifier field.
+    :return:
+    """
     print("Updating taxonomic fields")
     krep = {
         # Kingdom
@@ -973,10 +1051,9 @@ def update_taxon_fields():
 
     p_re = re.compile(r'[(].+[)]')  # matches anything in parentheses
 
-    cf_re = re.compile(r'[?]')  # find all cases with '?'
-    cfstart = re.compile(r'^[?][\s]*(.*)')
-    cfend = re.compile(r'(.*)[?]')
-    id_re = re.compile(r'[Tt][Hh]|[A][Ww][Gg]')
+    iq_re = re.compile(r'cf|aff')  # find all cases with 'cf' or 'aff'
+
+    iqrep = {'cf.': '', 'aff.': ''}  # remove cf. and aff.
 
     def clean_taxon_field(obj, verbatim_taxon_field_name, rep_dict):
         vfn = verbatim_taxon_field_name
@@ -985,13 +1062,19 @@ def update_taxon_fields():
         fs = q2cf(fs)  # convert any case with ? to cf.
         fs = indet2None(fs)  # remove indet
         fs = multireplace(fs, rep_dict)  # fix random misspellings and typos
-        fs = fs.replace('   ', ' ')  # remove double spaces
+        if iq_re.search(fs):
+            setattr(obj, 'identification_qualifier', fs)
+            fs = multireplace(fs, iqrep)
+        fs = fs.replace('   ', ' ')  # remove triple spaces
         fs = fs.replace('  ', ' ')  # remove double spaces
         fs = fs.strip()  # remove leading and trailing spaces
+
         if fs in ['', ' ', None]:  # convert any blanks to None
             fs = None
+
         return fs
 
+    # Update taxon columns
     for f in Fossil.objects.all():
         f.tkingdom = clean_taxon_field(f, 'verbatim_kingdom', krep)
         f.tphylum = clean_taxon_field(f, 'verbatim_phylum_subphylum', krep)
@@ -1002,15 +1085,78 @@ def update_taxon_fields():
         f.tgenus = clean_taxon_field(f, 'verbatim_genus', grep)
         f.tspecies = clean_taxon_field(f, 'verbatim_species', srep)
 
+        # Update taxon ranks
+        if f.tspecies:
+            f.taxon_rank = "species"
+        elif f.tgenus:
+            f.taxon_rank = "genus"
+        elif f.ttribe:
+            f.taxon_rank = "tribe"
+        elif f.tfamily:
+            f.taxon_rank = "family"
+        elif f.torder:
+            f.taxon_rank = "order"
+        elif f.tclass:
+            f.taxon_rank = "class"
+        elif f.tphylum:
+            f.taxon_rank = "phylum"
+        elif f.tkingdom:
+            f.taxon_rank = "kingdom"
+
         f.save()
 
-
-def update_subfamily():
+    # Update Subfamily entries recorded in Family column
     fossils = Fossil.objects.filter(verbatim_family__contains='inae')
     for f in fossils:
-        f.subfamily = f.verbatim_family
-        f.subfamily = f.subfamily.replace('Cercopithecidae - Colobinae', 'Colobinae')
+        f.tsubfamily = f.verbatim_family
+        f.tsubfamily = f.tsubfamily.replace('Cercopithecidae - Colobinae', 'Colobinae')
+        f.taxon_rank = "subfamily"
         f.save()
+
+    # Fix remaining unique errors.
+
+    # Fix EP 297/05  verbatim_class = 'Mammalia' but verbatim_order = 'Reptilia ?'
+    # Move order entry to taxonomic notes
+    f = Fossil.objects.get(catalog_number='EP 297/05')
+    f.taxon_remarks += ' ' + f.verbatim_order  # copy order entry to taxonomic remarks
+    if f.torder:
+        f.torder = None  # remove from torder field
+    f.save()
+
+    # Fix EP 3613/00 verbatim_order='Equidae (Th)' and verbatim_family is ''. Move entry to tfamily
+    f = Fossil.objects.get(catalog_number='EP 3613/00')
+    f.torder = None
+    f.tfamily = 'Equidae'
+    f.save()
+
+    # Fix EP 008/03 verbatim_order = 'Reptilia'
+    f = Fossil.objects.get(catalog_number='EP 008/03')
+    f.torder = None
+    f.save()
+
+    # Fix taxon comments and species for EP 688/98
+    f = Fossil.objects.get(catalog_number='EP 688/98')
+    f.tspecies = 'kohllarseni'
+    f.taxon_remarks += ' Awg - Probably Gazella Kohllarseni'
+    f.save()
+
+    # Fix taxon field for EP 1542/00
+    ep1542 = Fossil.objects.get(catalog_number='EP 1542/00')
+    update_dict_1542_achatina = {
+        'item_count': 2,
+        'tfamily': 'Achatinidae',
+        'tgenus': 'Achatina',
+        'tspecies': 'zanzibarica',
+        'scientific_name': 'Achatina zanzibarica',
+        'taxon_rank': 'species',
+    }
+    ep1542 = update_from_dict(ep1542, update_dict_1542_achatina)
+    remark_string = 'Urocyclidae moved to 1543/00'
+    if ep1542.remarks:
+        ep1542.remarks += ' ' + remark_string
+    else:
+        ep1542.remarks = remark_string
+    ep1542.save()
 
 
 def validate_kingdom():
@@ -1103,45 +1249,6 @@ def update_problems():
         f.save()
 
 
-def update_stragglers():
-    """
-    Fix any remaining unique problems
-    :return:
-    """
-    print("Updating stragglers")
-    # Fix three specimens that have incorrect geological context and locality info
-    # ['EP 900/98', 'EP 901/98', 'EP 902/98']
-    update_dict = {'geological_context_name': 'Upper Ngaloba Beds', 'locality_name': 'Laetoli 9 South'}
-    fossils = Fossil.objects.filter(catalog_number__in=['EP 900/98', 'EP 901/98', 'EP 902/98'])
-    if fossils.count() == 3:  # should have three matches
-        fossils.update(**update_dict)
-
-    # Fix EP 297/05  verbatim_class = 'Mammalia' but verbatim_order = 'Reptilia ?'
-    # Move order entry to taxonomic notes
-    f = Fossil.objects.get(catalog_number='EP 297/05')
-    f.taxon_remarks += ' ' + f.verbatim_order  # copy order entry to taxonomic remarks
-    if f.torder:
-        f.torder = f.torder.replace('Reptilia', '')  # remove from torder field
-    f.save()
-
-    # Fix EP 3613/00 verbatim_order='Equidae (Th)' and verbatim_family is ''. Move entry to tfamily
-    f = Fossil.objects.get(catalog_number='EP 3613/00')
-    f.torder = f.torder.replace('Equidae', '')
-    f.tfamily = 'Equidae'
-    f.save()
-
-    # Fix EP 008/03 verbatim_order = 'Reptilia'
-    f = Fossil.objects.get(catalog_number='EP 008/03')
-    f.torder = None
-    f.save()
-
-    # Fix taxon comments and species for EP 688/98
-    f = Fossil.objects.get(catalog_number='EP 688/98')
-    f.tspecies = 'kohllarseni'
-    f.taxon_remarks += ' Awg - Probably Gazella Kohllarseni'
-    f.save()
-
-
 # Main import function
 def main(year_list=CSHO_YEARS):
     # import data
@@ -1161,12 +1268,10 @@ def main(year_list=CSHO_YEARS):
     update_geological_context()
     update_description()
     update_taxon_fields()
-    update_subfamily()
     update_scientific_name()
     update_taxon_remarks()
     update_remarks()
     update_problems()
-    update_stragglers()
     print('====================================')
 
     print('\n Validating records')
@@ -1284,3 +1389,56 @@ def import_report(year_list=CSHO_YEARS):
         count = Fossil.objects.filter(verbatim_workbook_name=workbook_name).count()
         record_count_list.append((year, count))
     return record_count_list
+
+
+def update_from_dict(obj, dict):
+    """
+    :param obj: The object instance to be updated
+    :param dict: A dictionary of attribute-value pairs to update the object
+    :return: Returns the object instance with upated values. But still need to save the changes!
+    """
+    # A function to update an object instance with values stored in a dictionary.
+    # In some cases preferred over calling filter(pk=pk).update(**dict) because update does not send signals.
+    for attr, value in dict.items:
+        setattr(obj, attr, value)
+    return obj
+
+
+def duplicate(obj):
+    """
+    Duplicate an object in the database and return the duplicate
+    :param obj:
+    :return: Return the duplicate object.
+    """
+    obj.id = None
+    obj.pk = None
+    obj.save()
+    return obj
+
+
+def split2part(obj):
+    """
+    Split a catalog number into lettered two lettered parts, by default into a and b.
+    Example split EP 1280/00 into 1280a/00 and 1280b/00.
+    :param obj: A fossil object to be split
+    :param parts:
+    :return:
+    """
+    # Confirm no lettered part in catalog number
+    cat_re = re.compile(r'EP \d{3,4}/[09][01234589]$')
+    if type(obj) == Fossil:
+        if cat_re.match(obj.catalog_number):
+            obj.catalog_number = obj.catalog_number.replace('/', 'a/')  # insert part letter
+            obj.save()
+            new_obj = duplicate(obj)
+            new_obj.catalog_number = obj.catalog_number.replace('a/', 'b/')
+            new_obj.save()  # save second copy
+            return obj, new_obj
+        else:
+            print("catalog number already has parts")
+            return None
+    else:
+        raise TypeError
+
+
+
