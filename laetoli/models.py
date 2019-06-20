@@ -112,6 +112,8 @@ class Fossil(Find):
     tgenus = models.CharField('Genus', max_length=255, null=True, blank=True)
     tspecies = models.CharField('Trivial', max_length=255, null=True, blank=True)
     scientific_name = models.CharField(max_length=255, null=True, blank=True)
+    taxon_rank = models.CharField(max_length=255, null=True, blank=True)
+    identification_qualifier = models.CharField(max_length=255, null=True, blank=True)
     taxon_remarks = models.TextField(max_length=255, null=True, blank=True)
     identified_by = models.CharField(max_length=20, null=True, blank=True)
     # life_stage = models.CharField("Life Stage", null=True, blank=True, max_length=50, choices=LIFE_STAGE_CHOICES)
