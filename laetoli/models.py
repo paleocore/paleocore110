@@ -104,6 +104,7 @@ class Fossil(Find):
     sex = models.CharField("Sex", null=True, blank=True, max_length=50)
     tkingdom = models.CharField('Kingdom', max_length=255, null=True, blank=True)
     tphylum = models.CharField('Phylum', max_length=255, null=True, blank=True)
+    tsubphylum = models.CharField('Phylum', max_length=255, null=True, blank=True)
     tclass = models.CharField('Class', max_length=255, null=True, blank=True)
     torder = models.CharField('Order', max_length=255, null=True, blank=True)
     tfamily = models.CharField('Family', max_length=255, null=True, blank=True)
