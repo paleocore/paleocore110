@@ -1,4 +1,5 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.http.request import HttpRequest
 from .models import Fossil
 import xlrd
 from datetime import datetime
@@ -8,6 +9,7 @@ from paleocore110.settings import PROJECT_ROOT
 from sys import path
 import collections
 import idigbio
+import requests
 
 #FOLDER_PATH = '/Users/dnr266/Documents/PaleoCore/projects/Laetoli/csho_versions/'
 FOLDER_PATH = PROJECT_ROOT + '/laetoli/fixtures/'
@@ -284,7 +286,61 @@ def delete_records():
     return count
 
 
+# Function to split bulk records
+def split_records():
+    """
+    Procedure that splits records into parts. Needed for some bulk items where more than one taxa is
+    included in a single item. In these cases taxa appear as a comma separated list in the verbatim taxon
+    field, (e.g. tgenus = 'Achatina, Burtoa').
+    This procedure splits the single record into to parts, e.g. EP 1280/01 becomes EP 1280a/01 and EP 1280b/01
+    The taxon information for each new part is then updated.
+    :return:
+    """
+    count = 0
+    # Split 4 bulk samples that contain multiple taxa.
+    splits = SPLITS
+    for catno in splits:
+        if Fossil.objects.filter(verbatim_specimen_number=catno):
+            print("Splitting {}".format(catno))
+            split2part(Fossil.objects.get(verbatim_specimen_number=catno))
+            count += 1
+    return count
+
+
 # Functions for processing and validating data by field
+def update_idq(rts):
+    """
+    Function to update the identification qualifier field when appropriate.
+    This function searches a taxonomic string for Open Nomenclature abbreviations (e.g. cf. aff. sp. indet.)
+    If found the string is excised from the taxon field and added to the identification qualifier field
+    Darwin Core stipulates that all notations about taxonomic uncertaintly are limited to the
+    identificationQualifier field.
+    :param rts: The raw taxanomic string, e.g. 'cf. major'
+    :return: returns the cleaned taxon string and the identification qualifier string
+    """
+    idq = None
+    ts = rts.strip()
+    # regex matches all of the following:
+    # test_list = ['? major', '?major', 'aff. major', 'Nov. sp.', 'indet', 'Indet.', 'cf.', 'Cf', 'cf. major', 'sp.',
+    #             'Sp.', 'sp', 'Sp', ' sp.', 'major sp. nov.', 'sp. A', 'sp. A, sp. B', 'major']
+    idqre = re.compile(r'[sS]p[.]?.*|[cC]f[.]?|[iI]ndet[.]?|Nov[.]?.*|[Aa]ff[.]?|[?]')
+    if ts:
+        if idqre.search(ts):
+            idq = ts
+            ts = idqre.sub('', ts)
+    return ts, idq
+
+
+def test_idq():
+    test_list = ['? major', '?major', 'aff. major', 'Nov. sp.', 'indet', 'Indet.', 'cf.', 'Cf', 'cf. major', 'sp.', 'Sp.', 'sp', 'Sp', ' sp.', 'major sp. nov.', 'sp. A', 'sp. A, sp. B', 'major']
+    for t in test_list:
+        t, i = update_idq(t)
+        print(str(t)+' |  '+str(i))
+    print("============")
+    # for s in [t[0] for t in field_list('verbatim_species', report=False)]:
+    #     idq(s)
+
+
 def update_date_recorded():
     """
     date_recorded = verbatim_date_discovered
@@ -335,7 +391,8 @@ def update_catalog_number():
     extra_year = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}/[089][01234589][9]$')
     period = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}/[089][01234589][.]$')
     colon = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}:/[089][01234589]$')
-    for fossil in Fossil.objects.all():
+    # update catalog number for all records EXCEPT the splits
+    for fossil in Fossil.objects.exclude(verbatim_specimen_number__in=SPLITS):
         # Initial write of verbatim catalog number to catalog number
         # Fix missing EP prefix in 2005 records at the same time.
         if not ep_re.match(fossil.verbatim_specimen_number):  # 2005 catalog numbers missing EP prefix
@@ -905,12 +962,14 @@ def update_taxon_fields(qs=Fossil.objects.all()):
         'Perrisodactyla': 'Perissodactyla',
         'Perrissodactyla': 'Perissodactyla',
         'cf. Reptilia': '',
+        'Cricetidae': 'Rodentia',
     }
 
     frep = {
         '----': '',
         'Boidae': 'Bovidae',
         'Cercopithecidae - Colobinae': 'Cercopithecidae',
+        'Chameleonidae': 'Chamaeleonidae',
         'Colobinae': 'Cercopithecidae',
         'Deinotherium': 'Deinotheriidae',
         'Endiae': 'Enidae',
@@ -945,10 +1004,11 @@ def update_taxon_fields(qs=Fossil.objects.all()):
     }
 
     grep = {
+        # remove id quals.
         'Cf.': 'cf.',
         ',': '',
         'Sp.': '',
-        'Gen. Et': 'gen. nov.',
+        'Gen. Et': '',
         'Incertae': '',
         'As On Bag Label': '',
         'Large Mammal': '',
@@ -958,6 +1018,7 @@ def update_taxon_fields(qs=Fossil.objects.all()):
         'see comments': '',
         'Serpentes': '',
         'small sp.': '',
+        # corrections
         'Awg - Probably Gazella Kohllarseni': 'Gazella',
         'Aepyceros probably': 'Aepyceros',
         'Aepyceros probably ': 'Aepyceros',
@@ -982,17 +1043,15 @@ def update_taxon_fields(qs=Fossil.objects.all()):
         'serengetilagus': 'Serengetilagus',
         'Sublona': 'Subulona',
         'Trochananina': 'Trochonanina',
+        'Rhynchocyon pliocaenicus': 'Rhynchocyon',
     }
 
     srep = {
-        'cf ': 'cf. ',
-        'Sp.': 'sp.',
-        'Nov': 'nov',
-        'nov. sp.': 'sp. nov.',
+        'Cf.': 'cf.',
         'probably': '',
         '-': '',
-        's[/': 'sp.',
-        'Indet..': 'indet',
+        's[/': '',
+        'Indet..': '',
         'large mammal': '',
         'sedis': '',
         'aviflumminis': 'avifluminis',
@@ -1007,6 +1066,8 @@ def update_taxon_fields(qs=Fossil.objects.all()):
         'laeotoliensis': 'laetoliensis',
         'laeotolilensis': 'laetoliensis',
         'laetolilensis': 'laetoliensis',
+        #'laetoliensis sp. nov.': 'laetoliensis',
+        #'major sp. nov.': 'major',
         'palaegracilis': 'palaeogracilis',
         'paleogracilis': 'palaeogracilis',
         'serpentes': '',
@@ -1017,9 +1078,14 @@ def update_taxon_fields(qs=Fossil.objects.all()):
 
     p_re = re.compile(r'[(].+[)]')  # matches anything in parentheses
 
-    iq_re = re.compile(r'cf|aff')  # find all cases with 'cf' or 'aff'
+    iq_re = re.compile(r'[cC]f|[aA]ff|[iI]ndet|[nN]ov|[sS]p|[sS]edis|\?')  # find all cases with 'cf' or 'aff'
 
-    iqrep = {'cf.': '', 'aff.': ''}  # remove cf. and aff.
+    sp_re = re.compile(r'sp[.]+ [aAbBcC/]{0,5}')
+
+    iqrep = {
+        'cf.': '',
+        'aff.': ''
+    }  # remove cf. and aff.
 
     def clean_taxon_field(obj, verbatim_taxon_field_name, rep_dict):
         fs = getattr(obj, verbatim_taxon_field_name)  # get value for taxon field
@@ -1029,9 +1095,10 @@ def update_taxon_fields(qs=Fossil.objects.all()):
             fs = q2cf(fs)  # convert any case with ? to cf.
             fs = indet2None(fs)  # remove indet
             fs = multireplace(fs, rep_dict)  # fix random misspellings and typos
-            if iq_re.search(fs):
-                setattr(obj, 'identification_qualifier', fs)
-                fs = multireplace(fs, iqrep)
+            fs, idq = update_idq(fs)
+            if idq:
+                setattr(obj, 'identification_qualifier', idq)
+            # clean any excess whitespace
             fs = fs.replace('   ', ' ')  # remove triple spaces
             fs = fs.replace('  ', ' ')  # remove double spaces
             fs = fs.strip()  # remove leading and trailing spaces
@@ -1040,10 +1107,19 @@ def update_taxon_fields(qs=Fossil.objects.all()):
             fs = None
         return fs
 
+    def update_tsubphylum(obj):
+        if obj.tphylum == 'Vertebrata':
+            obj.tsubphylum = obj.tphylum
+            obj.tphylum = 'Chordata'
+        elif obj.tphylum == 'Hexapoda':
+            obj.tsubphylum = obj.tphylum
+            obj.tphylum = 'Arthropoda'
+
     # Update taxon columns
     for f in qs:
         f.tkingdom = clean_taxon_field(f, 'verbatim_kingdom', krep)
         f.tphylum = clean_taxon_field(f, 'verbatim_phylum_subphylum', krep)
+        update_tsubphylum(f)
         f.tclass = clean_taxon_field(f, 'verbatim_class', krep)
         f.torder = clean_taxon_field(f, 'verbatim_order', krep)
         f.tfamily = clean_taxon_field(f, 'verbatim_family', frep)
@@ -1139,6 +1215,25 @@ def update_taxon_fields(qs=Fossil.objects.all()):
         f.tgenus = None
         f.save()
 
+    # Fix EP 575/00 genus = Machairodontinae
+    ep575 = Fossil.objects.get(catalog_number='EP 575/00')
+    ep575.tsubfamily = ep575.tgenus
+    ep575.tgenus = None
+    ep575.save()
+
+    # Fix frame shift error for EP 243/05
+    ep243 = Fossil.objects.get(catalog_number='EP 243/05')
+    ep243.order = 'Rodentia'
+    ep243.family = 'Cricetidae'
+    ep243.subfamily = 'Gerbillinae'
+    ep243.save()
+
+    # Fix EP 224/04 tgenus = Scaraboidea [sic]
+    ep242 = Fossil.objects.get(catalog_number='EP 242/04')
+    ep242.tsubfamily = 'Scarabaeoidea'
+    ep242.tgenus = None
+    ep242.save()
+
     # Fix taxon comments and species for EP 688/98
     f = Fossil.objects.get(catalog_number='EP 688/98')
     f.tspecies = 'kohllarseni'
@@ -1149,7 +1244,8 @@ def update_taxon_fields(qs=Fossil.objects.all()):
         f.taxon_remarks = remark_string
     f.save()
 
-    # Fix taxon field for EP 1542/00
+    # Fix taxon field for EP 1542/00. Verbatim taxon fields show mix of Urocyclidaae and Achatinidae
+    # Urocyclidae was moved to EP 1543/00, need  to fix taxon field for EP 1542/00
     ep1542 = Fossil.objects.get(catalog_number='EP 1542/00')
     update_dict_1542_achatina = {
         'item_count': 2,
@@ -1167,10 +1263,92 @@ def update_taxon_fields(qs=Fossil.objects.all()):
         ep1542.remarks = remark_string
     ep1542.save()
 
+    # Fix Taxon fields for splits
+    update_dict = {
+        'EP 1280a/01': {
+            'item_count': 2,
+            'tfamily': 'Achatinidae',
+            'tgenus': 'Achatina',
+            'tspecies': 'zanzibarica',
+            'scientific_name': 'Achatina zanzibarica',
+            'taxon_rank': 'species',
+        },
+        'EP 1280b/01': {
+            'item_count': 5,
+            'tfamily': 'Subulinidae',
+            'tgenus': 'Pseudoglessula',
+            'tspecies': 'gibbonsi',
+            'scientific_name': 'Pseudoglessula gibbonsi',
+            'identification_qualifier': 'cf. gibbonsi',
+            'taxon_rank': 'species',
+        },
+        'EP 3129a/00': {
+            'item_count': 8,
+            'tfamily': 'Achatinidae',
+            'tgenus': 'Achatina',
+            'tspecies': 'zanzibarica',
+            'scientific_name': 'Achatina zanzibarica',
+            'taxon_rank': 'species',
+        },
+        'EP 3129b/00': {
+            'item_count': 1,
+            'tfamily': 'Subulinidae',
+            'tgenus': 'Pseudoglessula',
+            'tspecies': 'gibbonsi',
+            'scientific_name': 'Pseudoglessula gibbonsi',
+            'identification_qualifier': 'cf. Pseudoglessula gibbonsi',
+            'taxon_rank': 'species',
+        },
+        'EP 1181a/00': {
+            'item_count': 1,
+            'tgenus': 'Achatina',
+            'tspecies': 'zanzibarica',
+            'scientific_name': 'Achatina zanzibarica',
+            'taxon_rank': 'species',
+        },
+        'EP 1181b/00': {
+            'item_count': 1,
+            'tgenus': 'Burtoa',
+            'tspecies': 'nilotica',
+            'scientific_name': 'Burtoa nilotica',
+            'taxon_rank': 'species',
+        },
+        'EP 3635a/00': {
+            'item_count': 1,
+            'tgenus': 'Achatina',
+            'tspecies': 'zanzibarica',
+            'scientific_name': 'Achatina zanzibarica',
+            'taxon_rank': 'species',
+        },
+        'EP 3635b/00': {
+            'item_count': 8,
+            'tgenus': 'Limicolaria',
+            'tspecies': 'martensiana',
+            'scientific_name': 'Limicolaria martensiana',
+            'taxon_rank': 'species',
+        }
+    }
+    for catno in update_dict.keys():
+        if Fossil.objects.filter(catalog_number=catno):
+            fossil = Fossil.objects.get(catalog_number=catno)
+            fossil = update_from_dict(fossil, update_dict[fossil.catalog_number])
+            fossil.save()
 
-def validate_kingdom():
-    api = idigbio.json()
-    api.search_records(pk={'kingdom': 'Animalia'})
+
+def validate_taxon(taxon_name, verbose=True):
+    taxon_fields = ['kingdom', 'phylum', 'class', 'order', 'family', 'subfamily']
+    taxon_field_name = 't'+taxon_name
+    # print('Validating {}'.format(taxon_field_name))
+    api = idigbio.json()  # connection to idigbio db
+    tlist = [t[0] for t in field_list(taxon_field_name, report=False) if t[0]]  # list of taxon names excluding None
+    for taxon in tlist:
+        # print('validating {}'.format(taxon))
+        r = api.search_records(rq={taxon_name: taxon})  # search
+        if r['itemCount']:
+            if verbose:
+                print("{} OK {}".format(taxon, r['itemCount']))
+        else:
+            print("{} ERROR".format(taxon))
 
 
 def update_scientific_name():
@@ -1265,196 +1443,29 @@ def update_problems():
         f.save()
 
 
-def split_records():
-    """
-    Procedure that splits records into parts. Needed for some bulk items where more than one taxa is
-    included in a single item. In these cases taxa appear as a comma separated list in the verbatim taxon
-    field, (e.g. tgenus = 'Achatina, Burtoa').
-    This procedure splits the single record into to parts, e.g. EP 1280/01 becomes EP 1280a/01 and EP 1280b/01
-    The taxon information for each new part is then updated.
-    :return:
-    """
-    count = 0
-    # Split 3 bulk samples that contain multiple taxa.
-    # splits = ['EP 1280/01', 'EP 3129/00', 'EP1181/00']
-
-    # dictionary of updates for each split
-    update_dict = {
-        'EP 1280a/01': {
-            'catalog_number': 'EP 1280a/01',
-            'item_count': 2,
-            'tfamily': 'Achatinidae',
-            'tgenus': 'Achatina',
-            'tspecies': 'zanzibarica',
-            'scientific_name': 'Achatina zanzibarica',
-            'taxon_rank': 'species',
-        },
-        'EP 1280b/01': {
-            'catalog_number': 'EP 1280b/01',
-            'item_count': 5,
-            'tfamily': 'Subulinidae',
-            'tgenus': 'Pseudoglessula',
-            'tspecies': 'gibbonsi',
-            'scientific_name': 'Pseudoglessula gibbonsi',
-            'identification_qualifier': 'cf. gibbonsi',
-            'taxon_rank': 'species',
-        },
-        'EP 3129a/00': {
-            'catalog_number': 'EP 3129a/00',
-            'item_count': 8,
-            'tfamily': 'Achatinidae',
-            'tgenus': 'Achatina',
-            'tspecies': 'zanzibarica',
-            'scientific_name': 'Achatina zanzibarica',
-            'taxon_rank': 'species',
-        },
-        'EP 3129b/00': {
-            'catalog_number': 'EP 3129b/00',
-            'item_count': 1,
-            'tfamily': 'Subulinidae',
-            'tgenus': 'Pseudoglessula',
-            'tspecies': 'gibbonsi',
-            'scientific_name': 'Pseudoglessula gibbonsi',
-            'identification_qualifier': 'cf. Pseudoglessula gibbonsi',
-            'taxon_rank': 'species',
-        },
-        'EP 1181a/00': {
-            'catalog_number': 'EP 1181a/00',
-            'item_count': 1,
-            'tgenus': 'Achatina',
-            'tspecies': 'zanzibarica',
-            'scientific_name': 'Achatina zanzibarica',
-            'taxon_rank': 'species',
-        },
-        'EP 1181b/00': {
-            'catalog_number': 'EP 1181b/00',
-            'item_count': 1,
-            'tgenus': 'Burtoa',
-            'tspecies': 'nilotica',
-            'scientific_name': 'Burtoa nilotica',
-            'taxon_rank': 'species',
-        },
-        'EP 3635a/00': {
-            'catalog_number': 'EP 3635a/00',
-            'item_count': 1,
-            'tgenus': 'Achatina',
-            'tspecies': 'zanzibarica',
-            'scientific_name': 'Achatina zanzibarica',
-            'taxon_rank': 'species',
-        },
-        'EP 3635b/00': {
-            'catalog_number': 'EP 3635b/00',
-            'item_count': 1,
-            'tgenus': 'Limicolaria',
-            'tspecies': 'martensiana',
-            'scientific_name': 'Limicolaria martensiana',
-            'taxon_rank': 'species',
-        }
-    }
-    # Split 4 bulk samples that contain multiple taxa.
-    splits = SPLITS
-    for catno in splits:
-        if Fossil.objects.filter(catalog_number=catno):
-            print("Splitting {}".format(catno))
-            a, b = split2part(Fossil.objects.get(catalog_number=catno))
-            a = update_from_dict(a, update_dict[a.catalog_number])
-            a.save()
-            b = update_from_dict(b, update_dict[b.catalog_number])
-            b.save()
-            count += 1
-    return count
-
-    # EP 1280/01 - split to a and b.
-    # if Fossil.objects.filter(catalog_number='EP 1280/01'):
-    #     print("Splitting EP 1280/01")
-    #     ep1280a, ep1280b = split2part(Fossil.objects.get(catalog_number='EP 1280/01'))
-    #
-    #     update_dict_1280a = {
-    #         'catalog_number': 'EP 1280a/01',
-    #         'item_count': 2,
-    #         'tfamily': 'Achatinidae',
-    #         'tgenus': 'Achatina',
-    #         'tspecies': 'zanzibarica',
-    #         'scientific_name': 'Achatina zanzibarica',
-    #         'taxon_rank': 'species',
-    #     }
-    #     ep1280a = update_from_dict(ep1280a, update_dict_1280a)  # update first instance
-    #     ep1280a.save()  # save first instance
-    #
-    #     update_dict_1280b = {
-    #         'catalog_number': 'EP 1280b/01',
-    #         'item_count': 5,
-    #         'tfamily': 'Subulinidae',
-    #         'tgenus': 'Pseudoglessula',
-    #         'tspecies': 'gibbonsi',
-    #         'scientific_name': 'Pseudoglessula gibbonsi',
-    #         'identification_qualifier': 'cf. gibbonsi',
-    #         'taxon_rank': 'species',
-    #     }
-    #     ep1280b = update_from_dict(ep1280b, update_dict_1280b)
-    #     ep1280b.save()
-
-    # EP 3129/00 - split to a and b
-    # if Fossil.objects.filter(catalog_number='EP 3129/00'):
-    #     print("Splitting EP 3129/00")
-    #     ep3129a, ep3129b = split2part(Fossil.objects.get(catalog_number='EP 3129/00'))
-    #     update_dict_3129a = {
-    #         'catalog_number': 'EP 3129a/00',
-    #         'item_count': 8,
-    #         'tfamily': 'Achatinidae',
-    #         'tgenus': 'Achatina',
-    #         'tspecies': 'zanzibarica',
-    #         'scientific_name': 'Achatina zanzibarica',
-    #         'taxon_rank': 'species',
-    #     }
-    #     ep3129a = update_from_dict(ep3129a, update_dict_3129a)
-    #     ep3129a.save()
-    #     update_dict_3129b = {
-    #         'catalog_number': 'EP 3129b/00',
-    #         'item_count': 1,
-    #         'tfamily': 'Subulinidae',
-    #         'tgenus': 'Pseudoglessula',
-    #         'tspecies': 'gibbonsi',
-    #         'scientific_name': 'Pseudoglessula gibbonsi',
-    #         'identification_qualifier': 'cf. Pseudoglessula gibbonsi',
-    #         'taxon_rank': 'species',
-    #     }
-    #     ep3129b = update_from_dict(ep3129b, update_dict_3129b)
-    #     ep3129b.save()
-
-    # EP 1181/00 - split to a and b with separate genera
-    # if Fossil.objects.filter(catalog_number='EP 1181/00'):
-    #     print("Splitting EP EP 1181/00")
-    #     ep1181a, ep1181b = split2part(Fossil.objects.get(catalog_number='EP 1181/00'))
-    #     udicta = {
-    #         'catalog_number': 'EP1181a/00',
-    #         'item_count': 1,
-    #         'tgenus': 'Achatina',
-    #         'tspecies': 'zanzibarica',
-    #         'scientific_name': 'Achatina zanzibarica',
-    #         'taxon_rank': 'species',
-    #     }
-    #     ep1181a = update_from_dict(ep1181a, udicta)
-    #     ep1181a.save()
-    #     udictb = {
-    #         'catalog_number': 'EP1181b/00',
-    #         'item_count': 1,
-    #         'tgenus': 'Burtoa',
-    #         'tspecies': 'nilotica',
-    #         'scientific_name': 'Burtoa nilotica',
-    #         'taxon_rank': 'species',
-    #     }
-    #     ep1181b = update_from_dict(ep1181b, udictb)
-    #     ep1181b.save()
-
-
 def validate_splits():
     # Validate catalog numbers for splits = ['EP 1280/01', 'EP 3129/99']
-    splits = ['EP 1280a/01', 'EP 1280b/01',  'EP 3129a/00', 'EP 3129a/00']
-    valid = None
+    splits = SPLITS
+    valid = True
     for catno in splits:
-        Fossil.objects.get(catalog_number=catno)  # will raise error if splits don't exist.
-        valid = True
+        try:
+            Fossil.objects.get(catalog_number=catno)  # will raise error if splits don't exist.
+        except ObjectDoesNotExist:
+            pass
+        except MultipleObjectsReturned:
+            print("Split error {}".format(catno))
+            valid = False
+        try:
+            catnoa = catno.replace('/', 'a/')
+            Fossil.objects.get(catalog_number=catnoa)
+        except ObjectDoesNotExist:
+            print("Split error {}".format(catnoa))
+            valid = False
+        try:
+            catnob = catno.replace('/', 'b/')
+            Fossil.objects.get(catalog_number=catnob)
+        except ObjectDoesNotExist:
+            print("Split error {}".format(catnob))
     if valid:
         print("No split errors found.")
 
@@ -1476,6 +1487,13 @@ def main(year_list=CSHO_YEARS):
     print('Current record count: {}'.format(Fossil.objects.all().count()))
     print('====================================')
 
+    # split bulk collections
+    print('\nSplitting bulk collections.')
+    c = split_records()
+    print('{} records split'.format(c))
+    print('Current record count: {}'.format(Fossil.objects.all().count()))
+    print('====================================')
+
     # update data
     print('\nUpdating records from verbatim data.')
     update_date_recorded()
@@ -1492,14 +1510,6 @@ def main(year_list=CSHO_YEARS):
     update_problems()
     print('Current record count: {}'.format(Fossil.objects.all().count()))
     print('====================================')
-
-    # split bulk collections
-    print('\nSplitting bulk collections.')
-    c = split_records()
-    print('{} records split'.format(c))
-    print('Current record count: {}'.format(Fossil.objects.all().count()))
-    print('====================================')
-
 
     print('\nValidating records')
     validate_date_recorded()
@@ -1695,3 +1705,18 @@ def restore_splits():
             update_taxon_fields(qs=Fossil.objects.filter(catalog_number=catno))
         except ObjectDoesNotExist:
             pass
+
+
+def get_pbdb_taxon(taxon_name):
+    url = 'https://paleobiodb.org/data1.2/taxa/single.txt?name='+taxon_name
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        h, d = resp.content.decode('utf-8').replace('"','').split('\r\n')[0:2]
+        h = h.split(',')
+        d = d.split(',')
+        result = dict(zip(h, d))
+    else:
+        result = None
+    return result
+
+
