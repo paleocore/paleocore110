@@ -73,7 +73,7 @@ taxonomy_fieldsets = ('Taxonomy Fields', {'fields': [
     ('tclass', 'torder', 'tfamily'),
     ('tsubfamily', 'ttribe'),
     ('tgenus', 'tspecies'),
-    ('scientific_name',),
+    ('scientific_name','identification_qualifier'),
     ('identified_by',),
     ('taxon_remarks',),
 ]
@@ -96,6 +96,7 @@ class FossilAdmin(admin.ModelAdmin):
         'locality_name',
         'geological_context_name',
         'scientific_name',
+        'identification_qualifier',
         'description',
         'item_count',
         'taxon_remarks',
