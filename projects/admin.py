@@ -71,7 +71,6 @@ default_admin_fieldsets = (
 default_list_editable = ['problem', 'disposition']
 
 
-
 default_biology_inline_fieldsets = (
 
     ('Element', {
@@ -125,7 +124,7 @@ class PaleoCoreLocalityAdmin(BingGeoAdmin):
 class TaxonomyAdmin(admin.ModelAdmin):
     list_display = ('label', 'rank', 'full_name', 'biology_usages')
     readonly_fields = ['id', 'biology_usages']
-    fields = ['id', 'name', 'parent','label', 'rank']
+    fields = ['id', 'name', 'parent', 'label', 'rank']
     search_fields = ['name', 'label']
     list_filter = ['rank']
     list_select_related = ['rank', 'parent']
