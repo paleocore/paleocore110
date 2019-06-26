@@ -98,11 +98,11 @@ class PaleoCoreOccurrenceAdmin(admin.ModelAdmin):
         models.PointField: {"widget": GooglePointFieldWidget}
     }
 
-
     def get_search_results(self, request, queryset, search_term):
         # search_term is what you input in admin site
         # queryset is search results
-        queryset, use_distinct = super(PaleoCoreOccurrenceAdmin, self).get_search_results(request, queryset, search_term)
+        queryset, use_distinct = super(PaleoCoreOccurrenceAdmin, self).get_search_results(request,
+                                                                                          queryset, search_term)
 
         try:
             search_term_as_int = int(search_term)
@@ -140,7 +140,7 @@ class TaxonRankAdmin(admin.ModelAdmin):
 
 
 class CollectionCodeAdmin(admin.ModelAdmin):
-    list_display =['id', 'name', 'drainage_region']
+    list_display = ['id', 'name', 'drainage_region']
     list_display_links = ['id']
     list_editable = ['name', 'drainage_region']
 
