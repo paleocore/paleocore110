@@ -560,7 +560,10 @@ class ProjectPage(Page):
             try:
                 content_type = ContentType.objects.get(app_label=self.slug, model='occurrence')
             except ContentType.DoesNotExist:
-                content_type = ContentType.objects.get(app_label=self.slug, model='context')
+                try:
+                    content_type = ContentType.objects.get(app_label=self.slug, model='context')
+                except ContentType.DoesNotExist:
+                    content_type = ContentType.objects.get(app_label=self.slug, model='find')
             model_class = content_type.model_class()
             result = model_class.objects.all().count()
         return result
