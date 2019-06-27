@@ -308,7 +308,7 @@ def split_records():
     included in a single item. In these cases taxa appear as a comma separated list in the verbatim taxon
     field, (e.g. tgenus = 'Achatina, Burtoa').
     This procedure splits the single record into to parts, e.g. EP 1280/01 becomes EP 1280a/01 and EP 1280b/01
-    The taxon information for each new part is then updated.
+    One specimen, EP 1177/00 is split to 3 parts, a, b, and c.
     :return:
     """
     count = 0
@@ -319,6 +319,10 @@ def split_records():
             print("Splitting {}".format(catno))
             split2part(Fossil.objects.get(verbatim_specimen_number=catno))
             count += 1
+    f = Fossil.objects.get(catalog_number='EP 1177/00')
+    print("SPlitting {} into 3 parts".format(f.catalog_number))
+    split2many(f, no_parts=3)
+    count += 1
     return count
 
 
@@ -1280,6 +1284,12 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
         ep1406.identification_qualifier = 'cf. Lycaon'
         ep1406.save()
 
+        # Fix genus and species names for EP 529/03
+        ep529 = Fossil.objects.get(catalog_number='EP 529/03')
+        ep529.tgenus = None
+        ep529.tspecies = None
+        ep529.save()
+
         # Fix Taxon fields for splits
         update_dict = {
             'EP 1280a/01': {
@@ -1343,6 +1353,30 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
                 'tspecies': 'martensiana',
                 'scientific_name': 'Limicolaria martensiana',
                 'taxon_rank': 'species',
+            },
+            'EP 1177a/00': {
+                'item_count': 1,
+                'tgenus': 'Stigmochelys',
+                'tspecies': 'brachygularis',
+                'scientific_name': 'Stigmochelys brachygularis',
+                'taxon_rank': 'species',
+                'description': 'nuchal bone',
+            },
+            'EP 1177b/00': {
+                'item_count': 1,
+                'tgenus': 'Stigmochelys',
+                'tspecies': 'brachygularis',
+                'scientific_name': 'Stigmochelys brachygularis',
+                'taxon_rank': 'species',
+                'description': 'xiphiplastron',
+            },
+            'EP 1177c/00': {
+                'item_count': 1,
+                'tgenus': 'Stigmochelys',
+                'tspecies': 'brachygularis',
+                'scientific_name': 'Stigmochelys brachygularis',
+                'taxon_rank': 'species',
+                'description': 'fragment of carapace',
             }
         }
         for catno in update_dict.keys():
@@ -1780,6 +1814,31 @@ def split2part(obj):
         raise TypeError
 
 
+def letter_part(n):  # takes quotient and index
+    """
+    Function to calculate the lettered part for a given number of parts n
+    Eg. letter_part(1) = 'a', letter_part(26) = 'z', letter_part(27) = 'az', letter_part(702) = zz  this is the max
+    Values for n > 702 return None
+    :param n:number of parts
+    :return: returns a string of length 1 or 2 ranging from a to zz. Returns None for values greater than zz
+    """
+    q, i = divmod(n, 26)
+    if i == 0:
+        q -= 1
+        i = 25
+    else:
+        i -= 1
+    result = None
+    az = string.ascii_lowercase
+    if q == 0:  # quotient is 0, first time through a-z
+        result = az[i]  # one letter result
+    elif 26 >= q >=1:  # two letter result
+        result =  az[q-1]+az[i]
+    elif q > 26:
+        pass
+    return result
+
+
 def split2many(obj, no_parts=2):
     """
     Split a Fossil into arbitrary number of parts
@@ -1791,17 +1850,19 @@ def split2many(obj, no_parts=2):
     if type(obj) == Fossil:
         if cat_re.match(obj.catalog_number):  # confirm original has no parts
             clone_list = [obj]+[clone(obj) for i in range(1, no_parts)]  # create a list of cloned objects
-            i = 0
+            lpi = 1  # letter part index
             for c in clone_list:
-                part_string = string.ascii_lowercase[i]+'/'
-                c.catalog_number.replace('/', part_string)
+                part_string = letter_part(lpi)+'/'  # get incremented letter part string
+                c.catalog_number = c.catalog_number.replace('/', part_string)  # insert letter part string
                 c.save()
+                lpi += 1  # advance letter part index by 1
             return clone_list
         else:
             print("catalog number already has parts")
             return None
     else:
         raise TypeError
+
 
 def restore_splits():
     splits = SPLITS
@@ -1840,3 +1901,5 @@ def get_idigbio_taxon(taxon_name, taxon_rank):
     if r:
         result = r
     return result
+
+
