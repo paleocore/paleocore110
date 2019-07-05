@@ -1,4 +1,4 @@
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, FieldError
 from .models import Fossil
 import xlrd
 from datetime import datetime
@@ -9,16 +9,15 @@ import collections
 import idigbio
 import requests
 import string
-from copy import deepcopy
 
 
 FOLDER_PATH = PROJECT_ROOT + '/laetoli/fixtures/'
-YEARS = [1998, 1999, 2000, 2001, 2003, 2004, 2005, 2012, 2014, 2016]
+YEARS = (1998, 1999, 2000, 2001, 2003, 2004, 2005, 2012, 2014, 2016)
 CSHO_YEARS = YEARS[0:7]  # 1998-2005
 file_name = 'laetoli_csho_1998'
 verbose_default = False
 # A list of lots that need to be split into separate catalog numbers
-SPLITS = ['EP 1280/01', 'EP 3129/00', 'EP 1181/00', 'EP 3635/00']
+SPLITS = ['EP 1280/01', 'EP 3129/00', 'EP 1181/00', 'EP 3635/00', 'EP 1177/00']
 
 
 # Functions for opening Excel files and reading headers
@@ -140,7 +139,7 @@ def validate_all_headers(file_years=YEARS):
     """
     files = [make_file_string(y) for y in file_years]
     for file in files:
-        book = open_book(file=FOLDER_PATH+file)
+        book = open_book(folder=FOLDER_PATH, file=file)
         sheet = book.sheet_by_index(0)
         header = get_header_list(sheet)
         if validate_header_list(header):
@@ -149,7 +148,7 @@ def validate_all_headers(file_years=YEARS):
             print("Header for {} is NOT valid".format(file))
 
 
-# Functions for processing data in Excel Files
+# Functions for processing and reading data from Excel Files
 def convert_date(date_cell, date_mode):
     """
     Convert the dates in the excel spreadsheets into python datetime objects.
@@ -301,7 +300,75 @@ def delete_records():
     return count
 
 
-# Function to split bulk records
+# Functions to split bulk records
+def clone(obj):
+    """
+    Clone a database object.
+    :param obj: Original object to be cloned
+    :return: New, saved object. New object is identical to old *except* for id and pk
+    Note that id and pk are often the same but can differ when using abstract models or model inheritance.
+    """
+    from copy import deepcopy
+    # Need deepcopy here so that obj become different from c.
+    # If we use normal assignment, obj = c, when we change c, obj changes too, and that leads to unexpected behavior.
+    c = deepcopy(obj)
+    c.id = None
+    c.pk = None
+    c.save()
+    return c
+
+
+def letter_part(n):  # takes quotient and index
+    """
+    Function to calculate the lettered part for a given number of parts n
+    Eg. letter_part(1) = 'a', letter_part(26) = 'z', letter_part(27) = 'az', letter_part(702) = zz  this is the max
+    Values for n > 702 return None
+    :param n:number of parts
+    :return: returns a string of length 1 or 2 ranging from a to zz. Returns None for values greater than zz
+    """
+    q, i = divmod(n, 26)  # divmod returns quotient and modulus
+    if i == 0:  # Fix special case for z, n=26 returns (1,0), but we want (0,25)
+        q -= 1
+        i = 25  # convert i to index for az string.
+    else:
+        i -= 1  # convert i to index for az string.
+    result = None  # set default result to None
+    az = string.ascii_lowercase  # 'abcdefghijklmnopqrstuvwxyz'
+    if q == 0:  # quotient is 0, first time through a-z
+        result = az[i]  # one letter result, eg. 'a'
+    elif 26 >= q >= 1:  # quotient is 1 or more, beyond q=26 we would need three letters.
+        result = az[q-1]+az[i]  # two letter result, eg. 'aa'
+    elif q > 26:
+        pass  # will return default None
+    return result
+
+
+def split2many(obj, no_parts=2):
+    """
+    Split a Fossil into arbitrary number of parts
+    :param obj: original db object to split
+    :param no_parts: integer number of parts to split into
+    :return: returns a list of db objects, length = no_parts,
+    all with uniuqe id,pk. Other attributes will need to be updated.
+    """
+    cat_re = re.compile(r'EP \d{3,4}/[09][01234589]$')  # regex to test lettered part not already present.
+    if type(obj) == Fossil:  # only meant to work on fossil objects.
+        if cat_re.match(obj.catalog_number):  # confirm original has no parts
+            clone_list = [obj]+[clone(obj) for i in range(1, no_parts)]  # create a list of cloned objects
+            lpi = 1  # letter part index
+            for c in clone_list:  # for each new object reassign catalog number with part.
+                part_string = letter_part(lpi)+'/'  # get incremented letter part string
+                c.catalog_number = c.catalog_number.replace('/', part_string)  # insert letter part string
+                c.save()
+                lpi += 1  # advance letter part index by 1
+            return clone_list
+        else:
+            print("catalog number already has parts")
+            return None
+    else:
+        raise TypeError
+
+
 def split_records():
     """
     Procedure that splits records into parts. Needed for some bulk items where more than one taxa is
@@ -312,109 +379,20 @@ def split_records():
     :return:
     """
     count = 0
-    # Split 4 bulk samples that contain multiple taxa.
+    # Split 5 bulk samples that contain multiple taxa.
     splits = SPLITS
     for catno in splits:
         if Fossil.objects.filter(verbatim_specimen_number=catno):
             print("Splitting {}".format(catno))
-            split2part(Fossil.objects.get(verbatim_specimen_number=catno))
-            count += 1
-    f = Fossil.objects.get(catalog_number='EP 1177/00')
-    print("SPlitting {} into 3 parts".format(f.catalog_number))
-    split2many(f, no_parts=3)
-    count += 1
-    return count
+            if catno == 'EP 1177/00':  # split EP 1177/00 into 3 parts
+                split2many(Fossil.objects.get(verbatim_specimen_number=catno), no_parts=3)
+            else:  # split all others into 2 parts
+                split2many(Fossil.objects.get(verbatim_specimen_number=catno), no_parts=2)
+            count += 1  # increase counter
+    return count  # return number of splits made
 
 
-# Functions for processing and validating data by field
-def update_idq(rts):
-    """
-    Function to update the identification qualifier field when appropriate.
-    This function searches a taxonomic string for Open Nomenclature abbreviations (e.g. cf. aff. sp. indet.)
-    If found the string is excised from the taxon field and the verbatim taxon field is copied to
-    the identification qualifier field.
-    Darwin Core stipulates that all notations about taxonomic uncertainty are limited to the
-    identificationQualifier field.
-    Example: if verbatim_genus == cf. Australopithecus,
-    tgenus = Australopithecus, identification_qualifier = cf. Australopithecus
-    :param rts: The raw taxanomic string, e.g. 'cf. major'
-    :return: returns the cleaned taxon string and the identification qualifier string
-    """
-    idq = None
-    ts = rts.strip()
-    # regex matches all of the following:
-    # test_list = ['? major', '?major', 'aff. major', 'Nov. sp.', 'indet', 'Indet.', 'cf.', 'Cf', 'cf. major', 'sp.',
-    #             'Sp.', 'sp', 'Sp', ' sp.', 'major sp. nov.', 'sp. A', 'sp. A, sp. B', 'major']
-    idqls = re.compile(r'^large sp.$|^small sp.$|[Ii]ndeterminate')
-    ndetre = re.compile(r'[Nn]o [Dd]et[.]*[ here]*')
-    noidre = re.compile(r'[nN][oO] [iI][dD]')
-    idqre = re.compile(r'[sS]p[.]?.*|[cC]f[.]?|[iI]ndet[.]?|Nov[.]?.*|[Aa]ff[.]? |[?]|no det.')
-    if ts:
-        if idqls.search(ts):
-            idq = ts
-            ts = idqls.sub('', ts)
-        elif noidre.search(ts):
-            idq = ts
-            ts = noidre.sub('', ts)
-        elif ndetre.search(ts):
-            idq = ts
-            ts = ndetre.sub('', ts)
-        elif idqre.search(ts):
-            idq = ts
-            ts = idqre.sub('', ts)
-    return ts, idq
-
-
-def test_idq():
-    """
-    Function to test update_idq
-    :return: Prints results to a string for each test case in the test_list.
-    """
-    test_list = ['? major', '?major', 'aff. major', 'Nov. sp.',
-                 'indet', 'Indet.', 'no det.', 'Indeterminate', 'major no det.',
-                 'cf.', 'Cf', 'cf. major',
-                 'large sp.', 'small sp.',
-                 'sp.', 'Sp.', 'sp', 'Sp', ' sp.', 'major sp. nov.', 'sp. A', 'sp. A, sp. B',
-                 'major', 'Giraffa', 'spirellia']
-    for t in test_list:
-        t, i = update_idq(t)
-        print(str(t)+' |  '+str(i))
-
-
-def update_date_recorded():
-    """
-    date_recorded = verbatim_date_discovered
-    Function to copy dates to date_recorded field and add timezone info.
-    :return:
-    """
-    print("Updating date_recorded from verbatim_date_discovered")
-    tz = pytz.timezone('Africa/Dar_es_Salaam')
-    for s in Fossil.objects.all():
-        if s.verbatim_date_discovered:
-            s.date_recorded = datetime.combine(s.verbatim_date_discovered, datetime.min.time(), tzinfo=tz)
-            s.save()
-        else:
-            s.date_recorded = None
-
-
-def validate_date_recorded():
-    """
-    Function to test that all date_recorded values fall between 1998 and 2005.
-    :return:
-    """
-    print("Validating date_recorded")
-    result = 1
-    for fossil in Fossil.objects.all():
-        if fossil.date_recorded:
-            if not 1998 <= fossil.date_recorded.year <= 2005:
-                print("Fossil is outside date range 1998-2005.")
-                result = 0
-        else:
-            print("Fossil missing date_recorded")
-            result = 0
-    return result
-
-
+# Functions for processing and updating data by field
 def update_catalog_number():
     """
     Prodedure to update catalog_number from verbatim_specimen_number and standardize formatting of all
@@ -424,12 +402,12 @@ def update_catalog_number():
 
     # Define regex search strings
     ep_re = re.compile(r'EP ')
-    cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}/[089][01234589][a-zA-Z]$')
+    cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]?/[089][01234589][a-zA-Z]$')
     cap = re.compile(r'EP \d{3,4}[A-Z]/[089][01234589]$')
-    missing_slash = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}[089][01234589]$')
-    extra_year = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}/[089][01234589][9]$')
-    period = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}/[089][01234589][.]$')
-    colon = re.compile(r'EP \d{3,4}[a-zA-Z]{0,1}:/[089][01234589]$')
+    missing_slash = re.compile(r'EP \d{3,4}[a-zA-Z]?[089][01234589]$')
+    extra_year = re.compile(r'EP \d{3,4}[a-zA-Z]?/[089][01234589][9]$')
+    period = re.compile(r'EP \d{3,4}[a-zA-Z]?/[089][01234589][.]$')
+    colon = re.compile(r'EP \d{3,4}[a-zA-Z]?:/[089][01234589]$')
 
     # update catalog number for all records EXCEPT the splits
     for fossil in Fossil.objects.exclude(verbatim_specimen_number__in=SPLITS):
@@ -528,8 +506,8 @@ def update_catalog_number():
         fossil.save()
     # Also emend the taxonomic information for related record EP 1477a/00
     fossil = Fossil.objects.get(catalog_number='EP 1477a/00')
-    fossil.torder='Carnivora'
-    fossil.tfamily='Felidae'
+    fossil.torder = 'Carnivora'
+    fossil.tfamily = 'Felidae'
     fossil.tsubfamily = None
     fossil.tgenus = None
     fossil.ttribe = None
@@ -572,55 +550,32 @@ def update_catalog_number():
     fossil.save()
 
 
-def validate_catalog_number():
-    """
-    Test that all catalog numbers conform to consistant pattern
-    EP NNN/YY or EP NNNp/YY; where NNN is a three-four digit integer specimens number, YY is the year and p is an
-    optional part letter. Examples: 001/98, 1774/04, 1232a/99. Specimen number less than 100 all have leading
-    zeros to hundreds place.
-    """
-    print("Validating catalog_number.")
-    # regular expression to test proper format of catalog numbers
-    cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]?/[09][01234589]$')
-    # list of catalog_number column in db
-    catalog_list = list(Fossil.objects.values_list('catalog_number', flat=True))
-    # Test catalog numbers against re
-    re_errors_list = [item for item in catalog_list if not cat_re.match(item)]
-    duplicate_list = [item for item, count in collections.Counter(catalog_list).items() if count > 1]
-
-    # Pretty print format errors
-    print("\nFormat Errors\n---------------------")
-    if re_errors_list:
-        for f in re_errors_list:
-            print("Format error in catalog number {}".format(f))
-    else:
-        print("No formatting errors found.")
-
-    # Pretty print duplicates
-    print("\nDuplicate Summary\n---------------------")
-    if duplicate_list:
-        for duplicate_catalog_number in duplicate_list:
-            print("Duplicate catalog number {}".format(duplicate_catalog_number))
-            duplicate_qs = Fossil.objects.filter(catalog_number=duplicate_catalog_number)
-            for d in duplicate_qs:
-                print('id:{}  loc:{}  desc:{}  taxon:{}'.format(d.id, d.locality_name, d.description, d.scientific_name))
-    else:
-        print("No duplicates found.")
-
-
-def update_disposition():
-    """
-    Copy data from verbatim_storage into disposition
-    :return:
-    """
-    print("Updating disposition from verbatim_storage")
-    for fossil in Fossil.objects.all():
-        fossil.disposition = fossil.verbatim_storage
-        fossil.save()
-
-
 def update_institution():
     Fossil.objects.all().update(institution='NMT')
+
+
+def update_remarks():
+    print("Updating remarks")
+    for f in Fossil.objects.all():
+        f.remarks = f.verbatim_comments
+        f.save()
+
+
+def update_date_recorded():
+    """
+    date_recorded = verbatim_date_discovered
+    Function to copy dates to date_recorded field and add timezone info.
+    Note that times are meaningless here because only dates were recorded in original catalog.
+    :return:
+    """
+    print("Updating date_recorded from verbatim_date_discovered")
+    tz = pytz.timezone('Africa/Dar_es_Salaam')
+    for s in Fossil.objects.all():
+        if s.verbatim_date_discovered:
+            s.date_recorded = datetime.combine(s.verbatim_date_discovered, datetime.min.time(), tzinfo=tz)
+            s.save()
+        else:
+            s.date_recorded = None
 
 
 def update_locality():
@@ -721,25 +676,6 @@ def update_locality():
         fossils.update(locality_name='Laetoli 6')
 
 
-def validate_locality(verbose=False):
-    """
-    Validate locality entries against locality vocabulary.
-    :return: Prints a listing of the Laetoli locality vocabulary alongside all the verbatim values matched to the
-    standardized vocabulary value.
-    """
-    print("Validating localities")
-    locality_list = field_list('locality_name', report=False)
-    i = 1
-    for loc in locality_list:
-        locality_set = set([l.verbatim_locality for l in Fossil.objects.filter(locality_name=loc[0])])
-        locality_string = str(locality_set)[1:-1].replace("', ", "'; ")
-        area_set = set([l.area_name for l in Fossil.objects.filter(locality_name=loc[0])])
-        area_string = '; '.join(area_set)
-        if verbose:
-            print("{}\t{}\t{}\t{}\t{}".format(i, loc[0], loc[1], area_string, locality_string))
-        i += 1
-
-
 def update_area():
     """
     Assumes upldate locality
@@ -782,67 +718,6 @@ def update_area():
         else:
             f.area_name = 'Laetoli'
         f.save()
-
-
-def validate_area():
-    kakesio_list = ['Kakesio 1', 'Kakesio 2', 'Kakesio 3', 'Kakesio 4', 'Kakesio 5', 'Kakesio 6', 'Kakesio 7',
-                    'Kakesio 8', 'Kakesio 9', 'Kakesio 10', 'Kakesio 1-6', 'Kakesio South', 'Kakesio 2-4',
-                    'Lobileita', 'Emboremony 1', 'Emboremony 2', 'Emboremony 3']
-
-    esere_list = ['Engesha', 'Esere 1', 'Esere 2', 'Esere 3', 'Noiti 1', 'Noiti 3']
-    laetoli_list = ['Laetoli 1',
-                    'Laetoli 1 Northwest',
-                    'Laetoli 10',
-                    'Laetoli 10 East',
-                    'Laetoli 10 Northeast',
-                    'Laetoli 10 West',
-                    'Laetoli 11',
-                    'Laetoli 12',
-                    'Laetoli 12 East',
-                    'Laetoli 13',
-                    'Laetoli 13 "Snake Gully"',
-                    'Laetoli 14',
-                    'Laetoli 15',
-                    'Laetoli 16',
-                    'Laetoli 17',
-                    'Laetoli 18',
-                    'Laetoli 19',
-                    'Laetoli 2',
-                    'Laetoli 20',
-                    'Laetoli 21',
-                    'Laetoli 21 And 21 East',
-                    'Laetoli 22',
-                    'Laetoli 22 East',
-                    'Laetoli 22 South',
-                    'Laetoli 22 South Nenguruk Hill',
-                    'Laetoli 23',
-                    'Laetoli 24',
-                    'Laetoli 3',
-                    'Laetoli 4',
-                    'Laetoli 5',
-                    'Laetoli 6',
-                    'Laetoli 7',
-                    'Laetoli 7 East',
-                    'Laetoli 8',
-                    'Laetoli 9',
-                    'Laetoli 9 South', 'Olaitole River Gully', 'Silal Artum', 'Garusi Southwest']
-    oleisusu_list = ['Oleisusu']
-    olaltanaudo_list = ['Olaltanaudo']
-    ndoroto_list = ['Ndoroto']
-
-    for f in Fossil.objects.all():
-        if f.area_name == 'Kakesio' and f.locality_name not in kakesio_list:
-            print('Area missmatch for {}'.format(f.catalog_number))
-        elif f.area_name == 'Esere-Noiti' and f.locality_name not in esere_list:
-            print('Area missmatch for {}'.format(f.catalog_number))
-        elif f.area_name == 'Laetoli' and f.locality_name not in laetoli_list:
-            print('Area missmatch for {}'.format(f.catalog_number))
-        elif f.area_name == 'Oleisusu' and f.locality_name != 'Oleisusu':
-            print('Area missmatch for {}'.format(f.catalog_number))
-        elif f.area_name == 'Olaltanaudo' and f.locality_name != 'Olaltanaudo':
-            print('Area missmatch for {}'.format(f.catalog_number))
-        elif f.area_name == 'Ndoroto' and f.locality_name != 'Ndoroto':
-            print('Area missmatch for {}'.format(f.catalog_number))
 
 
 def update_geological_context():
@@ -958,7 +833,7 @@ def update_description():
     print("Updating description and item_count")
     # Many entries are suffixed with (N) indicating the number of items. Since N differs each is uniuqe.
     # Start by splitting out item counts
-    ic_re = re.compile(r'(?P<desc>[\w\s./+-]*)(?P<count>[(]\d{1,3}[)])\s*$')  # blah blah (14)  desc='blah blah' count=(14)
+    ic_re = re.compile(r'(?P<desc>[\w\s./+-]*)(?P<count>[(]\d{1,3}[)])\s*$')
     for f in Fossil.objects.all():
         m = ic_re.match(f.verbatim_element)
         if m:
@@ -997,8 +872,8 @@ def update_description():
 def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
     """
     Function to read values from verbatim taxon field (e.g. verbatim_kingdom, etc.) clean the entries and
-    write them to the taxonomic fields (e.g. tkingdom). All taxon fields start with t to avoid conflicts
-    with python keywords (e.g. class, order). The function also updates the taxon_rank field and the
+    write them to the taxonomic fields (e.g. tkingdom). All taxon fields start with 't' to avoid conflicts
+    with python keywords (e.g. class, order). The function also updates the
     identification_qualifier field.
     :return:
     """
@@ -1123,8 +998,6 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
         'laeotoliensis': 'laetoliensis',
         'laeotolilensis': 'laetoliensis',
         'laetolilensis': 'laetoliensis',
-        #'laetoliensis sp. nov.': 'laetoliensis',
-        #'major sp. nov.': 'major',
         'palaegracilis': 'palaeogracilis',
         'paleogracilis': 'palaeogracilis',
         'serpentes': '',
@@ -1142,7 +1015,6 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
         if fs:
             fs = fs.strip()  # get verbatim value, remove leading and trailing spaces
             fs = p_re.sub('', fs)  # remove parenthetical
-            #fs = clean_indet(fs)  # standardize indet
             fs = multireplace(fs, rep_dict)  # fix random misspellings and typos
             fs, idq = update_idq(fs)  # parse entries for identification qualifiers.
             if idq:  # if ident. qualifiers are found, update record.
@@ -1164,9 +1036,10 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
             obj.tsubphylum = obj.tphylum
             obj.tphylum = 'Arthropoda'
 
-    def fix_unique():
+    def clean_higher_taxonomy():
         if verbose:
-            print("Fixing unique problems in taxoomic fields")
+            print("Fixing higher taxonomic entries")
+
         # Update Subfamily entries recorded in Family column
         fossils = Fossil.objects.filter(verbatim_family__contains='inae')
         for f in fossils:
@@ -1175,7 +1048,39 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
             f.taxon_rank = "subfamily"
             f.save()
 
-        # Fix remaining unique errors.
+        # Fix phylum, subphylum for Insectivora
+        fixes = Fossil.objects.filter(verbatim_class='Mammalia').filter(verbatim_phylum_subphylum='Arthropoda')
+        fixes.update(tphylum='Chordata')
+        fixes.update(tsubphylum='Vertebrata')
+
+        # Fix vertebrate gastropods
+        fixes = Fossil.objects.filter(verbatim_class='Gastropoda').filter(verbatim_phylum_subphylum='Vertebrata')
+        fixes.update(tphylum='Mollusca')
+        fixes.update(tsubphylum=None)
+
+        # Fix missing Order
+        fixes = Fossil.objects.filter(verbatim_order='').filter(verbatim_family='Bovidae')
+        fixes.update(torder='Artiodactyla')
+
+        # Fix Canis missing familly
+        fixes = Fossil.objects.filter(verbatim_family=None, verbatim_species='brevirostris')
+        fixes.update(tfamily='Canidae')
+
+        # Fix mammal coleoptera
+        fixes = Fossil.objects.filter(verbatim_class='Mammalia', verbatim_order='Coleoptera')
+        fixes.update(tphylum='Arthropoda')
+        fixes.update(tsubphylum='Hexapoda')
+        fixes.update(tclass='Insecta')
+
+        # Update bovid tribes where absent
+        fixes = Fossil.objects.filter(verbatim_genus__contains='Connochaetes', verbatim_tribe__in=['', ' ', None])
+        fixes.update(ttribe='Alcelaphini')
+
+        fixes = Fossil.objects.filter(verbatim_genus__contains='Gazella', verbatim_tribe__in=['', ' ', None])
+
+    def fix_unique():
+        if verbose:
+            print("Fixing unique problems in taxoomic fields")
 
         # Fix EP 297/05  verbatim_class = 'Mammalia' but verbatim_order = 'Reptilia ?'
         # Move order entry to taxonomic notes
@@ -1190,7 +1095,7 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
 
         # Fix EP 3613/00 verbatim_order='Equidae (Th)' and verbatim_family is ''. Move entry to tfamily
         f = Fossil.objects.get(catalog_number='EP 3613/00')
-        f.torder = None
+        f.torder = 'Perissodactyla'
         f.tfamily = 'Equidae'
         f.save()
 
@@ -1399,6 +1304,7 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
         record.tgenus = clean_taxon_field(record, 'verbatim_genus', grep)
         record.tspecies = clean_taxon_field(record, 'verbatim_species', srep)
         record.save()
+    clean_higher_taxonomy()
     fix_unique()  # works on entire DB and fixes specific records
 
 
@@ -1438,64 +1344,58 @@ def update_scientific_name_taxon_rank(qs=Fossil.objects.all()):
         f.save()
 
 
-def validate_taxon_name(taxon_name, taxon_rank, verbose=True):
-    api = idigbio.json()
-    r = api.search_records(rq={taxon_rank: taxon_name})
-    if r['itemCount']:
-        if verbose:
-            print("{} OK {}".format(taxon_name, r['itemCount']))
-    else:
-        print("{} ERROR".format(taxon_name))
-
-
-def validate_taxon_field(taxon_name, verbose=True):
-    taxon_fields = ['kingdom', 'phylum', 'class', 'order', 'family', 'subfamily']
-    taxon_field_name = 't'+taxon_name
-    # print('Validating {}'.format(taxon_field_name))
-    api = idigbio.json()  # connection to idigbio db
-    tlist = [t[0] for t in field_list(taxon_field_name, report=False) if t[0]]  # list of taxon names excluding None
-    for taxon in tlist:
-        # print('validating {}'.format(taxon))
-        if taxon_field_name == 'tspecies':
-            r = api.search_records(rq={'scientificname': taxon})
-        else:
-            r = api.search_records(rq={taxon_name: taxon})  # search
-        if r:
-            if r['itemCount']:
-                if verbose:
-                    print("{} OK {}".format(taxon, r['itemCount']))
-            else:
-                print("{} ERROR".format(taxon))
-        else:
-            pass
-            #print("{} ERROR".format(taxon))
-
-
-def update_scientific_name_old():
+def update_idq(rts):
     """
-    Update scientific name from cleaned data in taxon columns.
-    e.g. Animalia:Chordata:Primates:Hominoidea:Homminidae:Homininae:Homo:sapiens
-    :return: A coma delimited string representing a taxonomic path/hierarchy
+    Function to update the identification qualifier field when appropriate.
+    This function searches a taxonomic string for Open Nomenclature abbreviations (e.g. cf. aff. sp. indet.)
+    If found the string is excised from the taxon field and the verbatim taxon field is copied to
+    the identification qualifier field.
+    Darwin Core stipulates that all notations about taxonomic uncertainty are limited to the
+    identificationQualifier field.
+    Example: if verbatim_genus == cf. Australopithecus,
+    tgenus = Australopithecus, identification_qualifier = cf. Australopithecus
+    :param rts: The raw taxanomic string, e.g. 'cf. major'
+    :return: returns the cleaned taxon string and the identification qualifier string
     """
-    print("Updating scientific_name")
-    # rep = {
-    #     '::': ':'
-    # }
-    c = re.compile(r'([.]*)[:]*$')  # group everything but trailing colons
-    for f in Fossil.objects.all():
-        snl = [f.tkingdom, f.tphylum, f.tsubphylum, f.tclass, f.torder, f.tfamily, f.tsubfamily, f.ttribe,
-               f.tgenus, f.tspecies]
-        snl = ['' if x is None else x for x in snl]  # replace None elements with empty strings
-        sn = ':'.join(snl)  # join all elements in the sci name list, colon delimited
-        #sn = multireplace(sn, rep)  # replace all
-        sn = c.sub('\g<1>', sn)  # replace with group and omit trailing colons
-        f.scientific_name = sn.strip()
-        f.save()
+    idq = None
+    ts = rts.strip()
+    # regex matches all of the following:
+    # test_list = ['? major', '?major', 'aff. major', 'Nov. sp.', 'indet', 'Indet.', 'cf.', 'Cf', 'cf. major', 'sp.',
+    #             'Sp.', 'sp', 'Sp', ' sp.', 'major sp. nov.', 'sp. A', 'sp. A, sp. B', 'major']
+    idqls = re.compile(r'^large sp.$|^small sp.$|[Ii]ndeterminate')
+    ndetre = re.compile(r'[Nn]o [Dd]et[.]*[ her]*')
+    noidre = re.compile(r'[nN][oO] [iI][dD]')
+    idqre = re.compile(r'[sS]p[.]?.*|[cC]f[.]?|[iI]ndet[.]?|Nov[.]?.*|[Aa]ff[.]? |[?]|no det.')
+    if ts:
+        if idqls.search(ts):
+            idq = ts
+            ts = idqls.sub('', ts)
+        elif noidre.search(ts):
+            idq = ts
+            ts = noidre.sub('', ts)
+        elif ndetre.search(ts):
+            idq = ts
+            ts = ndetre.sub('', ts)
+        elif idqre.search(ts):
+            idq = ts
+            ts = idqre.sub('', ts)
+    return ts, idq
 
-    fix = Fossil.objects.filter(verbatim_phylum_subphylum='Arthropoda').filter(verbatim_class='Mammalia')
-    for fossil in fix:
-        fossil.scientific_name.replace('Arthropoda:Mammalia:', 'Vertebrata:Mammalia:')
-        fossil.save()
+
+def test_idq():
+    """
+    Function to test update_idq
+    :return: Prints results to a string for each test case in the test_list.
+    """
+    test_list = ['? major', '?major', 'aff. major', 'Nov. sp.',
+                 'indet', 'Indet.', 'no det.', 'Indeterminate', 'major no det.',
+                 'cf.', 'Cf', 'cf. major',
+                 'large sp.', 'small sp.',
+                 'sp.', 'Sp.', 'sp', 'Sp', ' sp.', 'major sp. nov.', 'sp. A', 'sp. A, sp. B',
+                 'major', 'Giraffa', 'spirellia']
+    for t in test_list:
+        t, i = update_idq(t)
+        print(str(t)+' |  '+str(i))
 
 
 def update_taxon_remarks(verbose=False):
@@ -1535,16 +1435,22 @@ def update_taxon_remarks(verbose=False):
         f.save()
 
 
-def update_remarks():
-    print("Updating remarks")
-    for f in Fossil.objects.all():
-        f.remarks = f.verbatim_comments
-        f.save()
+def update_disposition():
+    """
+    Copy data from verbatim_storage into disposition
+    :return:
+    """
+    print("Updating disposition from verbatim_storage")
+    for fossil in Fossil.objects.all():
+        fossil.disposition = fossil.verbatim_storage
+        fossil.save()
 
 
 def update_problems():
     print("Updating problems")
-    for f in Fossil.objects.all():
+    # Get only non empty records and exclude those contining the word duplicate.
+    # Duplicates have been cleaned and validated elsewhere.
+    for f in Fossil.objects.exclude(verbatim_problems__in=['']).exclude(verbatim_problems__icontains='duplicate'):
         # Must check if problem has been flagged by other import functions
         if f.verbatim_problems and not f.problem:
             f.problem = True
@@ -1564,8 +1470,51 @@ def update_problems():
         f.save()
 
 
+# Functions for validating data
+def validate_catalog_number():
+    """
+    Test that all catalog numbers conform to consistant pattern
+    EP NNN/YY or EP NNNp/YY; where NNN is a three-four digit integer specimens number, YY is the year and p is an
+    optional part letter. Examples: 001/98, 1774/04, 1232a/99. Specimen number less than 100 all have leading
+    zeros to hundreds place.
+    """
+    print("Validating catalog_number.")
+    # regular expression to test proper format of catalog numbers
+    cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]?/[09][01234589]$')
+    # list of catalog_number column in db
+    catalog_list = list(Fossil.objects.values_list('catalog_number', flat=True))
+    # Test catalog numbers against re
+    re_errors_list = [item for item in catalog_list if not cat_re.match(item)]
+    duplicate_list = [item for item, count in collections.Counter(catalog_list).items() if count > 1]
+
+    # Pretty print format errors
+    print("\nFormat Errors\n---------------------")
+    if re_errors_list:
+        for f in re_errors_list:
+            print("Format error in catalog number {}".format(f))
+    else:
+        print("No formatting errors found.")
+
+    # Pretty print duplicates
+    print("\nDuplicate Summary\n---------------------")
+    if duplicate_list:
+        for duplicate_catalog_number in duplicate_list:
+            print("Duplicate catalog number {}".format(duplicate_catalog_number))
+            duplicate_qs = Fossil.objects.filter(catalog_number=duplicate_catalog_number)
+            for d in duplicate_qs:
+                print('id:{}  loc:{}  desc:{}  taxon:{}'.format(d.id,
+                                                                d.locality_name,
+                                                                d.description,
+                                                                d.scientific_name))
+    else:
+        print("No duplicates found.")
+
+
 def validate_splits():
-    # Validate catalog numbers for splits = ['EP 1280/01', 'EP 3129/99']
+    """
+    Validate correct catalog numbers for splits.
+    :return:
+    """
     splits = SPLITS
     valid = True
     for catno in splits:
@@ -1587,8 +1536,155 @@ def validate_splits():
             Fossil.objects.get(catalog_number=catnob)
         except ObjectDoesNotExist:
             print("Split error {}".format(catnob))
+            valid = False
+    try:
+        Fossil.objects.get(catalog_number='EP 1177a/00')
+    except ObjectDoesNotExist:
+        print("Split error {}".format('EP 1177a/00'))
+        valid = False
+    try:
+        Fossil.objects.get(catalog_number='EP 1177b/00')
+    except ObjectDoesNotExist:
+        print("Split error {}".format('EP 1177b/00'))
+        valid = False
+    try:
+        Fossil.objects.get(catalog_number='EP 1177c/00')
+    except ObjectDoesNotExist:
+        print("Split error {}".format('EP 1177c/00'))
+        valid = False
     if valid:
         print("No split errors found.")
+
+
+def validate_area():
+    kakesio_list = ['Kakesio 1', 'Kakesio 2', 'Kakesio 3', 'Kakesio 4', 'Kakesio 5', 'Kakesio 6', 'Kakesio 7',
+                    'Kakesio 8', 'Kakesio 9', 'Kakesio 10', 'Kakesio 1-6', 'Kakesio South', 'Kakesio 2-4',
+                    'Lobileita', 'Emboremony 1', 'Emboremony 2', 'Emboremony 3']
+
+    esere_list = ['Engesha', 'Esere 1', 'Esere 2', 'Esere 3', 'Noiti 1', 'Noiti 3']
+    laetoli_list = ['Laetoli 1',
+                    'Laetoli 1 Northwest',
+                    'Laetoli 10',
+                    'Laetoli 10 East',
+                    'Laetoli 10 Northeast',
+                    'Laetoli 10 West',
+                    'Laetoli 11',
+                    'Laetoli 12',
+                    'Laetoli 12 East',
+                    'Laetoli 13',
+                    'Laetoli 13 "Snake Gully"',
+                    'Laetoli 14',
+                    'Laetoli 15',
+                    'Laetoli 16',
+                    'Laetoli 17',
+                    'Laetoli 18',
+                    'Laetoli 19',
+                    'Laetoli 2',
+                    'Laetoli 20',
+                    'Laetoli 21',
+                    'Laetoli 21 And 21 East',
+                    'Laetoli 22',
+                    'Laetoli 22 East',
+                    'Laetoli 22 South',
+                    'Laetoli 22 South Nenguruk Hill',
+                    'Laetoli 23',
+                    'Laetoli 24',
+                    'Laetoli 3',
+                    'Laetoli 4',
+                    'Laetoli 5',
+                    'Laetoli 6',
+                    'Laetoli 7',
+                    'Laetoli 7 East',
+                    'Laetoli 8',
+                    'Laetoli 9',
+                    'Laetoli 9 South', 'Olaitole River Gully', 'Silal Artum', 'Garusi Southwest']
+    oleisusu_list = ['Oleisusu']
+    olaltanaudo_list = ['Olaltanaudo']
+    ndoroto_list = ['Ndoroto']
+
+    for f in Fossil.objects.all():
+        if f.area_name == 'Kakesio' and f.locality_name not in kakesio_list:
+            print('Area missmatch for {}'.format(f.catalog_number))
+        elif f.area_name == 'Esere-Noiti' and f.locality_name not in esere_list:
+            print('Area missmatch for {}'.format(f.catalog_number))
+        elif f.area_name == 'Laetoli' and f.locality_name not in laetoli_list:
+            print('Area missmatch for {}'.format(f.catalog_number))
+        elif f.area_name == 'Oleisusu' and f.locality_name != 'Oleisusu':
+            print('Area missmatch for {}'.format(f.catalog_number))
+        elif f.area_name == 'Olaltanaudo' and f.locality_name != 'Olaltanaudo':
+            print('Area missmatch for {}'.format(f.catalog_number))
+        elif f.area_name == 'Ndoroto' and f.locality_name != 'Ndoroto':
+            print('Area missmatch for {}'.format(f.catalog_number))
+
+
+def validate_date_recorded():
+    """
+    Function to test that all date_recorded values fall between 1998 and 2005.
+    :return:
+    """
+    print("Validating date_recorded")
+    result = 1
+    for fossil in Fossil.objects.all():
+        if fossil.date_recorded:
+            if not 1998 <= fossil.date_recorded.year <= 2005:
+                print("Fossil is outside date range 1998-2005.")
+                result = 0
+        else:
+            print("Fossil missing date_recorded")
+            result = 0
+    return result
+
+
+def validate_locality(verbose=False):
+    """
+    Validate locality entries against locality vocabulary.
+    :return: Prints a listing of the Laetoli locality vocabulary alongside all the verbatim values matched to the
+    standardized vocabulary value.
+    """
+    print("Validating localities")
+    locality_list = field_list('locality_name', report=False)
+    i = 1
+    for loc in locality_list:
+        locality_set = set([l.verbatim_locality for l in Fossil.objects.filter(locality_name=loc[0])])
+        locality_string = str(locality_set)[1:-1].replace("', ", "'; ")
+        area_set = set([l.area_name for l in Fossil.objects.filter(locality_name=loc[0])])
+        area_string = '; '.join(area_set)
+        if verbose:
+            print("{}\t{}\t{}\t{}\t{}".format(i, loc[0], loc[1], area_string, locality_string))
+        i += 1
+
+
+def validate_taxon_name(taxon_name, taxon_rank, verbose=True):
+    api = idigbio.json()
+    r = api.search_records(rq={taxon_rank: taxon_name})
+    if r['itemCount']:
+        if verbose:
+            print("{} OK {}".format(taxon_name, r['itemCount']))
+    else:
+        print("{} ERROR".format(taxon_name))
+
+
+def validate_taxon_field(taxon_name, verbose=True):
+    taxon_fields = ['kingdom', 'phylum', 'class', 'order', 'family', 'subfamily']
+    taxon_field_name = 't'+taxon_name
+    # print('Validating {}'.format(taxon_field_name))
+    api = idigbio.json()  # connection to idigbio db
+    tlist = [t[0] for t in field_list(taxon_field_name, report=False) if t[0]]  # list of taxon names excluding None
+    for taxon in tlist:
+        # print('validating {}'.format(taxon))
+        if taxon_field_name == 'tspecies':
+            r = api.search_records(rq={'scientificname': taxon})
+        else:
+            r = api.search_records(rq={taxon_name: taxon})  # search
+        if r:
+            if r['itemCount']:
+                if verbose:
+                    print("{} OK {}".format(taxon, r['itemCount']))
+            else:
+                print("{} ERROR".format(taxon))
+        else:
+            pass
+            #print("{} ERROR".format(taxon))
 
 
 # Main import function
@@ -1617,8 +1713,9 @@ def main(year_list=CSHO_YEARS):
 
     # update data
     print('\nUpdating records from verbatim data.')
-    update_date_recorded()
     update_catalog_number()
+    update_remarks()
+    update_date_recorded()
     update_institution()
     update_disposition()
     update_locality()
@@ -1628,7 +1725,6 @@ def main(year_list=CSHO_YEARS):
     update_taxon_fields(verbose=False)
     update_scientific_name_taxon_rank()
     update_taxon_remarks()
-    update_remarks()
     update_problems()
     print('Current record count: {}'.format(Fossil.objects.all().count()))
     print('====================================')
@@ -1675,21 +1771,27 @@ def field_list(field_name, report=True):
     :return:
     """
     res_list = []
-    for f in Fossil.objects.distinct(field_name):
-        n = getattr(f, field_name)
-        kwargs = {
-            '{0}__{1}'.format(field_name, 'exact'): n
-        }
-        c = Fossil.objects.filter(**kwargs).count()
-        if field_name == 'tspecies':
-            g = getattr(f, 'tgenus')
-            if g:
-                n = g + ' ' + n
-        t = (n, c)
-        res_list.append(t)
-    if report:
-        for i in res_list:
-            print("{} {}".format(*i))  # use * to unpack tuple
+    try:
+        dl = Fossil.objects.distinct(field_name)
+        for f in dl:
+            n = getattr(f, field_name)
+            kwargs = {
+                '{0}__{1}'.format(field_name, 'exact'): n
+            }
+            c = Fossil.objects.filter(**kwargs).count()
+            if field_name == 'tspecies':
+                g = getattr(f, 'tgenus')
+                if g:
+                    n = g + ' ' + n
+            t = (n, c)
+            res_list.append(t)
+        if report:
+            for i in res_list:
+                print("{} {}".format(*i))  # use * to unpack tuple
+    except FieldError:  # because field_name is a method not an attribute
+        res_list = list(set([getattr(f, field_name)() for f in Fossil.objects.all()]))
+        res_list = sorted(res_list)
+
     return res_list
 
 
@@ -1758,133 +1860,11 @@ def update_from_dict(obj, update_dict):
     return obj
 
 
-def duplicate(obj):
-    """
-    Duplicate an object in the database and return the duplicate.
-    Warning, original obj now points to new object
-    a = Fossil.objects.get(catalog_number = 'EP 1280/01')
-    a
-    <Fossil 11132>
-    b = duplicate(a)
-    b
-    <Fossil 11134>
-    a
-    <Fossil 11134> !!!
-    :param obj:
-    :return: Return the duplicate object.
-    """
-    obj.id = None
-    obj.pk = None
-    obj.save()
-    return obj
-
-
-def clone(obj):
-    c = deepcopy(obj)
-    c.id = None
-    c.pk = None
-    c.save()
-    return c
-
-
-def split2part(obj):
-    """
-    Split a catalog number into lettered two lettered parts, by default into a and b.
-    Example split EP 1280/00 into 1280a/00 and 1280b/00.
-    :param obj: A fossil object to be split
-    :param parts:
-    :return:
-    """
-    # Confirm no lettered part in catalog number
-    cat_re = re.compile(r'EP \d{3,4}/[09][01234589]$')
-    if type(obj) == Fossil:
-        if cat_re.match(obj.catalog_number):
-            obj.catalog_number = obj.catalog_number.replace('/', 'a/')  # insert part letter
-            obj.save()
-            old_obj_id = obj.id
-            old_obj = Fossil.objects.get(id=old_obj_id)
-            new_obj = duplicate(obj)  # Here obj now points to new_obj!
-            new_obj.catalog_number = new_obj.catalog_number.replace('a/', 'b/')
-            new_obj.save()  # save second copy
-            return old_obj, new_obj
-        else:
-            print("catalog number already has parts")
-            return None
-    else:
-        raise TypeError
-
-
-def letter_part(n):  # takes quotient and index
-    """
-    Function to calculate the lettered part for a given number of parts n
-    Eg. letter_part(1) = 'a', letter_part(26) = 'z', letter_part(27) = 'az', letter_part(702) = zz  this is the max
-    Values for n > 702 return None
-    :param n:number of parts
-    :return: returns a string of length 1 or 2 ranging from a to zz. Returns None for values greater than zz
-    """
-    q, i = divmod(n, 26)
-    if i == 0:
-        q -= 1
-        i = 25
-    else:
-        i -= 1
-    result = None
-    az = string.ascii_lowercase
-    if q == 0:  # quotient is 0, first time through a-z
-        result = az[i]  # one letter result
-    elif 26 >= q >=1:  # two letter result
-        result =  az[q-1]+az[i]
-    elif q > 26:
-        pass
-    return result
-
-
-def split2many(obj, no_parts=2):
-    """
-    Split a Fossil into arbitrary number of parts
-    :param obj:
-    :param no_parts:
-    :return:
-    """
-    cat_re = re.compile(r'EP \d{3,4}/[09][01234589]$')
-    if type(obj) == Fossil:
-        if cat_re.match(obj.catalog_number):  # confirm original has no parts
-            clone_list = [obj]+[clone(obj) for i in range(1, no_parts)]  # create a list of cloned objects
-            lpi = 1  # letter part index
-            for c in clone_list:
-                part_string = letter_part(lpi)+'/'  # get incremented letter part string
-                c.catalog_number = c.catalog_number.replace('/', part_string)  # insert letter part string
-                c.save()
-                lpi += 1  # advance letter part index by 1
-            return clone_list
-        else:
-            print("catalog number already has parts")
-            return None
-    else:
-        raise TypeError
-
-
-def restore_splits():
-    splits = SPLITS
-    for catno in splits:
-        cata = catno.replace('/', 'a/')
-        catb = catno.replace('/', 'b/')
-        try:
-            b = Fossil.objects.get(catalog_number=catb)
-            b.delete()
-            a = Fossil.objects.get(catalog_number=cata)
-            a.catalog_number = catno
-            a.save()
-            update_taxon_fields(qs=Fossil.objects.filter(catalog_number=catno))
-        except ObjectDoesNotExist:
-            pass
-
-
 def get_pbdb_taxon(taxon_name):
     url = 'https://paleobiodb.org/data1.2/taxa/single.txt?name='+taxon_name
     resp = requests.get(url)
     if resp.status_code == 200:
-        h, d = resp.content.decode('utf-8').replace('"','').split('\r\n')[0:2]
+        h, d = resp.content.decode('utf-8').replace('"', '').split('\r\n')[0:2]
         h = h.split(',')
         d = d.split(',')
         result = dict(zip(h, d))
@@ -1901,5 +1881,3 @@ def get_idigbio_taxon(taxon_name, taxon_rank):
     if r:
         result = r
     return result
-
-
