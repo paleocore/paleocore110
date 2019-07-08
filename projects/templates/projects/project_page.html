@@ -91,7 +91,7 @@
           </div>
           <!-- Tab Panel 2 -->
           <div class="tabs-panel" id="panel2">
-            {% include "projects/includes/project_datasets.html" %}
+            {% include "projects/includes/project_datasets.html" with datasets=self.related_links.all only %}
           </div>
         </div>
         <!-- End Tab Contents -->
