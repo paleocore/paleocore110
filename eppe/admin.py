@@ -90,25 +90,26 @@ locality_fieldsets = ('Locality Fields', {'fields': [
 
 default_list_display = [
     'catalog_number',
-    'date_recorded',
+    'date_discovered',
     'description',
     'locality_name',
     'geological_context_name',
     'scientific_name',
     'identification_qualifier',
-    'verbatim_other',
+    'problem',
 ]
 
 
 class FossilAdmin(admin.ModelAdmin):
-    readonly_fields = ['taxon_path', 'verbatim_taxon_path', 'event_date', 'institution_code', 'collection_code']
-    list_display = [
-        'catalog_number',
-        'verbatim_problems',
-        'problem',
-        'problem_comment',
-    ]
-    # list_display = default_list_display
+    def date_discovered(self, obj):
+        return obj.date_recorded.strftime("%Y %b %d")
+
+    date_discovered.admin_order_field = 'date_recorded'
+    date_discovered.short_description = 'Date Discovered'
+
+    readonly_fields = ['taxon_path', 'verbatim_taxon_path', 'event_date',
+                       'institution_code', 'collection_code', 'date_discovered']
+    list_display = default_list_display
 
     fieldsets = (
         record_fieldsets,
@@ -121,7 +122,10 @@ class FossilAdmin(admin.ModelAdmin):
                      'locality_name',
                      'description'
                      ] + verbatim_taxon_field_list + taxon_field_list
-    list_filter = ['problem', 'locality_name', 'tfamily', 'ttribe', 'tgenus', 'identification_qualifier']
+    list_filter = ['date_recorded', 'locality_name',
+                   'tfamily', 'ttribe', 'tgenus', 'identification_qualifier',
+                   'problem']
+
     actions = ['create_data_csv', 'create_dwc']
 
     def create_dwc(self, request, queryset):
