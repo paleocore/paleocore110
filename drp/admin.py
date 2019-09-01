@@ -4,6 +4,21 @@ from django.contrib.gis.admin import OSMGeoAdmin
 import projects.admin
 
 
+drp_search_fields = ('id',
+                     'catalog_number',
+                     'basis_of_record',
+                     'item_type',
+                     'barcode',
+                     'collection_code',
+                     'item_scientific_name',
+                     'item_description',
+                     'stratigraphic_marker_found',
+                     'stratigraphic_marker_likely',
+                     'analytical_unit',
+                     'finder',
+                     'collector',)
+
+
 ###############
 # Media Admin #
 ###############
@@ -93,7 +108,11 @@ class PaleoCoreLocalityAdmin(DGGeoAdmin):
     list_filter = ("collection_code",)
     search_fields = ("paleolocality_number",)
 
+
 class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
+    """
+    OccurrenceAdmin <- PaleoCoreOccurrenceAdmin <- BingGeoAdmin <- OSMGeoAdmin <- GeoModelAdmin
+    """
     actions = ['create_data_csv', 'change_xy', 'get_nearest_locality']
     default_read_only_fields = ('id', 'point_x', 'point_y', 'easting', 'northing', 'date_last_modified')
     readonly_fields = default_read_only_fields + ('photo',)
@@ -105,6 +124,7 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
     fieldsets = occurrence_fieldsets
     default_list_filter = ['basis_of_record', 'item_type', 'collector', 'problem', 'disposition']
     list_filter = default_list_filter + ['collection_code']
+    search_fields = drp_search_fields
 
     # admin action to get nearest locality
     def get_nearest_locality(self, request, queryset):
