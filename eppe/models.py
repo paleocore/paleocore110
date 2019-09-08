@@ -148,6 +148,7 @@ class Fossil(Find):
     taxon_remarks = models.TextField(max_length=255, null=True, blank=True)
     identified_by = models.CharField(max_length=20, null=True, blank=True)
     full_taxon = models.TextField(max_length=255, null=True, blank=True)
+    identifications = models.ManyToManyField(Taxon, through='Identification')
     # life_stage = models.CharField("Life Stage", null=True, blank=True, max_length=50, choices=LIFE_STAGE_CHOICES)
     # size_class = models.CharField("Size Class", null=True, blank=True, max_length=50, choices=SIZE_CLASS_CHOICES)
     # # Taxon
@@ -183,3 +184,11 @@ class Fossil(Find):
     class Meta:
         verbose_name = 'Laetoli Fossil'
         verbose_name_plural = 'Laetoli Fossils'
+
+
+class Identification(models.Model):
+    fossil = models.ForeignKey(Fossil, on_delete=models.CASCADE)
+    taxon = models.ForeignKey(Taxon,  on_delete=models.CASCADE)
+    identified_by = models.CharField(max_length=255, null=True, blank=True)
+    date_identified = models.DateField(null=True, blank=True)
+    reference = models.TextField(null=True, blank=True)

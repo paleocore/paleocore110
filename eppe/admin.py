@@ -1,8 +1,9 @@
 from django.contrib import admin
-from .models import Fossil, Locality
+from .models import Fossil, Locality, Taxon, TaxonRank, Identification
 from django.http import HttpResponse, HttpResponseRedirect, StreamingHttpResponse
 import csv
 import os
+import projects.admin
 
 
 class Echo(object):
@@ -100,6 +101,11 @@ default_list_display = [
 ]
 
 
+class IdentificationInline(admin.TabularInline):
+    model = Identification
+    extra = 1
+
+
 class FossilAdmin(admin.ModelAdmin):
     def date_discovered(self, obj):
         return obj.date_recorded.strftime("%Y %b %d")
@@ -126,6 +132,7 @@ class FossilAdmin(admin.ModelAdmin):
                    'tfamily', 'ttribe', 'tgenus', 'identification_qualifier',
                    'problem']
 
+    inlines = [IdentificationInline]
     actions = ['create_data_csv', 'create_dwc']
 
     def create_dwc(self, request, queryset):
@@ -290,3 +297,4 @@ class LocalityAdmin(admin.ModelAdmin):
 
 admin.site.register(Fossil, FossilAdmin)
 admin.site.register(Locality, LocalityAdmin)
+admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
