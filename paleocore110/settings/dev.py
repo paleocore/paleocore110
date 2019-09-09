@@ -13,6 +13,7 @@ INSTALLED_APPS += (
     'import_export',
     'taph',
     'olduvai',
+    'mptt',
 )
 
 INTERNAL_IPS = ('127.0.0.1',)
