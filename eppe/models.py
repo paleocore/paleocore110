@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models
 import projects.models
 from .ontologies import LAETOLI_AREAS, LAETOLI_UNITS
+from mptt.models import MPTTModel, TreeForeignKey
 
 
 class TaxonRank(projects.models.TaxonRank):
@@ -192,3 +193,15 @@ class Identification(models.Model):
     identified_by = models.CharField(max_length=255, null=True, blank=True)
     date_identified = models.DateField(null=True, blank=True)
     reference = models.TextField(null=True, blank=True)
+
+
+class TaxonTree(MPTTModel):
+    name = models.CharField(max_length=50, unique=True)
+    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    # rank = models.ForeignKey(TaxonRank)
+
+    def __str__(self):
+        return self.name
+
+    class MPTTMeta:
+        order_insertion_by = ['name']
