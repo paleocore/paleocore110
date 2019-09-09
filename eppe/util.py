@@ -1481,7 +1481,7 @@ def validate_catalog_number():
     print("Validating catalog_number.")
     # regular expression to test proper format of catalog numbers
     cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]?/[09][01234589]$')
-    # list of catalog_number column in db
+    # list of catalog_number column in db. The values_list function is built into django
     catalog_list = list(Fossil.objects.values_list('catalog_number', flat=True))
     # Test catalog numbers against re
     re_errors_list = [item for item in catalog_list if not cat_re.match(item)]
