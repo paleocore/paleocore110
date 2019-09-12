@@ -169,18 +169,6 @@ class Fossil(Find):
     identified_by = models.CharField(max_length=20, null=True, blank=True)
     full_taxon = models.TextField(max_length=255, null=True, blank=True)
     identifications = models.ManyToManyField(Taxon, through='Identification')
-    # life_stage = models.CharField("Life Stage", null=True, blank=True, max_length=50, choices=LIFE_STAGE_CHOICES)
-    # size_class = models.CharField("Size Class", null=True, blank=True, max_length=50, choices=SIZE_CLASS_CHOICES)
-    # # Taxon
-    # taxon = models.ForeignKey(Taxon,
-    #                           default=0, on_delete=models.SET_DEFAULT,  # prevent deletion when taxa deleted
-    #                           related_name='laetoli_taxon_bio_occurrences')
-    # identification_qualifier = models.ForeignKey(IdentificationQualifier, null=True, blank=True,
-    #                                              on_delete=models.SET_NULL,
-    #                                              related_name='laetoli_id_qualifier_bio_occurrences')
-    # qualifier_taxon = models.ForeignKey(Taxon, null=True, blank=True,
-    #                                     on_delete=models.SET_NULL,
-    #                                     related_name='laetoli_qualifier_taxon_bio_occurrences')
 
     def basisOfRecord(self):
         return 'FossilSpecimen'
@@ -213,14 +201,3 @@ class Identification(models.Model):
     date_identified = models.DateField(null=True, blank=True)
     reference = models.TextField(null=True, blank=True)
 
-
-class TaxonTree(MPTTModel):
-    name = models.CharField(max_length=50, unique=True)
-    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
-    # rank = models.ForeignKey(TaxonRank)
-
-    def __str__(self):
-        return self.name
-
-    class MPTTMeta:
-        order_insertion_by = ['name']

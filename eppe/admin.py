@@ -1,10 +1,9 @@
 from django.contrib import admin
-from .models import Fossil, Locality, Taxon, TaxonRank, Identification, TaxonTree
-from django.http import HttpResponse, HttpResponseRedirect, StreamingHttpResponse
+from .models import Fossil, Locality, Taxon, Identification
+from django.http import StreamingHttpResponse
 import csv
 import os
 import projects.admin
-from mptt.admin import MPTTModelAdmin
 
 
 class Echo(object):
@@ -299,4 +298,4 @@ class LocalityAdmin(admin.ModelAdmin):
 admin.site.register(Fossil, FossilAdmin)
 admin.site.register(Locality, LocalityAdmin)
 admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
-admin.site.register(TaxonTree, MPTTModelAdmin)
+
