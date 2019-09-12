@@ -6,6 +6,7 @@ import os
 import projects.admin
 from mptt.admin import MPTTModelAdmin
 
+
 class Echo(object):
     """
     From the django docs on streaming large csv files
@@ -74,7 +75,7 @@ taxonomy_fieldsets = ('Taxonomy Fields', {'fields': [
     ('tclass', 'torder', 'tfamily'),
     ('tsubfamily', 'ttribe'),
     ('tgenus', 'tspecies'),
-    ('scientific_name','identification_qualifier'),
+    ('scientific_name', 'identification_qualifier'),
     ('identified_by',),
     ('taxon_remarks',),
 ]
@@ -136,7 +137,7 @@ class FossilAdmin(admin.ModelAdmin):
     actions = ['create_data_csv', 'create_dwc']
 
     def create_dwc(self, request, queryset):
-        # dictionary mapping output csv column names (kyes) to db fields (values)
+        # dictionary mapping output csv column names (keys) to db fields (values)
         mapping_dict = {
             # verbatim fields
             'verbatim_specimen_number': 'verbatim_specimen_number',

@@ -47,6 +47,25 @@ class Locality(projects.models.PaleoCoreLocalityBaseClass):
         ordering = ("name",)
 
 
+class Context(projects.models.PaleoCoreBaseClass):
+    """
+    Context <- PaleoCoreBaseClass
+    inherits: name, date_creeated, date_modified
+
+    """
+    upper_unit = models.CharField(max_length=256, null=True, blank=True, default='Ma', choices=LAETOLI_UNITS)
+    lower_unit = models.CharField(max_length=256, null=True, blank=True, default='Ma', choices=LAETOLI_UNITS)
+    likely_unit = models.CharField(max_length=256, null=True, blank=True, default='Ma', choices=LAETOLI_UNITS)
+    max_age = models.IntegerField(null=True, blank=True)
+    max_age_system = models.CharField(max_length=10, null=True, blank=True, default='Ma')
+    min_age = models.IntegerField(null=True, blank=True)
+    min_age_system = models.CharField(max_length=10, null=True, blank=True, default='Ma')
+    age_uncertainty = models.IntegerField(null=True, blank=True)  # in years as defined in dwc
+    age_protocol = models.TextField(null=True, blank=True)
+    age_references = models.TextField(null=True, blank=True)
+    age_remarks = models.TextField(null=True, blank=True)
+
+
 class Find(projects.models.PaleoCoreOccurrenceBaseClass):
     """
     Find <- PaleoCoreOccurrenceBaseClass <- PaleoCoreGeomBaseClass <- PaleoCoreBaseClass
@@ -128,7 +147,7 @@ class Find(projects.models.PaleoCoreOccurrenceBaseClass):
         :return:
         """
         return ['event_date']
-        #return ['longitude', 'latitude', 'easting', 'northing', 'catalog_number', 'photo']
+        # return ['longitude', 'latitude', 'easting', 'northing', 'catalog_number', 'photo']
 
 
 class Fossil(Find):
@@ -176,7 +195,7 @@ class Fossil(Find):
 
     def verbatim_taxon_path(self):
         snl = [self.verbatim_kingdom, self.verbatim_phylum_subphylum, self.verbatim_class,
-               self.verbatim_order, self.verbatim_family,self.ttribe,
+               self.verbatim_order, self.verbatim_family, self.ttribe,
                self.tgenus, self.tspecies]
         snl = ['' if x is None else x for x in snl]  # replace None elements with empty strings
         sn = ':'.join(snl)  # join all elements in the sci name list, colon delimited
