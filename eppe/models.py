@@ -1,6 +1,6 @@
 from django.contrib.gis.db import models
 import projects.models
-from .ontologies import LAETOLI_AREAS, LAETOLI_UNITS
+from .ontologies import LAETOLI_AREAS, LAETOLI_UNITS, DATING_PROTOCOLS, DATING_REFERENCES
 from mptt.models import MPTTModel, TreeForeignKey
 
 
@@ -56,14 +56,22 @@ class Context(projects.models.PaleoCoreBaseClass):
     upper_unit = models.CharField(max_length=256, null=True, blank=True, default='Ma', choices=LAETOLI_UNITS)
     lower_unit = models.CharField(max_length=256, null=True, blank=True, default='Ma', choices=LAETOLI_UNITS)
     likely_unit = models.CharField(max_length=256, null=True, blank=True, default='Ma', choices=LAETOLI_UNITS)
-    max_age = models.IntegerField(null=True, blank=True)
+    max_age = models.DecimalField(max_digits=20, decimal_places=5, null=True, blank=True)
     max_age_system = models.CharField(max_length=10, null=True, blank=True, default='Ma')
-    min_age = models.IntegerField(null=True, blank=True)
+    min_age = models.DecimalField(max_digits=20, decimal_places=5, null=True, blank=True)
     min_age_system = models.CharField(max_length=10, null=True, blank=True, default='Ma')
-    age_uncertainty = models.IntegerField(null=True, blank=True)  # in years as defined in dwc
-    age_protocol = models.TextField(null=True, blank=True)
+    age_uncertainty_help_text = "In years as defined by DwC"
+    age_uncertainty = models.DecimalField(max_digits=20, decimal_places=5, null=True, blank=True,
+                                          help_text=age_uncertainty_help_text)
+    age_protocol = models.CharField(max_length=256, null=True, blank=True, choices=DATING_PROTOCOLS)
     age_references = models.TextField(null=True, blank=True)
     age_remarks = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    def usage_count(self):
+        return Find.objects.filter(context=self).count()
 
 
 class Find(projects.models.PaleoCoreOccurrenceBaseClass):
@@ -80,6 +88,7 @@ class Find(projects.models.PaleoCoreOccurrenceBaseClass):
     disposition = models.CharField(max_length=255, null=True, blank=True)
     institution = models.CharField(max_length=255, null=True, blank=True)
     geological_context_name = models.CharField('Geol. Context', max_length=255, null=True, blank=True)
+    context = models.ForeignKey(Context, null=True, blank=True)
 
     # Verbatim fields to store data read directly from spreadsheet versions of the catalog
     verbatim_workbook_name = models.TextField(null=True, blank=True)
