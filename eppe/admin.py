@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Fossil, Locality, Taxon, Identification
+from .models import Fossil, Locality, Taxon, Identification, Context
 from django.http import StreamingHttpResponse
 import csv
 import os
@@ -130,7 +130,7 @@ class FossilAdmin(admin.ModelAdmin):
                      ] + verbatim_taxon_field_list + taxon_field_list
     list_filter = ['date_recorded', 'locality_name',
                    'tfamily', 'ttribe', 'tgenus', 'identification_qualifier',
-                   'problem']
+                   'problem', 'context__name']
 
     inlines = [IdentificationInline]
     actions = ['create_data_csv', 'create_dwc']
@@ -169,7 +169,11 @@ class FossilAdmin(admin.ModelAdmin):
             'organism_quantity_type': 'organism_quantity_type',
             'country': 'country',
             'locality': 'locality_name',
-            'bed': 'geological_context_name',
+            #'bed': 'geological_context_name',
+            'bed': 'context.name',
+            'maximum_chronometric_age': 'context.max_age',
+            'minimum_chronometric_age': 'context.min_age',
+            'chronometric_age_uncertainty_in_years': 'context.age_uncertainty',
             'kingdom': 'tkingdom',
             'phylum': 'tphylum',
             'subphylum': 'tsubphylum',
@@ -192,11 +196,23 @@ class FossilAdmin(admin.ModelAdmin):
         def get_headers():
             return mapping_dict.keys()
 
+        # Trick to get foreing key field values
+        # see https://stackoverflow.com/questions/20235807/how-to-get-foreign-key-values-with-getattr-from-models
+        def get_field_value(instance, field):
+            field_path = field.split('.')
+            attr = instance
+            for elem in field_path:
+                try:
+                    attr = getattr(attr, elem)
+                except AttributeError:
+                    return None
+            return attr
+
         def get_row_data(o, md):
             row_data = []
             for key in md:
                 # for each item in the field mapping dict get the db value for that field
-                field_value = getattr(o, md[key])
+                field_value = get_field_value(o, md[key])
                 if callable(field_value):  # method attribute
                     row_data.append(field_value())
                 else:
@@ -295,7 +311,14 @@ class LocalityAdmin(admin.ModelAdmin):
     fieldsets = (locality_fieldsets, )
 
 
+class ContextAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'upper_unit', 'lower_unit', 'max_age', 'min_age', 'usage_count']
+    list_filter = ['upper_unit', 'lower_unit']
+    readonly_fields = ['usage_count']
+
+
 admin.site.register(Fossil, FossilAdmin)
 admin.site.register(Locality, LocalityAdmin)
 admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
+admin.site.register(Context, ContextAdmin)
 
