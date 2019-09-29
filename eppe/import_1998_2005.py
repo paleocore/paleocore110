@@ -1622,7 +1622,7 @@ def validate_catalog_number():
     optional part letter. Examples: 001/98, 1774/04, 1232a/99. Specimen number less than 100 all have leading
     zeros to hundreds place.
     """
-    print("Validating catalog_number.")
+    print("Validating catalog_number")
     # regular expression to test proper format of catalog numbers
     cat_re = re.compile(r'EP \d{3,4}[a-zA-Z]?/[09][01234589]$')
     # list of catalog_number column in db. The values_list function is built into django
@@ -1632,16 +1632,17 @@ def validate_catalog_number():
     duplicate_list = [item for item, count in collections.Counter(catalog_list).items() if count > 1]
 
     # Pretty print format errors
-    print("\nFormat Errors\n---------------------")
+
     if re_errors_list:
+        print("\nFormat Errors\n---------------------")
         for f in re_errors_list:
             print("Format error in catalog number {}".format(f))
-    else:
-        print("No formatting errors found.")
+    # else:
+    #     print("No formatting errors found.")
 
     # Pretty print duplicates
-    print("\nDuplicate Summary\n---------------------")
     if duplicate_list:
+        print("\nDuplicate Summary\n---------------------")
         for duplicate_catalog_number in duplicate_list:
             print("Duplicate catalog number {}".format(duplicate_catalog_number))
             duplicate_qs = Fossil.objects.filter(catalog_number=duplicate_catalog_number)
@@ -1650,8 +1651,8 @@ def validate_catalog_number():
                                                                 d.locality_name,
                                                                 d.description,
                                                                 d.scientific_name))
-    else:
-        print("No duplicates found.")
+    # else:
+    #     print("No duplicates found.")
 
 
 def validate_splits():
@@ -1659,6 +1660,7 @@ def validate_splits():
     Validate correct catalog numbers for splits.
     :return:
     """
+    print("Validating catalog numbers for splits")
     splits = SPLITS
     valid = True
     for catno in splits:
@@ -1697,7 +1699,8 @@ def validate_splits():
         print("Split error {}".format('EP 1177c/00'))
         valid = False
     if valid:
-        print("No split errors found.")
+        pass
+        # print("No split errors found.")
 
 
 def validate_area():
