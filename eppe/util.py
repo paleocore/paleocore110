@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, FieldError
-from .models import Fossil
+from .models import Fossil, Context
 import xlrd
 from datetime import datetime
 import pytz
@@ -18,6 +18,13 @@ file_name = 'laetoli_csho_1998'
 verbose_default = False
 # A list of lots that need to be split into separate catalog numbers
 SPLITS = ['EP 1280/01', 'EP 3129/00', 'EP 1181/00', 'EP 3635/00', 'EP 1177/00']
+
+# Define variables for consistent horizon names
+lower_laetolil = 'Laetolil Beds, Lower Unit'
+upper_laetolil = 'Laetolil Beds, Upper Unit'
+upper_ngaloba = 'Ngaloba Beds, Upper Unit'
+lower_ngaloba = 'Ngaloba Beds, Lower Unit'
+upper_ndolanya = 'Ndolanya Beds, Upper Unit'
 
 
 # Functions for opening Excel files and reading headers
@@ -277,22 +284,22 @@ def delete_records():
             delete_me.delete()
             count += 1
 
-    # 8. One item is modern, not fossil.
-    specimen = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
-    specimen.delete()
-    count += 1
+    # 8. One item is modern, not fossil. Update: decided to keep modern specimens
+    # specimen = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
+    # specimen.delete()
+    # count += 1
 
-    # 9. Fix EP 1052/98. The Aves specimen is an inccorrect entry and is deleted.
+    # 8. Fix EP 1052/98. The Aves specimen is an inccorrect entry and is deleted.
     fossil = Fossil.objects.get(verbatim_specimen_number='EP 1052/98', verbatim_class='Aves')
     fossil.delete()
     count += 1
 
-    # 10. Fix EP 001/98 Delete the crocodile entry
+    # 9. Fix EP 001/98 Delete the crocodile entry
     fossil = Fossil.objects.get(verbatim_specimen_number='EP 001/98', verbatim_family='Crocodylidae')
     fossil.delete()
     count += 1
 
-    # 11. EP 1477b/00 Delete the suid entry.
+    # 10. EP 1477b/00 Delete the suid entry.
     fossil = Fossil.objects.get(verbatim_specimen_number='EP 1477B/00', verbatim_order='Artiodactyla')
     fossil.delete()
     count += 1
@@ -720,6 +727,85 @@ def update_area():
         f.save()
 
 
+def create_geological_context_dictionary():
+    gcn_dict = {
+        "?Laetolil Beds, Upper Unit": lower_laetolil,
+        "?Mbuga Clay": upper_ngaloba,
+        "?Ndolanya Beds": upper_ndolanya,
+        "?Upper Ndolanya Beds": upper_ndolanya,
+        "?Ngaloba Beds": upper_ngaloba,
+        "Ngaloba Beds?": upper_ngaloba,
+        "Upper Ngaloba Beds?": upper_ngaloba,
+        "?Olpiro Beds": lower_ngaloba,
+        "?Pleistocene": upper_ngaloba,
+        "Basal Pale Yellow-Brown Tuff": lower_laetolil,
+        "Below Ogol Lava": lower_laetolil,
+        "Laetolil Beds, ?Lower Unit": lower_laetolil,
+        "Laetolil Beds, ?Lower Unit Or Mbuga Clay Horizon": lower_laetolil,
+        "Laetolil Beds, Lower Unit": lower_laetolil,
+        "Lower Laetolil Beds": lower_laetolil,
+        "Laetolil Beds, Lower Unit, Tuff 8": upper_laetolil+", Tuff 8",
+        "Laetolil Beds, Upper Unit": upper_laetolil,
+        upper_laetolil+", @ Base Of Yellow Marker Tuff": upper_laetolil+", Yellow Marker Tuff",
+        upper_laetolil+", Above Tuff 7": upper_laetolil+", Between Tuffs 7 - 8",
+        upper_laetolil+", Above Tuff 8": upper_laetolil+", Between Tuff 8 - Yellow Marker Tuff",
+        upper_laetolil+", Augite-Biotite Tuff Of Tuff 7": upper_laetolil+", Augite-Biotite Tuff of Tuff 7",
+        upper_laetolil+", Below Tuff 2": upper_laetolil+", Below Tuff 2",
+        upper_laetolil+", Below Tuff 3": upper_laetolil+", Below Tuff 3",
+        upper_laetolil+", Below Tuff 5": upper_laetolil+", Below Tuff 5",
+        upper_laetolil+", Below Tuff 7": upper_laetolil+", Between Tuffs 6 - 7",
+        upper_laetolil+", Below Tuff 8 To Just Below Tuff 7": upper_laetolil+", Below Tuff 8 To Just Below Tuff 7",
+        upper_laetolil+", Below Tuffs 7 - 8": upper_laetolil+", Between Tuffs 7 - 8",
+        upper_laetolil+", Between Tuff 6 - Just Above Tuff 7": upper_laetolil+", Between Tuff 6 - Just Above Tuff 7",
+        upper_laetolil+", Between Tuff 6 - Just Above Tuff 8": upper_laetolil+", Between Tuff 6 - Just Above Tuff 8",
+        upper_laetolil+", Between Tuff 7 - 2M Above Tuff 8": upper_laetolil+", Between Tuff 7 - 2M Above Tuff 8",
+        upper_laetolil+", Between Tuff 7 - Just Above Tuff 8": upper_laetolil+", Between Tuff 7 - Just Above Tuff 8",
+        upper_laetolil+", Between Tuff 7 - Yellow Marker Tuff": upper_laetolil+", Between Tuff 7 - Yellow Marker Tuff",
+        upper_laetolil+", Between Tuff 8 - Yellow Marker Tuff": upper_laetolil+", Between Tuff 8 - Yellow Marker Tuff",
+        upper_laetolil+", Between Tuffs 1 - 2": upper_laetolil+", Below Tuff 2",
+        upper_laetolil+", Between Tuffs 2 - 3 - Tuffs 5 - 7": upper_laetolil+", Between Tuffs 2 - 3 and Tuffs 5 - 7",
+        upper_laetolil+", Between Tuffs 3 - 5": upper_laetolil+", Between Tuffs 3 - 5",
+        upper_laetolil+", Between Tuffs 3 - 7": upper_laetolil+", Between Tuffs 3 - 7",
+        upper_laetolil+", Between Tuffs 3 - 8": upper_laetolil+", Between Tuffs 3 - 8",
+        upper_laetolil+", Between Tuffs 4 - 5": upper_laetolil+", Between Tuffs 4 - 5",
+        upper_laetolil+", Between Tuffs 5 - 6": upper_laetolil+", Between Tuffs 5 - 6",
+        upper_laetolil+", Between Tuffs 5 - 6, Calcrete Layer": upper_laetolil+", Between Tuffs 5 - 6",
+        upper_laetolil+", Between Tuffs 5 - 7": upper_laetolil+", Between Tuffs 5 - 7",
+        upper_laetolil+", Between Tuffs 5 - 8": upper_laetolil+", Between Tuffs 5 - 8",
+        upper_laetolil+", Between Tuffs 6 - 7": upper_laetolil+", Between Tuffs 6 - 7",
+        upper_laetolil+", 2 M Below Tuff 7": upper_laetolil+", Between Tuffs 6 - 7",
+        "Laetolil Beds Between Tuffs 6 - 7": upper_laetolil+", Between Tuffs 6 - 7",
+        upper_laetolil+", Between Tuffs 6 - 8": upper_laetolil+", Between Tuffs 6 - 8",
+        upper_laetolil+", Between Tuffs 7 - 8": upper_laetolil+", Between Tuffs 7 - 8",
+        upper_laetolil+", 1 M Above Tuff 7": upper_laetolil+", Between Tuffs 7 - 8",
+        upper_laetolil+", Just Below Tuff 7": upper_laetolil+", Between Tuffs 6 - 7",
+        upper_laetolil+", Level Unknown": upper_ngaloba,
+        upper_laetolil+", Lower Part Of Tuff 7": upper_laetolil+", Tuff 7",
+        upper_laetolil+", South Below Tuff 2": upper_laetolil+", Below Tuff 2",
+        upper_laetolil+", Surface Below Tuff 7": upper_laetolil+", Between Tuffs 6 - 7",
+        upper_laetolil+", Top Part Of Tuff 8": upper_laetolil+", Tuff 8",
+        upper_laetolil+", Uppermost Tuff": lower_laetolil,
+        upper_laetolil+", Within Tuff 7": upper_laetolil+", Tuff 7",
+        upper_laetolil+", Yellow Marker Tuff": upper_laetolil+", Yellow Marker Tuff",
+        "Lava Below Laetolil Beds": lower_laetolil,
+        "Mbuga Clay": upper_ngaloba,
+        "Mbuga Clay - Alluvium (Late Quaternary)": upper_ngaloba,
+        "Modern": "Modern",
+        "Ndolanya Beds": upper_ndolanya,
+        "Ndolanya Beds, Upper Unit": upper_ndolanya,
+        "Upper Ndolanya Beds": upper_ndolanya,
+        "Ndolanya Beds, Upper Unit, Above Tuff 8": upper_laetolil+", Between Tuff 8 - Yellow Marker Tuff",
+        "Ngaloba Beds": upper_ngaloba,
+        "Ngaloba Beds, Upper Unit": upper_ngaloba,
+        "Ngaloba Beds/Ndolanya Beds": upper_ngaloba,
+        "Lower Ngaloba Beds": lower_ngaloba,
+        "Olpiro Beds": "Olpiro Beds",
+        "Surface Find": upper_laetolil,
+        None: None,
+    }
+    return gcn_dict
+
+
 def update_geological_context():
     """
     Clean up and consolidate entries in the Horizon field and copy to geological_context_name
@@ -760,12 +846,17 @@ def update_geological_context():
     bt_re = re.compile(r'^Below Tuff.*|^Between Tuff.*')  # All cases beginning w/ 'Below Tuff' or 'Between Tuff'
     ub_re = re.compile(r'^Upper Beds (Between Tuff[s]* [\d] - .*)')  # Upper Beds Betwee ...
     so_re = re.compile(r'^South Below Tuff 2')  # All cases beginning with 'South Below Tuff 2'
-    tf_re = re.compile(r'.*Tuffs 6 - [\d]{2, 2}$')  # Auto increment error
     ab_re = re.compile(r'^Above Tuff 8$')  # All cases beginning with 'Above Tuff 8'
     ue_re = re.compile(r'^[?]Upper Ndolanya$')  # All cases beginning with '? Upper Ndolanya'
 
+    # Compile regex for auto sequence error.
+    tf_re = re.compile(r'.*Tuffs 6 - [\d]{2,2}$')  # DO NOT PUT space after comma! This will break regex functionality.
+
     # Define a standard prefix string for Laetoli Upper Beds
-    prefix = 'Laetolil Beds, Upper Unit, '
+    prefix = upper_laetolil+', '
+
+    # Define lookup dictionary outside loop
+    gcn_dict = create_geological_context_dictionary()
 
     # Iterate through all records and update
     for f in Fossil.objects.all():
@@ -775,18 +866,26 @@ def update_geological_context():
         gcn = multireplace(gcn, rep)  # Fix abbreviations
         gcn = multireplace(gcn, rep)  # Need to run 2x to catch changes from first round
 
+        # These lines use the regex defined above to update and standardize entries.
+        # E.g. The first one converts 'Upper Laetolil' -> 'Laetolil Beds, Upper Unit'
         # Substitute matching strings with groups, group 0 is whole string, group 1 is partial string in parentheses
         gcn = re.sub(lb_re, prefix+'\g<1>', gcn)
         gcn = re.sub(bt_re, prefix+'\g<0>', gcn)
         gcn = re.sub(ub_re, prefix+'\g<1>', gcn)
         gcn = re.sub(so_re, prefix+'\g<0>', gcn)  # These localities should also be updated to 9S
-        gcn = re.sub(ab_re, 'Upper Ndolanya Beds, Above Tuff 8', gcn)
-        gcn = re.sub(ue_re, '?Upper Ndolanya Beds', gcn)
+        gcn = re.sub(ab_re, upper_ndolanya + ', Above Tuff 8', gcn)
+        gcn = re.sub(ue_re, upper_ndolanya, gcn)
 
-        # Fix auto sequence error
-        gcn = tf_re.sub('Laetolil Beds, Upper Unit, Between Tuffs 6 - 8', gcn)
-        gcn = gcn.replace('Laetolil Beds, Upper Unit, Between Tuffs 6 - 9',
-                          'Laetolil Beds, Upper Unit, Between Tuffs 6 - 8')
+        # Fix auto sequence error. A sequence of entries have incrementing tuff intervals,
+        # e.g.
+        # Laetolil Beds, Upper Unit, Between Tuffs 6 - 8'
+        # Laetolil Beds, Upper Unit, Between Tuffs 6 - 9'
+        # Laetolil Beds, Upper Unit, Between Tuffs 6 - 10'
+        # Laetolil Beds, Upper Unit, Between Tuffs 6 - 11' ... all the way to 6 - 24
+        # My guess is that at some point someone updating the XL sheets selected a range of cells and
+        # drag filled below them which created an automatic sequence.
+        gcn = tf_re.sub(upper_laetolil + ', Between Tuffs 6 - 8', gcn)
+        gcn = gcn.replace('Between Tuffs 6 - 9', 'Between Tuffs 6 - 8')
 
         # Fix remaining oddballs
         gcn = gcn.replace(' T7', ' Tuff 7 ')
@@ -802,9 +901,21 @@ def update_geological_context():
         gcn = gcn.replace('Tuffs 7 - Just Above Tuff 8', 'Tuff 7 - Just Above Tuff 8')
         gcn = gcn.replace('Tuffs 7 - Yellow Marker Tuff', 'Tuff 7 - Yellow Marker Tuff')
 
-        gcn = gcn.replace('Laetolil Beds Between Tuffs 6 - 7', 'Laetolil Beds, Upper Unit, Between Tuffs 6 - 7')
-        gcn = gcn.replace('Ngaloba Beds?', '?Ngaloba Beds')
-        gcn = gcn.replace('Upper ?Ngaloba Beds', '?Upper Ngaloba Beds')
+        # gcn = gcn.replace('1 M Above Tuff 7', 'Between Tuffs 7 - 8')
+        # gcn = gcn.replace('2 M Below Tuff 7', 'Between Tuffs 6 - 7')
+        # gcn = gcn.replace('Laetolil Beds Between Tuffs 6 - 7', 'Laetolil Beds, Upper Unit, Between Tuffs 6 - 7')
+        # gcn = gcn.replace('Ngaloba Beds?', 'Ngaloba Beds, Upper Unit')
+        # gcn = gcn.replace('Upper ?Ngaloba Beds', '?'+upper_ngaloba)
+        # gcn = gcn.replace('Lower Laetolil Beds', lower_lateolil)
+        # gcn = gcn.replace('Lower Ngaloba Beds', lower_ngaloba)
+        # gcn = gcn.replace('Upper Ngaloba Beds', upper_ngaloba)
+        # #gcn = gcn.replace('Upper Ndolanya Beds', upper_ndolanya)  # delete me
+        # # TH indicates that Basal Pale Yellow-Brown Tuff from Emboremony 1 == Lower Laetolil Beds
+        # gcn = gcn.replace('Basal Pale Yellow-Brown Tuff', lower_lateolil)
+        # gcn = gcn.replace('?Mbuga Clay', upper_ngaloba)
+        # gcn = gcn.replace('?Pleistocene', upper_ngaloba)
+        # gcn = gcn.replace('Laetolil Beds, ?Lower Unit Or Mbuga Clay Horizon', lower_lateolil)
+
         gcn = gcn.replace('Horizon Unknown ', '')
         gcn = gcn.replace('(Th)', '')
         gcn = gcn.strip().replace('  ', ' ')  # remove any extraneous spaces
@@ -812,6 +923,16 @@ def update_geological_context():
         # Convert all versions of blank to None
         if gcn in ['', ' ', None]:
             gcn = None
+
+        # Simplify and merge gcn values using lookup dictionary
+        # This step uses the gcn_dictionary to further clean entries and to merge several unique entries together
+        # For example all entries of "?Laetolil Beds, Upper Unit" -> lower_laetolil
+        # Note that lower_laetolil is a variable pointing to "Laetolil Beds, Lower Unit". If we decided it is better
+        # to label this level "Lower Laetolil Beds" we can simply update the variable.
+        try:
+            gcn = gcn_dict[gcn]
+        except KeyError:  # If the value in gcn is not in the dictionary we just move on.
+            pass
 
         # Assign to field and save
         f.geological_context_name = gcn
@@ -821,7 +942,30 @@ def update_geological_context():
     # ['EP 900/98', 'EP 901/98', 'EP 902/98']
     fossils = Fossil.objects.filter(catalog_number__in=['EP 900/98', 'EP 901/98', 'EP 902/98'])
     if fossils.count() == 3:  # should have three matches
-        fossils.update(geological_context_name='Upper Ngaloba Beds')  # update does not require save
+        fossils.update(geological_context_name=upper_ngaloba)  # update does not require save
+
+    # Fix one specimen with incorrect geological context info
+    # EP EP 4337/00
+    ep433700 = Fossil.objects.get(verbatim_specimen_number='EP 4337/00')
+    ep433700.geological_context_name = upper_laetolil+", Between Tuffs 6 - 7"
+    ep433700.save()
+
+    # Fix three specimens with incorrect geological context info
+    # EP EP 717/01 - 719/01
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 717/01', 'EP 718/01', 'EP 719/01'])
+    if fossils.count() == 3:  # should have three matches
+        fossils.update(geological_context_name=upper_laetolil+", Between Tuffs 5 - 7")  # update does not require save
+
+    # Fix two specimens with imprecise geological context
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 2025/00', 'EP 2026/00'])
+    if fossils.count() ==2:
+        fossils.update(geological_context_name=lower_laetolil)
+
+    # Create or link to Context objects
+    for f in Fossil.objects.all():
+        c, created = Context.objects.get_or_create(name=f.geological_context_name)
+        f.context = c
+        f.save()
 
 
 def update_description():
@@ -1687,6 +1831,62 @@ def validate_taxon_field(taxon_name, verbose=True):
             #print("{} ERROR".format(taxon))
 
 
+def validate_geological_context(verbose=False):
+    """
+    Validate entries for geological context.
+    :return:
+    """
+    print("Validating Geological Context")
+    r1 = re.compile(r'Between Tuffs 6 - [\d]{2}$')
+    gcn_list = field_list('geological_context_name', report=False)
+    # count=1
+    for gcn in gcn_list:
+        # print('checking {}'.format(count))
+        # count += 1
+        gcn_string = gcn[0]
+        if gcn_string:
+            if r1.search(gcn_string):
+                print("Bad entry for Geological Context: {}".format(gcn_string))
+
+    if verbose:
+        for g in Context.objects.all():
+            # For every entry in the Context table print the name of the Context followed by a list of
+            # all the unique values of verbatim_horizon that were matched to that Context.
+            fossils = Fossil.objects.filter(context=g)
+            fossils_set = set([f.verbatim_horizon for f in fossils])
+            fossils_string = str(fossils_set).replace("', ", "'\n\t").replace("{", "\t").replace("}", "\n")
+            print("--{}--".format(g.name))
+            print("{}".format(fossils_string))
+
+    # Verify updates to 'EP 900/98', 'EP 901/98', 'EP 902/98'
+    fossils = Fossil.objects.filter(catalog_number__in=['EP 900/98', 'EP 901/98', 'EP 902/98'])
+    for f in fossils:
+        if f.geological_context_name != upper_ngaloba:
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify updates to EP 4337/00
+    ep433700 = Fossil.objects.get(catalog_number='EP 4337/00')
+    if ep433700.geological_context_name != upper_laetolil+", Between Tuffs 6 - 7":
+        print("Update gcn error for "+ep433700.catalog_number)
+
+    # Verify updates to EP 717/01 - 719/01
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 717/01', 'EP 718/01', 'EP 719/01'])
+    for f in fossils:
+        if f.geological_context_name != upper_laetolil + ", Between Tuffs 5 - 7":
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify updates to EP 2025/00 and 2026/00
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 2025/00', 'EP 2026/00'])
+    for f in fossils:
+        if f.geological_context_name != lower_laetolil:
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Spot checks
+    # There should be no gcn with a ?
+    if Fossil.objects.filter(geological_context_name__contains='?').count() > 0:
+        print("Update gcn error, ? not updated")
+
+
 # Main import function
 def main(year_list=CSHO_YEARS):
     # import data
@@ -1734,6 +1934,7 @@ def main(year_list=CSHO_YEARS):
     validate_catalog_number()
     validate_locality()
     validate_splits()
+    validate_geological_context()
     print('====================================')
 
 
