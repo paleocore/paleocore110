@@ -25,6 +25,7 @@ upper_laetolil = 'Laetolil Beds, Upper Unit'
 upper_ngaloba = 'Ngaloba Beds, Upper Unit'
 lower_ngaloba = 'Ngaloba Beds, Lower Unit'
 upper_ndolanya = 'Ndolanya Beds, Upper Unit'
+naibadad = 'Naibadad Beds'
 
 
 # Functions for opening Excel files and reading headers
@@ -405,7 +406,7 @@ def update_catalog_number():
     Prodedure to update catalog_number from verbatim_specimen_number and standardize formatting of all
     catalog numbers.
     """
-    print("Updating catalog_number from verbatim_specimen_number.")
+    print("Updating catalog_number from verbatim_specimen_number")
 
     # Define regex search strings
     ep_re = re.compile(r'EP ')
@@ -680,7 +681,13 @@ def update_locality():
     # ['EP 1308/04', 'EP 1309/04']
     fossils = Fossil.objects.filter(catalog_number__in=['EP 1308/04', 'EP 1309/04'])
     if fossils.count() == 2:
-        fossils.update(locality_name='Laetoli 6')
+        fossils.update(locality_name='Laetoli 5')
+
+    # Fix 12 specimens with incorrect locality information','
+    specimen_list = ['EP 807/04', 'EP 808/04', 'EP 809/04', 'EP 810/04', 'EP 811/04', 'EP 812/04', 'EP 813/04',
+            'EP 814/04', 'EP 815/04', 'EP 816/04', 'EP 817/04', 'EP 818/04']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=specimen_list)
+    fossils.update(locality_name='Laetoli 7')
 
 
 def update_area():
@@ -744,7 +751,7 @@ def create_geological_context_dictionary():
         "Laetolil Beds, ?Lower Unit Or Mbuga Clay Horizon": lower_laetolil,
         "Laetolil Beds, Lower Unit": lower_laetolil,
         "Lower Laetolil Beds": lower_laetolil,
-        "Laetolil Beds, Lower Unit, Tuff 8": upper_laetolil+", Tuff 8",
+        "Laetolil Beds, Lower Unit, Tuff 8": upper_laetolil+", Between Tuff 8 - Yellow Marker Tuff",  # Fix 001/99
         "Laetolil Beds, Upper Unit": upper_laetolil,
         upper_laetolil+", @ Base Of Yellow Marker Tuff": upper_laetolil+", Yellow Marker Tuff",
         upper_laetolil+", Above Tuff 7": upper_laetolil+", Between Tuffs 7 - 8",
@@ -884,8 +891,8 @@ def update_geological_context():
         # Laetolil Beds, Upper Unit, Between Tuffs 6 - 11' ... all the way to 6 - 24
         # My guess is that at some point someone updating the XL sheets selected a range of cells and
         # drag filled below them which created an automatic sequence.
-        gcn = tf_re.sub(upper_laetolil + ', Between Tuffs 6 - 8', gcn)
-        gcn = gcn.replace('Between Tuffs 6 - 9', 'Between Tuffs 6 - 8')
+        gcn = tf_re.sub(upper_laetolil + ', Between Tuffs 6 - 7', gcn)
+        gcn = gcn.replace('Between Tuffs 6 - 9', 'Between Tuffs 6 - 7')
 
         # Fix remaining oddballs
         gcn = gcn.replace(' T7', ' Tuff 7 ')
@@ -951,15 +958,71 @@ def update_geological_context():
     ep433700.save()
 
     # Fix three specimens with incorrect geological context info
-    # EP EP 717/01 - 719/01
+    # EP 717/01 - 719/01
     fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 717/01', 'EP 718/01', 'EP 719/01'])
     if fossils.count() == 3:  # should have three matches
         fossils.update(geological_context_name=upper_laetolil+", Between Tuffs 5 - 7")  # update does not require save
 
+    # Fix one specimen with incorrect gcn
+    # EP 080/05
+    fossil = Fossil.objects.get(verbatim_specimen_number='080/05')
+    fossil.geological_context_name = upper_laetolil+", Between Tuff 7 - Just Above Tuff 8"
+    fossil.save()
+
+    # Fix two specimens with incorrect gcn
+    fossils_list = ['EP 949/01', 'EP 950/01']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=fossils_list)
+    fossils.update(geological_context_name=upper_laetolil+", Between Tuffs 7 - 8")
+
+    # Fix three specimens EP 717-719/01
+    fossils_list = ['EP 717/01', 'EP 718/01', 'EP 719/01']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=fossils_list)
+    fossils.update(geological_context_name=upper_laetolil + ", Between Tuffs 5 - 7")
+
     # Fix two specimens with imprecise geological context
     fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 2025/00', 'EP 2026/00'])
-    if fossils.count() ==2:
+    if fossils.count() == 2:
         fossils.update(geological_context_name=lower_laetolil)
+
+    # Fix specimens from Emboremony 1
+    emb_specimens = ['EP 1545/00', 'EP 1539/00', 'EP 1540/00', 'EP 1541/00', 'EP 1542/00', 'EP 1543/00', 'EP 1544/00']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=emb_specimens)
+    fossils.update(geological_context_name=lower_laetolil)
+
+    fossils = Fossil.objects.filter(locality_name='Emboremony 1').filter(geological_context_name=upper_ndolanya)
+    fossils.update(geological_context_name=upper_ngaloba)
+
+    # Fix specimen from Emboremony 2
+    # All specimens from Laetolil Beds are Lower Laetolil.
+    fossils = Fossil.objects.filter(locality_name='Emboremony 2').filter(geological_context_name=upper_laetolil)
+    fossils.update(geological_context_name=lower_laetolil)
+
+    fossils_list = ['EP 358/99', 'EP 360/99', 'EP 361/99', 'EP 362/99']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=fossils_list)
+    fossils.update(geological_context_name=upper_ngaloba)
+
+    # Update specimens from Locality 17
+    # All specimens from Locality 17 are from Laetolil Beds, Upper Unit, Between Tuffs 7 - 8
+    fossils = Fossil.objects.filter(locality_name='laetoli 17')
+    fossils.update(geological_context_name=upper_laetolil+", Between Tuffs 7 - 8")
+
+    # Update specimens from Locality 10E NE
+    fossil_list = ['EP 404 / 98', 'EP 405 / 98', 'EP 406 / 98', 'EP 407 / 98', 'EP 408 / 98', 'EP 409 / 98',
+                   'EP 410 / 98', 'EP 411 / 98']
+    loc10 = Fossil.objects.filter(verbatim_specimen_number__in=fossil_list)
+    loc10.update(geological_context_name=upper_laetolil+", Between Tuffs 5 - 7")
+
+    # Fix specimens from Naibadad Beds
+    nb_specimens = ['EP 1123/03', 'EP 1124/03', 'EP 1125/03', 'EP 1503/98', 'EP 1529/04', 'EP 1530/04',
+                    'EP 1531/04', 'EP 1641/98', 'EP 2348/03', 'EP 2349/03', 'EP 2350/03', 'EP 2351/03',
+                    'EP 2352/03', '249/05', '250/05', 'EP 493/01', 'EP 931/04', 'EP 932/04', 'EP 933/04',
+                    'EP 934/04', 'EP 935/04', 'EP 936/04', 'EP 937/04', 'EP 938/04', 'EP 939/04', 'EP 940/04',
+                    'EP 941/04', 'EP 942/04', 'EP 943/04', 'EP 944/04', 'EP 945/04', 'EP 946/04', 'EP 947/04',
+                    'EP 948/04', 'EP 949/04', 'EP 950/04', 'EP 951/04', 'EP 952/04', 'EP 953/04', 'EP 954/04',
+                    'EP 955/04']+['EP 2145/00', 'EP 2061/00', 'EP 2061B/00', 'EP 2062/00', '1163/05', '1164/05',
+                                  '1172/05', '1173/05', '1174/05']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=nb_specimens)
+    fossils.update(geological_context_name=naibadad)
 
     # Create or link to Context objects
     for f in Fossil.objects.all():
@@ -1800,6 +1863,21 @@ def validate_locality(verbose=False):
             print("{}\t{}\t{}\t{}\t{}".format(i, loc[0], loc[1], area_string, locality_string))
         i += 1
 
+    # Validate updates to two specimens that are missing locality information.
+    # ['EP 1308/04', 'EP 1309/04']
+    fossils = Fossil.objects.filter(catalog_number__in=['EP 1308/04', 'EP 1309/04'])
+    for f in fossils:
+        if f.locality_name != 'Laetoli 5':
+            print("Locality update error for {}".format(f.catalog_number))
+
+    # Validate updates to Locality 7
+    specimen_list = ['EP 807/04', 'EP 808/04', 'EP 809/04', 'EP 810/04', 'EP 811/04', 'EP 812/04', 'EP 813/04',
+                     'EP 814/04', 'EP 815/04', 'EP 816/04', 'EP 817/04', 'EP 818/04']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=specimen_list)
+    for f in fossils:
+        if f.locality_name != 'Laetoli 7':
+            print("Locality update error for {}".format(f.catalog_number))
+
 
 def validate_taxon_name(taxon_name, taxon_rank, verbose=True):
     api = idigbio.json()
@@ -1839,7 +1917,7 @@ def validate_geological_context(verbose=False):
     Validate entries for geological context.
     :return:
     """
-    print("Validating Geological Context")
+    print("Validating geological context")
     r1 = re.compile(r'Between Tuffs 6 - [\d]{2}$')
     gcn_list = field_list('geological_context_name', report=False)
     # count=1
@@ -1884,6 +1962,60 @@ def validate_geological_context(verbose=False):
         if f.geological_context_name != lower_laetolil:
             print("Update gcn error for {}".format(f.catalog_number))
 
+    # Verify updates to EP 080/05
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=['080/05'])
+    for f in fossils:
+        if f.geological_context_name != upper_laetolil+", Between Tuff 7 - Just Above Tuff 8":
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify updates to EP 949/01 and EP 950/01
+    fossils_list = ['EP 949/01', 'EP 950/01']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=fossils_list)
+    for f in fossils:
+        if f.geological_context_name != upper_laetolil+", Between Tuffs 7 - 8":
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Fix three specimens EP 717-719/01
+    fossils_list = ['EP 717/01', 'EP 718/01', 'EP 719/01']
+    fossils = Fossil.objects.filter(verbatim_specimen_number__in=fossils_list)
+    for f in fossils:
+        if f.geological_context_name != upper_laetolil+", Between Tuffs 5 - 7":
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify updates to Emboremony 1
+    emb1 = Fossil.objects.filter(locality_name='Emboremony 1')
+    for f in emb1:
+        if f.geological_context_name not in [lower_laetolil, upper_ngaloba]:
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify update to Emboremony 2
+    # All fossils should be from Lower Laetolil Beds or Upper Ngaloba Beds
+    emb2 = Fossil.objects.filter(locality_name='Emboremony 2')
+    for f in emb2:
+        if f.geological_context_name not in [lower_laetolil, upper_ngaloba]:
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify specimens from Locality 17
+    # All specimens from Locality 17 are from Laetolil Beds, Upper Unit, Between Tuffs 7 - 8
+    loc17 = Fossil.objects.filter(locality_name='laetoli 17')
+    for f in loc17:
+        if f.geological_context_name != upper_laetolil+", Between Tuffs 7 - 8":
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify specimens from Locality 10
+    # No specimens shoudl be "Upper Laetolil Beds" only
+    loc10 = Fossil.objects.filter(locality_name='laetoli 10 Northeast')
+    for f in loc10:
+        if f.geological_context_name == upper_laetolil:
+            print("Update gcn error for {}".format(f.catalog_number))
+
+    # Verify specimens from Locality 13
+    # All fossils listed as Ndolanya Beds at loc 13 should be Naibadad
+    loc13 = Fossil.objects.filter(locality_name='Laetoli 13')
+    for f in loc13:
+        if f.geological_context_name in [upper_ndolanya, upper_ngaloba]:
+            print("Update gcn error for {}".format(f.catalog_number))
+
     # Spot checks
     # There should be no gcn with a ?
     if Fossil.objects.filter(geological_context_name__contains='?').count() > 0:
@@ -1893,7 +2025,7 @@ def validate_geological_context(verbose=False):
 # Main import function
 def main(year_list=CSHO_YEARS):
     # import data
-    print('Importing data from XL spreadsheets.')
+    print('Importing data from XL spreadsheets...')
     for year in year_list:
         file = make_file_string(year)
         import_file(folder=FOLDER_PATH, file=file, year=year)
@@ -1901,21 +2033,21 @@ def main(year_list=CSHO_YEARS):
     print('====================================')
 
     # delete records
-    print('\nDeleting duplicate and erroneous records.')
+    print('\nDeleting duplicate and erroneous records...')
     c = delete_records()
     print('{} records deleted'.format(c))
     print('Current record count: {}'.format(Fossil.objects.all().count()))
     print('====================================')
 
     # split bulk collections
-    print('\nSplitting bulk collections.')
+    print('\nSplitting bulk collections...')
     c = split_records()
     print('{} records split'.format(c))
     print('Current record count: {}'.format(Fossil.objects.all().count()))
     print('====================================')
 
     # update data
-    print('\nUpdating records from verbatim data.')
+    print('\nUpdating records from verbatim data...')
     update_catalog_number()
     update_remarks()
     update_date_recorded()
