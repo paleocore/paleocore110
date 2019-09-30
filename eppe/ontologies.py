@@ -11,8 +11,8 @@ LAETOLI_AREAS = (
 
 # Laetoli Stratigraphic Units
 ngaloba = 'Ngaloba Beds'
-lower_ngaloba = "Lower Ngaloba Beds"
 upper_ngaloba = "Upper Ngaloba Beds"
+lower_ngaloba = "Lower Ngaloba Beds"
 qngaloba = '?Ngaloba Beds'
 olpiro = 'Olpiro Beds'
 naibadad = 'Naibadad Beds'
