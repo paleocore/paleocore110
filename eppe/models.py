@@ -93,7 +93,7 @@ class Find(projects.models.PaleoCoreOccurrenceBaseClass):
     # Verbatim fields to store data read directly from spreadsheet versions of the catalog
     verbatim_workbook_name = models.TextField(null=True, blank=True)
     verbatim_workbook_year = models.IntegerField(null=True, blank=True)
-    verbatim_specimen_number = models.CharField('cat_number', max_length=255, null=True, blank=True)
+    verbatim_specimen_number = models.CharField('specimen_number', max_length=255, null=True, blank=True)
     verbatim_date_discovered = models.DateField(null=True, blank=True)
     verbatim_storage = models.CharField(max_length=255, null=True, blank=True)
     verbatim_tray = models.CharField(max_length=255, null=True, blank=True)
@@ -117,6 +117,7 @@ class Find(projects.models.PaleoCoreOccurrenceBaseClass):
     verbatim_published = models.TextField(null=True, blank=True)
     verbatim_problems = models.TextField(null=True, blank=True)
 
+    # method fields, many that provide static literal values for Darwin Core output
     def event_date(self):
         """
         create event data from date_recorded datatime object
@@ -146,6 +147,13 @@ class Find(projects.models.PaleoCoreOccurrenceBaseClass):
     @staticmethod
     def organism_quantity_type():
         return 'NISP'
+
+    @staticmethod
+    def max_age_units():
+        return 'Ma'
+
+    def min_age_units(self):
+        return self.max_age_units()
 
     @staticmethod
     def method_fields_to_export():
