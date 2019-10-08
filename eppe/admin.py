@@ -169,10 +169,11 @@ class FossilAdmin(admin.ModelAdmin):
             'organism_quantity_type': 'organism_quantity_type',
             'country': 'country',
             'locality': 'locality_name',
-            #'bed': 'geological_context_name',
             'bed': 'context.name',
             'maximum_chronometric_age': 'context.max_age',
+            'maximum_chronometric_age_reference_system': 'max_age_units',
             'minimum_chronometric_age': 'context.min_age',
+            'minimum_chronometric_age_reference_system': 'min_age_units',
             'chronometric_age_uncertainty_in_years': 'context.age_uncertainty',
             'kingdom': 'tkingdom',
             'phylum': 'tphylum',
@@ -196,7 +197,7 @@ class FossilAdmin(admin.ModelAdmin):
         def get_headers():
             return mapping_dict.keys()
 
-        # Trick to get foreing key field values
+        # Trick to get foreign key field values
         # see https://stackoverflow.com/questions/20235807/how-to-get-foreign-key-values-with-getattr-from-models
         def get_field_value(instance, field):
             field_path = field.split('.')
