@@ -20,6 +20,7 @@ verbose_default = False
 SPLITS = ['EP 1280/01', 'EP 3129/00', 'EP 1181/00', 'EP 3635/00', 'EP 1177/00']
 
 # Define variables for consistent horizon names
+modern = 'Modern'
 lower_laetolil = 'Laetolil Beds, Lower Unit'
 upper_laetolil = 'Laetolil Beds, Upper Unit'
 upper_ngaloba = 'Ngaloba Beds, Upper Unit'
@@ -962,6 +963,16 @@ def update_geological_context():
     fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 717/01', 'EP 718/01', 'EP 719/01'])
     if fossils.count() == 3:  # should have three matches
         fossils.update(geological_context_name=upper_laetolil+", Between Tuffs 5 - 7")  # update does not require save
+
+    # Fix on modern specimen's gcn
+    # EP 1905/00 has scientific name = Modern Hartebeest and
+    # geological_context name = 'Laetolil Beds, Upper Unit, Between Tuffs 3 - 5'
+    # Meanwhile seven other specimens have geological_context_name = Modern indicating they are fresh skeletons
+    # not fossils. The following lines of code update EP 1905/00 gcn = Modern to bring it in line with the other 7
+    # specimens
+    ep1905 = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
+    ep1905.geological_context_name = modern
+    ep1905.save()
 
     # Fix one specimen with incorrect gcn
     # EP 080/05
