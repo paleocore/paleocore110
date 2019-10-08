@@ -128,9 +128,9 @@ class Find(projects.models.PaleoCoreOccurrenceBaseClass):
             event_date = self.date_recorded.date()
         return event_date
 
-    @staticmethod
-    def basis_of_record():
-        return 'FossilSpecimen'
+    # @staticmethod
+    # def basis_of_record():
+    #     return 'FossilSpecimen'
 
     @staticmethod
     def country():
@@ -187,7 +187,8 @@ class Fossil(Find):
     full_taxon = models.TextField(max_length=255, null=True, blank=True)
     identifications = models.ManyToManyField(Taxon, through='Identification')
 
-    def basisOfRecord(self):
+    @staticmethod
+    def basis_of_record():
         return 'FossilSpecimen'
 
     def taxon_path(self):
