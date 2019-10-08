@@ -134,6 +134,10 @@ class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
     readonly_fields = ('date_created', 'date_last_modified')
     list_filter = ['date_discovered', 'formation', 'NALMA', 'region', 'county']
     search_fields = ('locality_number', 'locality_field_number', 'name')
+    # create a dictionary of field names and output labels for csv export
+    locality_fields = [f.name for f in Locality._meta.fields]
+    field_mapping = dict(zip(locality_fields, locality_fields))
+    actions = ['export_csv']
 
 
 class LocalityInline(admin.TabularInline):
