@@ -10,12 +10,13 @@ import idigbio
 import requests
 import string
 
-
+# Define global variables
 FOLDER_PATH = PROJECT_ROOT + '/eppe/fixtures/'
 YEARS = (1998, 1999, 2000, 2001, 2003, 2004, 2005, 2012, 2014, 2016)
 CSHO_YEARS = YEARS[0:7]  # 1998-2005
 file_name = 'laetoli_csho_1998'
 verbose_default = False
+
 # A list of lots that need to be split into separate catalog numbers
 SPLITS = ['EP 1280/01', 'EP 3129/00', 'EP 1181/00', 'EP 3635/00', 'EP 1177/00']
 
@@ -28,6 +29,9 @@ lower_ngaloba = 'Ngaloba Beds, Lower Unit'
 upper_ndolanya = 'Ndolanya Beds, Upper Unit'
 naibadad = 'Naibadad Beds'
 
+# define horizontal rule
+hr = '===================================='
+
 
 # Functions for opening Excel files and reading headers
 def make_file_string(year):
@@ -37,15 +41,6 @@ def make_file_string(year):
     :return: string representation of file name
     """
     return 'laetoli_csho_'+str(year)+'.xls'
-
-
-def delete_all():
-    """
-    Delete all Fossil objects.
-    :return:
-    """
-    for s in Fossil.objects.all():
-        s.delete()
 
 
 def open_book(folder, file):
@@ -71,11 +66,12 @@ def get_max_sheet(book):
     return sheet
 
 
-def get_header_cells(sheet):
-    return sheet.row(0)
-
-
 def get_header_list(sheet):
+    """
+    Get a list of header row cell values.
+    :param sheet:
+    :return: Returns a list of values from the first row in the sheet.
+    """
     return [c.value for c in sheet.row(0)]
 
 
@@ -388,7 +384,7 @@ def split_records():
     :return:
     """
     count = 0
-    # Split 5 bulk samples that contain multiple taxa.
+    # Split 5 bulk samples that contain multiple taxa. See Table 5 in manuscript.
     splits = SPLITS
     for catno in splits:
         if Fossil.objects.filter(verbatim_specimen_number=catno):
@@ -467,29 +463,53 @@ def update_catalog_number():
             fossil.catalog_number = cn
         fossil.save()
 
-    # Fix 3 Format Errors
-    # Three specimens have badly formed catalog numbers.
-    # format_errors = ['EP 120A+B/98', 'EP 507/07', 'EP 756/06']
-    # 1. Fix EP 120A+B/98
+    # Fix six (6) errors in catalog numbers, see Table 6 in manuscript
+    # 1. Fix EP 120A+B/98, remove parts
     ep120 = Fossil.objects.get(verbatim_specimen_number='EP 120A+B/98')
     ep120.catalog_number = 'EP 120/98'
-    if ep120.remarks:
-        ep120.remarks += ' Catalog number changed from EP 120A+B/98'
-    else:
-        ep120.remarks = 'Catalog number changed from EP 120A+B/98'
+    comment = 'Catalog number corrected from EP {} to EP 120/98'.format(ep120.verbatim_specimen_number)
+    ep120.remarks = (ep120.remarks + " " if ep120.remarks else "") + comment
     ep120.save()
 
     # 2. Fix EP 507/07
-    fossil = Fossil.objects.get(catalog_number='EP 507/07')
-    fossil.catalog_number = 'EP 507/05'
-    fossil.save()
+    ep507 = Fossil.objects.get(verbatim_specimen_number='EP 507/07')
+    ep507.catalog_number = 'EP 507/05'
+    comment = 'Catalog number corrected from {} to EP 507/05'.format(ep507.verbatim_specimen_number)
+    ep507.remarks = (ep507.remarks + " " if ep507.remarks else "") + comment
+    ep507.save()
 
     # 3. Fix EP 756/06
-    fossil = Fossil.objects.get(catalog_number='EP 756/06')
-    fossil.catalog_number = 'EP 756/05'
+    ep756 = Fossil.objects.get(verbatim_catalog_number='EP 756/06')
+    ep756.catalog_number = 'EP 756/05'
+    ep756_comment = 'Catalog number corrected from {} to EP 756/05'.format(ep756.verbatim_specimen_number)
+    ep756.remarks = (ep756.remarks + " " if ep756.remarks else "") + ep756_comment
+    ep756.save()
+
+    # 4. Fix EP 1075/03. The Serengetilabus specimen has a typo in the catalog number. Should be EP 1975/03
+    ep1975 = Fossil.objects.get(verbatim_specimen_number='EP 1075/03', verbatim_genus='Serengetilagus')
+    ep1975.catalog_number = 'EP 1975/03'
+    ep1975_comment = 'Catalog number corrected from {} to EP 1975/03'.format(ep1975.verbatim_specimen_number)
+    ep1975.remarks = (ep1975.remarks + " " if ep1975.remarks else "") + ep1975_comment
+    ep1975.save()
+
+    # 5. Fix EP 348/04. The distal radius specimen has a typo in the catalog number and incorrect date. It should
+    # read EP 349/04 and the date should be 29 June 2004
+    fossil = Fossil.objects.get(catalog_number='EP 348/04', verbatim_element='Distal radius')
+    fossil.catalog_number = 'EP 349/04'
+    tz = pytz.timezone('Africa/Dar_es_Salaam')
+    fossil.date_recorded = datetime(year=2004, month=6, day=29, tzinfo=tz)
     fossil.save()
 
-    # Fix 6 duplicate catalog number entries.
+    # 6. Fix EP 2188/99, the Bovidae distal humerus is a typo and should be EP 2188/03
+    fossil = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='distal humerus')
+    fossil.catalog_number = 'EP 2188/03'
+    fossil.save()
+
+    fossil = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='Lumbar Vertebral Centrum')
+    fossil.catalog_number = 'EP 2188/00'
+    fossil.save()
+
+    # Fix 3 emended taxonomic identifications. See Table 8 in text
     # Fix two pairs of duplicate entries that reflect emended taxonomic identifications of the same specimen.
     # emended_specimens = ['EP 001/98', 'EP 1477b/00']
     # EP 001/98 was emended from crocodile to rhino
@@ -531,32 +551,6 @@ def update_catalog_number():
         fossil.taxon_remarks = 'Identification updated from ' \
                                'Animalia:Vertebrata:Mammalia:Artiodactyla:Suidae:Kolpochoerus'
         fossil.save()
-
-    # We are still left with 3 duplicates resulting from typos during digitization.
-    # duplicates = ['EP 1052/98', 'EP 1075/03', 'EP 348/04', 'EP 2188/99']
-    # These items need to be fixed individually.
-    
-    # 1. Fix EP 1075/03. The Serengetilabus specimen has a typo in the catalog number. Should be EP 1975/03
-    fossil = Fossil.objects.get(catalog_number='EP 1075/03', verbatim_genus='Serengetilagus')
-    fossil.catalog_number = 'EP 1975/03'
-    fossil.save()
-
-    # 2. Fix EP 348/04. The distal radius specimen has a typo in the catalog number and incorrect date. It should
-    # read EP 349/04 and the date should be 29 June 2004
-    fossil = Fossil.objects.get(catalog_number='EP 348/04', verbatim_element='Distal radius')
-    fossil.catalog_number = 'EP 349/04'
-    tz = pytz.timezone('Africa/Dar_es_Salaam')
-    fossil.date_recorded = datetime(year=2004, month=6, day=29, tzinfo=tz)
-    fossil.save()
-
-    # 3. Fix EP 2188/99, the Bovidae distal humerus is a typo and should be EP 2188/03
-    fossil = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='distal humerus')
-    fossil.catalog_number = 'EP 2188/03'
-    fossil.save()
-
-    fossil = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='Lumbar Vertebral Centrum')
-    fossil.catalog_number = 'EP 2188/00'
-    fossil.save()
 
 
 def update_institution():
@@ -909,21 +903,6 @@ def update_geological_context():
         gcn = gcn.replace('Tuffs 7 - Just Above Tuff 8', 'Tuff 7 - Just Above Tuff 8')
         gcn = gcn.replace('Tuffs 7 - Yellow Marker Tuff', 'Tuff 7 - Yellow Marker Tuff')
 
-        # gcn = gcn.replace('1 M Above Tuff 7', 'Between Tuffs 7 - 8')
-        # gcn = gcn.replace('2 M Below Tuff 7', 'Between Tuffs 6 - 7')
-        # gcn = gcn.replace('Laetolil Beds Between Tuffs 6 - 7', 'Laetolil Beds, Upper Unit, Between Tuffs 6 - 7')
-        # gcn = gcn.replace('Ngaloba Beds?', 'Ngaloba Beds, Upper Unit')
-        # gcn = gcn.replace('Upper ?Ngaloba Beds', '?'+upper_ngaloba)
-        # gcn = gcn.replace('Lower Laetolil Beds', lower_lateolil)
-        # gcn = gcn.replace('Lower Ngaloba Beds', lower_ngaloba)
-        # gcn = gcn.replace('Upper Ngaloba Beds', upper_ngaloba)
-        # #gcn = gcn.replace('Upper Ndolanya Beds', upper_ndolanya)  # delete me
-        # # TH indicates that Basal Pale Yellow-Brown Tuff from Emboremony 1 == Lower Laetolil Beds
-        # gcn = gcn.replace('Basal Pale Yellow-Brown Tuff', lower_lateolil)
-        # gcn = gcn.replace('?Mbuga Clay', upper_ngaloba)
-        # gcn = gcn.replace('?Pleistocene', upper_ngaloba)
-        # gcn = gcn.replace('Laetolil Beds, ?Lower Unit Or Mbuga Clay Horizon', lower_lateolil)
-
         gcn = gcn.replace('Horizon Unknown ', '')
         gcn = gcn.replace('(Th)', '')
         gcn = gcn.strip().replace('  ', ' ')  # remove any extraneous spaces
@@ -964,16 +943,6 @@ def update_geological_context():
     if fossils.count() == 3:  # should have three matches
         fossils.update(geological_context_name=upper_laetolil+", Between Tuffs 5 - 7")  # update does not require save
 
-    # Fix on modern specimen's gcn
-    # EP 1905/00 has scientific name = Modern Hartebeest and
-    # geological_context name = 'Laetolil Beds, Upper Unit, Between Tuffs 3 - 5'
-    # Meanwhile seven other specimens have geological_context_name = Modern indicating they are fresh skeletons
-    # not fossils. The following lines of code update EP 1905/00 gcn = Modern to bring it in line with the other 7
-    # specimens
-    ep1905 = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
-    ep1905.geological_context_name = modern
-    ep1905.save()
-
     # Fix one specimen with incorrect gcn
     # EP 080/05
     fossil = Fossil.objects.get(verbatim_specimen_number='080/05')
@@ -994,6 +963,25 @@ def update_geological_context():
     fossils = Fossil.objects.filter(verbatim_specimen_number__in=['EP 2025/00', 'EP 2026/00'])
     if fossils.count() == 2:
         fossils.update(geological_context_name=lower_laetolil)
+
+    # Fix specimens with verbatim horizon == 'Modern'
+    moderns = Fossil.objects.filter(verbatim_horizon='Modern')
+    moderns_update_dict = {
+        'EP 1074/98': upper_laetolil + 'Below Tuff 2',
+        'EP 018/98': lower_laetolil,
+        'EP 980/01': upper_laetolil + 'Between Tuffs 6 - 7',
+        'EP 981/01': upper_laetolil + 'Between Tuff 7 - 8',
+        'EP 1332/01': 'Modern',
+        'EP 844/98': upper_laetolil + 'Below Tuff 2',
+        'EP 1657/00': 'Modern'
+    }
+    for k in moderns_update_dict.keys():
+        if moderns_update_dict[k] != 'Modern':
+            f = Fossil.objects.get(catalog_number=k)
+            comment = 'Restored verbatim horizon from hard copy catalog to geological context. Possibly modern?'
+            f.remarks = (f.remarks + " " if f.remarks else "") + comment
+            f.geological_context_name = moderns_update_dict[k]
+        f.save()
 
     # Fix specimens from Emboremony 1
     emb_specimens = ['EP 1545/00', 'EP 1539/00', 'EP 1540/00', 'EP 1541/00', 'EP 1542/00', 'EP 1543/00', 'EP 1544/00']
@@ -1413,6 +1401,18 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
         ep529.tspecies = None
         ep529.save()
 
+        # Fix EP 1905/00, has verbatim genus = Modern Hartebeest
+        # This is a comment added by Alan Gentry and needs to be moved to the Taxon remarks field.
+        ep1905 = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
+        vtr = ep1905.verbatim_taxon_remarks
+        vg = ep1905.verbatim_genus
+        if vg:
+            # append vg if prior remarks present, add vg if no prior remarks
+            ep1905.taxon_remarks = (vtr + " " if vtr else "") + vg
+            # update genus
+            ep1905.genus = None
+        ep1905.save()
+
         # Fix Taxon fields for splits
         update_dict = {
             'EP 1280a/01': {
@@ -1666,7 +1666,7 @@ def update_disposition():
 
 def update_problems():
     print("Updating problems")
-    # Get only non empty records and exclude those contining the word duplicate.
+    # Get only non empty records and exclude those containing the word duplicate.
     # Duplicates have been cleaned and validated elsewhere.
     for f in Fossil.objects.exclude(verbatim_problems__in=['']).exclude(verbatim_problems__icontains='duplicate'):
         # Must check if problem has been flagged by other import functions
@@ -1725,8 +1725,49 @@ def validate_catalog_number():
                                                                 d.locality_name,
                                                                 d.description,
                                                                 d.scientific_name))
-    # else:
-    #     print("No duplicates found.")
+    # Validate individual changes
+    # Check EP 120/98
+    ep120 = Fossil.objects.get(verbatim_specimen_number='EP 120A+B/98')
+    if ep120.catalog_number != 'EP 120/98':
+        print('Update error {}'.format(ep120.catalog_number))
+
+    # Check EP 507/05
+    ep507 = Fossil.objects.get(verbatim_specimen_number='EP 507/07')
+    if ep507.catalog_number != 'EP 507/05':
+        print('Update error {}'.format(ep507.catalog_number))
+
+    # Check EP 756/05
+    ep756 = Fossil.objects.get(verbatim_catalog_number='EP 756/06')
+    if ep756.catalog_number != 'EP 756/05':
+        print('Update error {}'.format(ep756.catalog_number))
+
+    # Check EP 1975/03
+    ep1975 = Fossil.objects.get(verbatim_specimen_number='EP 1075/03', verbatim_genus='Serengetilagus')
+    if ep1975.catalog_number != 'EP 1975/03':
+        print('Update error {}'.format(ep1975.catalog_number))
+
+    # Check EP 348/04
+    ep349 = Fossil.objects.get(catalog_number='EP 348/04', verbatim_element='Distal radius')
+    if ep349.catalog_number != 'EP 349/04':
+        print('Update error {}'.format(ep349.catalog_number))
+
+    # Check EP 2188/99 -> 2188/03 and 2188/00
+    ep2188_03 = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='distal humerus')
+    if ep2188_03.catalog_number != 'EP 2188/03':
+        print('Update error {}'.format(ep2188_03.catalog_number))
+
+    ep2188_00 = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='Lumbar Vertebral Centrum')
+    if ep2188_00.catalog_number != 'EP 2188/00':
+        print('Update error {}'.format(ep2188_00.catalog_number))
+
+    # Check EP 1905/00
+    ep1905 = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
+    if ep1905.genus:
+        print('Update error {}'.format(ep1905.catalog_number))
+    if ep1905.scientific_name != 'Alcelaphini':
+        print('Update error {}'.format(ep1905.catalog_number))
+    if not ep1905.taxon_remarks:
+        print('Update error {}'.format(ep1905.catalog_number))
 
 
 def validate_splits():
@@ -1993,6 +2034,21 @@ def validate_geological_context(verbose=False):
         if f.geological_context_name != upper_laetolil+", Between Tuffs 5 - 7":
             print("Update gcn error for {}".format(f.catalog_number))
 
+    # gcn for specimens with verbatim horizon =  Modern
+    moderns_update_dict = {
+        'EP 1074/98': upper_laetolil + 'Below Tuff 2',
+        'EP 018/98': lower_laetolil,
+        'EP 980/01': upper_laetolil + 'Between Tuffs 6 - 7',
+        'EP 981/01': upper_laetolil + 'Between Tuff 7 - 8',
+        'EP 1332/01': 'Modern',
+        'EP 844/98': upper_laetolil + 'Below Tuff 2',
+        'EP 1657/00': 'Modern'
+    }
+    for k in moderns_update_dict.keys():
+        f = Fossil.objects.get(update_catalog_number=k)
+        if f.geological_context_name != moderns_update_dict[k]:
+            print("Update gcn error for {}".format(f.catalog_number))
+
     # Verify updates to Emboremony 1
     emb1 = Fossil.objects.filter(locality_name='Emboremony 1')
     for f in emb1:
@@ -2041,21 +2097,25 @@ def main(year_list=CSHO_YEARS):
         file = make_file_string(year)
         import_file(folder=FOLDER_PATH, file=file, year=year)
     print('{} records imported'.format(Fossil.objects.all().count()))
-    print('====================================')
+    print(hr)
 
     # delete records
     print('\nDeleting duplicate and erroneous records...')
     c = delete_records()
     print('{} records deleted'.format(c))
     print('Current record count: {}'.format(Fossil.objects.all().count()))
-    print('====================================')
+    print(hr)
 
     # split bulk collections
     print('\nSplitting bulk collections...')
     c = split_records()
     print('{} records split'.format(c))
     print('Current record count: {}'.format(Fossil.objects.all().count()))
-    print('====================================')
+    print(hr)
+
+    # update verbatim records
+    print('\nUpdating verbatim records ...')
+    print(hr)
 
     # update data
     print('\nUpdating records from verbatim data...')
@@ -2073,7 +2133,7 @@ def main(year_list=CSHO_YEARS):
     update_taxon_remarks()
     update_problems()
     print('Current record count: {}'.format(Fossil.objects.all().count()))
-    print('====================================')
+    print(hr)
 
     print('\nValidating records')
     validate_date_recorded()
@@ -2081,7 +2141,7 @@ def main(year_list=CSHO_YEARS):
     validate_locality()
     validate_splits()
     validate_geological_context()
-    print('====================================')
+    print(hr)
 
 
 # Additional utility functions
@@ -2228,3 +2288,4 @@ def get_idigbio_taxon(taxon_name, taxon_rank):
     if r:
         result = r
     return result
+
