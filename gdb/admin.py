@@ -89,7 +89,7 @@ locality_fieldsets = (('Record', {
                    ('member',),
                    ('NALMA', 'sub_age')],
     }),
-    ('Verbatim_Location', {
+    ('Verbatim Location', {
         'fields': [('survey',),
                    ('quad_sheet',),
                    ('region',),
