@@ -182,6 +182,57 @@ class PaleoCoreLocalityAdmin(BingGeoAdmin):
         return response
 
 
+class PaleoCoreLocalityAdminGoogle(admin.ModelAdmin):
+    formfield_overrides = {
+        models.CharField: {'widget': TextInput(attrs={'size': '25'})},
+        models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
+        models.PointField: {"widget": GooglePointFieldWidget}
+    }
+
+    def export_csv(self, request, queryset):
+        mapping_dict = self.field_mapping
+        pseudo_buffer = Echo()
+        writer = csv.writer(pseudo_buffer)
+
+        def get_headers():
+            return mapping_dict.keys()
+
+        # Trick to get foreign key field values
+        # see https://stackoverflow.com/questions/20235807/how-to-get-foreign-key-values-with-getattr-from-models
+        def get_field_value(instance, field):
+            field_path = field.split('.')
+            attr = instance
+            for elem in field_path:
+                try:
+                    attr = getattr(attr, elem)
+                except AttributeError:
+                    return None
+            return attr
+
+        def get_row_data(o, md):
+            row_data = []
+            for key in md:
+                # for each item in the field mapping dict get the db value for that field
+                field_value = get_field_value(o, md[key])
+                if callable(field_value):  # method attribute
+                    row_data.append(field_value())
+                else:
+                    row_data.append(field_value)
+            # Return list without empty strings and Nulls.
+            return ['' if i in [None, False, 'None', 'False'] else i for i in row_data]
+
+        def get_rows(items):
+            yield writer.writerow(get_headers())
+            for item in items:
+                yield writer.writerow(get_row_data(item, mapping_dict))
+
+        response = StreamingHttpResponse(
+            streaming_content=(get_rows(queryset)),
+            content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="DwC_Export.csv"'
+        return response
+
+
 class TaxonomyAdmin(admin.ModelAdmin):
     list_display = ('label', 'rank', 'full_name', 'biology_usages')
     readonly_fields = ['id', 'biology_usages']
