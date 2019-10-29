@@ -89,7 +89,7 @@ locality_fieldsets = (('Record', {
                    ('member',),
                    ('NALMA', 'sub_age')],
     }),
-    ('Location', {
+    ('Verbatim_Location', {
         'fields': [('survey',),
                    ('quad_sheet',),
                    ('region',),
@@ -101,7 +101,13 @@ locality_fieldsets = (('Record', {
                    ('verbatim_longitude', 'verbatim_latitude'),
                    ('verbatim_utm',),
                    ('verbatim_elevation',),
-                   ('georeference_remarks',),
+                   ('georeference_remarks',)]
+    }),
+    ('Location', {
+        'fields': [
+
+                   ('longitude', 'latitude'),
+                   ('easting', 'northing'),
                    ('geom',)],
     }),
     ('Image', {
@@ -128,10 +134,10 @@ class OccurrenceAdmin(admin.ModelAdmin):
     list_per_page = 1000
 
 
-class LocalityAdmin(projects.admin.PaleoCoreLocalityAdmin):
+class LocalityAdmin(projects.admin.PaleoCoreLocalityAdminGoogle):
     list_display = ('locality_number', 'locality_field_number', 'cm_locality_number', 'name', 'date_discovered')
     fieldsets = locality_fieldsets
-    readonly_fields = ('date_created', 'date_last_modified')
+    readonly_fields = ('date_created', 'date_last_modified', 'longitude', 'latitude', 'easting', 'northing')
     list_filter = ['date_discovered', 'formation', 'NALMA', 'region', 'county']
     search_fields = ('locality_number', 'locality_field_number', 'name')
     # create a dictionary of field names and output labels for csv export
