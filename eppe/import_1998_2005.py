@@ -29,6 +29,16 @@ lower_ngaloba = 'Ngaloba Beds, Lower Unit'
 upper_ndolanya = 'Ndolanya Beds, Upper Unit'
 naibadad = 'Naibadad Beds'
 
+moderns_update_dict = {
+        'EP 1074/98': upper_laetolil + ', Below Tuff 2',
+        'EP 018/98': lower_laetolil,
+        'EP 980/01': upper_laetolil + ', Between Tuffs 6 - 7',
+        'EP 981/01': upper_laetolil + ', Between Tuff 7 - 8',
+        'EP 1332/01': 'Modern',
+        'EP 844/98': upper_laetolil + ', Below Tuff 2',
+        'EP 1657/00': 'Modern'
+    }
+
 # define horizontal rule
 hr = '===================================='
 
@@ -680,7 +690,7 @@ def update_locality():
 
     # Fix 12 specimens with incorrect locality information','
     specimen_list = ['EP 807/04', 'EP 808/04', 'EP 809/04', 'EP 810/04', 'EP 811/04', 'EP 812/04', 'EP 813/04',
-            'EP 814/04', 'EP 815/04', 'EP 816/04', 'EP 817/04', 'EP 818/04']
+                     'EP 814/04', 'EP 815/04', 'EP 816/04', 'EP 817/04', 'EP 818/04']
     fossils = Fossil.objects.filter(verbatim_specimen_number__in=specimen_list)
     fossils.update(locality_name='Laetoli 7')
 
@@ -965,16 +975,7 @@ def update_geological_context():
         fossils.update(geological_context_name=lower_laetolil)
 
     # Fix specimens with verbatim horizon == 'Modern'
-    moderns_update_dict = {
-        'EP 1074/98': upper_laetolil + ', Below Tuff 2',
-        'EP 018/98': lower_laetolil,
-        'EP 980/01': upper_laetolil + ', Between Tuffs 6 - 7',
-        'EP 981/01': upper_laetolil + ', Between Tuff 7 - 8',
-        'EP 1332/01': 'Modern',
-        'EP 844/98': upper_laetolil + ', Below Tuff 2',
-        'EP 1657/00': 'Modern'
-    }
-    for k in moderns_update_dict.keys():
+    for k in moderns_update_dict.keys():  # modern_update_dict defined at top of file
         if moderns_update_dict[k] != 'Modern':
             f = Fossil.objects.get(catalog_number=k)
             comment = 'Restored verbatim horizon from hard copy catalog to geological context. Possibly modern?'
@@ -1859,9 +1860,6 @@ def validate_area():
                     'Laetoli 8',
                     'Laetoli 9',
                     'Laetoli 9 South', 'Olaitole River Gully', 'Silal Artum', 'Garusi Southwest']
-    oleisusu_list = ['Oleisusu']
-    olaltanaudo_list = ['Olaltanaudo']
-    ndoroto_list = ['Ndoroto']
 
     for f in Fossil.objects.all():
         if f.area_name == 'Kakesio' and f.locality_name not in kakesio_list:
@@ -1941,7 +1939,6 @@ def validate_taxon_name(taxon_name, taxon_rank, verbose=True):
 
 
 def validate_taxon_field(taxon_name, verbose=True):
-    taxon_fields = ['kingdom', 'phylum', 'class', 'order', 'family', 'subfamily']
     taxon_field_name = 't'+taxon_name
     # print('Validating {}'.format(taxon_field_name))
     api = idigbio.json()  # connection to idigbio db
@@ -1960,7 +1957,7 @@ def validate_taxon_field(taxon_name, verbose=True):
                 print("{} ERROR".format(taxon))
         else:
             pass
-            #print("{} ERROR".format(taxon))
+            # print("{} ERROR".format(taxon))
 
 
 def validate_geological_context(verbose=False):
@@ -2034,16 +2031,7 @@ def validate_geological_context(verbose=False):
             print("Update gcn error for {}".format(f.catalog_number))
 
     # gcn for specimens with verbatim horizon =  Modern
-    moderns_update_dict = {
-        'EP 1074/98': upper_laetolil + 'Below Tuff 2',
-        'EP 018/98': lower_laetolil,
-        'EP 980/01': upper_laetolil + 'Between Tuffs 6 - 7',
-        'EP 981/01': upper_laetolil + 'Between Tuff 7 - 8',
-        'EP 1332/01': 'Modern',
-        'EP 844/98': upper_laetolil + 'Below Tuff 2',
-        'EP 1657/00': 'Modern'
-    }
-    for k in moderns_update_dict.keys():
+    for k in moderns_update_dict.keys():  # modern_update_dict defined at top of file
         f = Fossil.objects.get(catalog_number=k)
         if f.geological_context_name != moderns_update_dict[k]:
             print("Update gcn error for {}".format(f.catalog_number))
@@ -2197,10 +2185,10 @@ def field_list(field_name, report=True):
     return res_list
 
 
-def multireplace(string, replacements):
+def multireplace(in_string, replacements):
     """
     Replace multiple matches in a string at once.
-    :param string: The string to be processed
+    :param in_string: The string to be processed
     :param replacements: a dictionary of replacement values {value to find, value to replace}
     :return: returns string with all matches replaced.
     Credit to bgusach, https://gist.github.com/bgusach/a967e0587d6e01e889fd1d776c5f3729
@@ -2208,13 +2196,13 @@ def multireplace(string, replacements):
     # Place longer ones first to keep shorter substrings from matching where the longer ones should take place
     # For instance given the replacements {'ab': 'AB', 'abc': 'ABC'} against the string 'hey abc', it should produce
     # 'hey ABC' and not 'hey ABc'
-    substrs = sorted(replacements, key=len, reverse=True)
+    sub_strings = sorted(replacements, key=len, reverse=True)
 
     # Create a big OR regex that matches any of the substrings to replace
-    regexp = re.compile('|'.join(map(re.escape, substrs)))
+    regexp = re.compile('|'.join(map(re.escape, sub_strings)))
 
     # For each match, look up the new string in the replacements
-    return regexp.sub(lambda match: replacements[match.group(0)], string)
+    return regexp.sub(lambda match: replacements[match.group(0)], in_string)
 
 
 def q2cf(taxon_string):
@@ -2283,4 +2271,3 @@ def get_idigbio_taxon(taxon_name, taxon_rank):
     if r:
         result = r
     return result
-
