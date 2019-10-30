@@ -472,14 +472,14 @@ def update_catalog_number():
     ep120.save()
 
     # 2. Fix EP 507/07
-    ep507 = Fossil.objects.get(verbatim_specimen_number='EP 507/07')
+    ep507 = Fossil.objects.get(verbatim_specimen_number='507/07')
     ep507.catalog_number = 'EP 507/05'
     comment = 'Catalog number corrected from {} to EP 507/05'.format(ep507.verbatim_specimen_number)
     ep507.remarks = (ep507.remarks + " " if ep507.remarks else "") + comment
     ep507.save()
 
     # 3. Fix EP 756/06
-    ep756 = Fossil.objects.get(verbatim_catalog_number='EP 756/06')
+    ep756 = Fossil.objects.get(verbatim_specimen_number='756/06')
     ep756.catalog_number = 'EP 756/05'
     ep756_comment = 'Catalog number corrected from {} to EP 756/05'.format(ep756.verbatim_specimen_number)
     ep756.remarks = (ep756.remarks + " " if ep756.remarks else "") + ep756_comment
@@ -965,14 +965,13 @@ def update_geological_context():
         fossils.update(geological_context_name=lower_laetolil)
 
     # Fix specimens with verbatim horizon == 'Modern'
-    moderns = Fossil.objects.filter(verbatim_horizon='Modern')
     moderns_update_dict = {
-        'EP 1074/98': upper_laetolil + 'Below Tuff 2',
+        'EP 1074/98': upper_laetolil + ', Below Tuff 2',
         'EP 018/98': lower_laetolil,
-        'EP 980/01': upper_laetolil + 'Between Tuffs 6 - 7',
-        'EP 981/01': upper_laetolil + 'Between Tuff 7 - 8',
+        'EP 980/01': upper_laetolil + ', Between Tuffs 6 - 7',
+        'EP 981/01': upper_laetolil + ', Between Tuff 7 - 8',
         'EP 1332/01': 'Modern',
-        'EP 844/98': upper_laetolil + 'Below Tuff 2',
+        'EP 844/98': upper_laetolil + ', Below Tuff 2',
         'EP 1657/00': 'Modern'
     }
     for k in moderns_update_dict.keys():
@@ -1404,13 +1403,13 @@ def update_taxon_fields(qs=Fossil.objects.all(), verbose=True):
         # Fix EP 1905/00, has verbatim genus = Modern Hartebeest
         # This is a comment added by Alan Gentry and needs to be moved to the Taxon remarks field.
         ep1905 = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
-        vtr = ep1905.verbatim_taxon_remarks
+        tr = ep1905.taxon_remarks
         vg = ep1905.verbatim_genus
         if vg:
             # append vg if prior remarks present, add vg if no prior remarks
-            ep1905.taxon_remarks = (vtr + " " if vtr else "") + vg
+            ep1905.taxon_remarks = (tr + " " if tr else "") + vg
             # update genus
-            ep1905.genus = None
+            ep1905.tgenus = None
         ep1905.save()
 
         # Fix Taxon fields for splits
@@ -1732,12 +1731,12 @@ def validate_catalog_number():
         print('Update error {}'.format(ep120.catalog_number))
 
     # Check EP 507/05
-    ep507 = Fossil.objects.get(verbatim_specimen_number='EP 507/07')
+    ep507 = Fossil.objects.get(verbatim_specimen_number='507/07')
     if ep507.catalog_number != 'EP 507/05':
         print('Update error {}'.format(ep507.catalog_number))
 
     # Check EP 756/05
-    ep756 = Fossil.objects.get(verbatim_catalog_number='EP 756/06')
+    ep756 = Fossil.objects.get(verbatim_specimen_number='756/06')
     if ep756.catalog_number != 'EP 756/05':
         print('Update error {}'.format(ep756.catalog_number))
 
@@ -1747,22 +1746,22 @@ def validate_catalog_number():
         print('Update error {}'.format(ep1975.catalog_number))
 
     # Check EP 348/04
-    ep349 = Fossil.objects.get(catalog_number='EP 348/04', verbatim_element='Distal radius')
+    ep349 = Fossil.objects.get(verbatim_specimen_number='EP 348/04', verbatim_element='Distal radius')
     if ep349.catalog_number != 'EP 349/04':
         print('Update error {}'.format(ep349.catalog_number))
 
     # Check EP 2188/99 -> 2188/03 and 2188/00
-    ep2188_03 = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='distal humerus')
+    ep2188_03 = Fossil.objects.get(verbatim_specimen_number='EP 2188/99', verbatim_element='distal humerus')
     if ep2188_03.catalog_number != 'EP 2188/03':
         print('Update error {}'.format(ep2188_03.catalog_number))
 
-    ep2188_00 = Fossil.objects.get(catalog_number='EP 2188/99', verbatim_element='Lumbar Vertebral Centrum')
+    ep2188_00 = Fossil.objects.get(verbatim_specimen_number='EP 2188/99', verbatim_element='Lumbar Vertebral Centrum')
     if ep2188_00.catalog_number != 'EP 2188/00':
         print('Update error {}'.format(ep2188_00.catalog_number))
 
     # Check EP 1905/00
     ep1905 = Fossil.objects.get(verbatim_specimen_number='EP 1905/00')
-    if ep1905.genus:
+    if ep1905.tgenus:
         print('Update error {}'.format(ep1905.catalog_number))
     if ep1905.scientific_name != 'Alcelaphini':
         print('Update error {}'.format(ep1905.catalog_number))
@@ -2045,7 +2044,7 @@ def validate_geological_context(verbose=False):
         'EP 1657/00': 'Modern'
     }
     for k in moderns_update_dict.keys():
-        f = Fossil.objects.get(update_catalog_number=k)
+        f = Fossil.objects.get(catalog_number=k)
         if f.geological_context_name != moderns_update_dict[k]:
             print("Update gcn error for {}".format(f.catalog_number))
 
@@ -2111,10 +2110,6 @@ def main(year_list=CSHO_YEARS):
     c = split_records()
     print('{} records split'.format(c))
     print('Current record count: {}'.format(Fossil.objects.all().count()))
-    print(hr)
-
-    # update verbatim records
-    print('\nUpdating verbatim records ...')
     print(hr)
 
     # update data
