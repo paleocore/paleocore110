@@ -71,7 +71,7 @@ old_taxonomy_fieldsets = ('Old Taxonomic Descriptions', {
     'fields': [('tax_order', 'family',),
                ('genus', 'specific_epithet',),
                ],
-    'classes':['collapse']
+    'classes': ['collapse']
 })
 
 locality_fieldsets = (('Record', {
@@ -126,16 +126,16 @@ class OccurrenceAdmin(admin.ModelAdmin):
     # readonly_fields = ['catalog_number', 'latitude', 'longitude', 'easting', 'northing']
     readonly_fields = ['catalog_number']
     fieldsets = default_admin_fieldsets
-    list_display = ['catalog_number', 'cm_catalog_number','item_scientific_name', 'item_description', 'locality',
+    list_display = ['catalog_number', 'cm_catalog_number', 'item_scientific_name', 'item_description', 'locality',
                     'date_collected', 'on_loan', 'date_last_modified']
-    list_select_related = ['locality']  #  improves performance, causes server to conduct 4 queries instead of 1004
+    list_select_related = ['locality']  # improves performance, causes server to conduct 4 queries instead of 1004
     list_filter = ['date_collected', 'on_loan', 'date_last_modified']
 
     list_per_page = 1000
 
 
 class LocalityAdmin(projects.admin.PaleoCoreLocalityAdminGoogle):
-    list_display = ('locality_number', 'locality_field_number', 'cm_locality_number', 'name', 'date_discovered')
+    list_display = ('locality_number', 'name', 'locality_field_number', 'latitude', 'longitude', 'region', 'quad_sheet')
     fieldsets = locality_fieldsets
     readonly_fields = ('date_created', 'date_last_modified', 'longitude', 'latitude', 'easting', 'northing')
     list_filter = ['date_discovered', 'formation', 'NALMA', 'region', 'county']
@@ -160,14 +160,14 @@ class BiologyAdmin(admin.ModelAdmin):
     biology_fieldsets.insert(3, old_taxonomy_fieldsets)
     # biology_fieldsets.insert(4, chronology_fieldsets)
     fieldsets = biology_fieldsets
-    list_display = ['catalog_number', 'cm_catalog_number', 'item_scientific_name', 'taxon', 'item_description', 'locality',
-                    'date_collected', 'nalma']
+    list_display = ['catalog_number', 'cm_catalog_number', 'item_scientific_name', 'taxon', 'item_description',
+                    'locality', 'date_collected', 'nalma']
     list_per_page = 1000
     list_filter = ['taxon', 'locality']
     search_fields = ['tax_class', 'tax_order', 'family', 'tribe', 'genus', 'specific_epithet', 'item_scientific_name',
-                     'catalog_number', 'cm_catalog_number',]
+                     'catalog_number', 'cm_catalog_number']
     actions = ['create_data_csv', 'generate_specimen_labels']
-    list_select_related = ['locality','taxon', 'occurrence_ptr']
+    list_select_related = ['locality', 'taxon', 'occurrence_ptr']
 
     def nalma(self, obj):
         return obj.locality.NALMA
@@ -200,19 +200,19 @@ class BiologyAdmin(admin.ModelAdmin):
         field_names = concrete_field_names + method_field_names + fk_field_names
         writer.writerow(field_names)  # write column headers
 
-        def get_fk_values(occurrence, fk):
+        def get_fk_values(o, fk):
             """
             Get the values associated with a foreign key relation
-            :param occurrence:
-            :param fk:
-            :return:
+            :param o: an occurrence instance
+            :param fk: the name of the foreign key field
+            :return: returns the value of the foreign key field as a string.
             """
             qs = None
             return_string = ''
             try:
-                qs = [obj for obj in getattr(occurrence, fk).all()]  # if fk is one to many try getting all objects
+                qs = [obj for obj in getattr(o, fk).all()]  # if fk is one to many try getting all objects
             except AttributeError:
-                return_string = str(getattr(occurrence, fk))  # if one2one or many2one get single related value
+                return_string = str(getattr(o, fk))  # if one2one or many2one get single related value
 
             if qs:
                 try:
@@ -254,15 +254,15 @@ class BiologyAdmin(admin.ModelAdmin):
         content = ""
         for b in queryset:
             specimen_data = "GDB Project\n{catalog_number}  {sci_name}\n" \
-                            "CM #: {cm_catalog_number}\n"\
+                            "CM #: {cm_catalog_number}\n" \
                             "{description}\nLocality {locality}\n" \
                             "{nalma} {date_collected}\n\n".format(catalog_number=b.catalog_number,
-                                                       sci_name=b.item_scientific_name,
-                                                        cm_catalog_number=b.cm_catalog_number,
-                                                       description=b.item_description,
-                                                              locality=b.locality,
-                                                              nalma=b.locality.NALMA,
-                                                              date_collected=b.date_collected)
+                                                                  sci_name=b.item_scientific_name,
+                                                                  cm_catalog_number=b.cm_catalog_number,
+                                                                  description=b.item_description,
+                                                                  locality=b.locality,
+                                                                  nalma=b.locality.NALMA,
+                                                                  date_collected=b.date_collected)
             content = content + specimen_data
         response = HttpResponse(content, content_type='text/plain')  # declare the response type
         response['Content-Disposition'] = 'attachment; filename="Specimens.txt"'  # declare the file name
@@ -275,4 +275,3 @@ admin.site.register(Biology, BiologyAdmin)
 admin.site.register(Locality, LocalityAdmin)
 admin.site.register(Taxon, projects.admin.TaxonomyAdmin)
 admin.site.register(TaxonRank, projects.admin.TaxonRankAdmin)
-
