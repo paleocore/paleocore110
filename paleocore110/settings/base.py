@@ -74,7 +74,7 @@ INSTALLED_APPS = (
     'wagtailgeowidget',
     'mapwidgets',
     'ckeditor',
-
+    'liststyle',
 
     'projects',
     'cc',
@@ -89,6 +89,7 @@ INSTALLED_APPS = (
     'origins',
     'standard',
     'wt',
+    'eval',
 )
 
 MIDDLEWARE_CLASSES = (
