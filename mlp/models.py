@@ -57,6 +57,9 @@ class Occurrence(projects.models.PaleoCoreOccurrenceBaseClass):
     weathering = models.SmallIntegerField(blank=True, null=True)
     surface_modification = models.CharField(max_length=255, blank=True, null=True)
 
+    # Verbatim Fields
+    verbatim_kml_data = models.TextField(null=True, blank=True)
+
     def __str__(self):
         """
         What is the best string representation for an occurrence instance?
