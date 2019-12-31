@@ -99,7 +99,7 @@ class ImportKMZ(generic.FormView):
                 # attributes[1::2] = ["Collection", "May 27, 2017, 10:12 AM", "Faunal" ...]
                 # zip creates a list of tuples  = [("Basis of Record", "Collection), ...]
                 # which is converted to a dictionary.
-                if len(attributes) % 2 == 0:  # attribuetes list should be even length
+                if len(attributes) % 2 == 0:  # attributes list should be even length
                     attributes_dict = dict(zip(attributes[0::2], attributes[1::2]))
                 else:
                     raise KeyError
@@ -123,8 +123,12 @@ class ImportKMZ(generic.FormView):
                 # Improve by checking each field to see if it has a choice list. If so validate against choice
                 # list.
 
-                # Verbatim Data - save a verbatim copy of the original kml placemark attributes.
-                lgrp_occ.verbatim_kml_data = attributes
+                # Verbatim Data - save a verbatim copy of the original kml placemark coordinates and attributes.
+                if o.geometry.wkt:
+                    geom = ['geom', o.geometry.wkt]
+                else:
+                    geom = ['geom', 'No coordinates']
+                lgrp_occ.verbatim_kml_data = attributes + geom
 
                 # Validate Basis of Record
                 if attributes_dict.get("Basis Of Record") in (fossil_specimen, "Fossil", "Collection"):
@@ -327,7 +331,7 @@ class Summary(generic.ListView):
           <td>--</td>
           <td>{no_fossil_count}</td>
           <td>{no_fossil_count}</td>
-          
+
         </tr>
         <tr>
           <td>Archaeology</td>

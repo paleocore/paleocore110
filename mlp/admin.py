@@ -60,6 +60,10 @@ class OccurrenceAdmin(projects.admin.PaleoCoreOccurrenceAdmin):
                        ('remarks',)],
             'classes': ['collapse']
         }),
+        ('Verbatim Data', {
+            'fields': ['verbatim_kml_data'],
+            #'classes': ['collapse']
+        }),
         ('Photos', {
             'fields': [('photo', 'image')],
             'classes': ['collapse'],
