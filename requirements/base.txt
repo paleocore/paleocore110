@@ -10,10 +10,10 @@ django-libsass==0.7
 django-redis==4.8.0
 elasticsearch==5.4.0
 libsass==0.12.3
-psycopg2==2.7.1
+psycopg2-binary==2.7.7
 wand==0.4.4
 wagalytics==0.6
 django-cachalot==1.4.1
 unicodecsv==0.14.1
 fastkml==0.11
-lxml==3.7.3
+lxml==4.5.0
