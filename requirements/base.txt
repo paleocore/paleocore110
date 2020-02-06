@@ -1,10 +1,15 @@
-Django==1.11.27
+Django==1.11.28
 wagtail==1.10.1
 wagtailfontawesome==1.0.6
 celery==4.0.2
+django-celery==3.3.1
+django-ckeditor==5.9.0
 django-compressor==2.1.1
 django-environ==0.4.3
 django-foundation-formtags==0.0.8
+django-geojson==2.12.0
+django-leaflet==0.26.0
+django-liststyle==0.2b0
 django-wagtail-feeds==0.0.7
 django-libsass==0.7
 django-redis==4.8.0
@@ -17,3 +22,8 @@ django-cachalot==1.4.1
 unicodecsv==0.14.1
 fastkml==0.11
 lxml==4.5.0
+wagtailgeowidget==5.0.2
+django-map-widgets==0.2.2
+django-import-export==2.0.1
+django-countries==5.3.3
+django-mptt==0.11.0
