@@ -134,7 +134,7 @@ class Find(projects.models.PaleoCoreOccurrenceBaseClass):
 
     @staticmethod
     def country():
-        return 'Ethiopia'
+        return 'Tanzania'
 
     @staticmethod
     def institution_code():
