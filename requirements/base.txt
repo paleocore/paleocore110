@@ -21,7 +21,7 @@ wagalytics==0.6
 django-cachalot==1.4.1
 unicodecsv==0.14.1
 fastkml==0.11
-lxml==4.6.5
+lxml==4.9.1
 wagtailgeowidget==5.0.2
 django-map-widgets==0.2.2
 django-import-export==2.0.1
